@@ -4,6 +4,15 @@ export default class Rgba8
 {
     static WHITE = new Rgba8(255, 255, 255, 255);
     static BLACK = new Rgba8(0, 0, 0, 255);
+    static RED = new Rgba8(255, 0, 0, 255);
+    static LIME = new Rgba8(0, 255, 0, 255);
+    static BLUE = new Rgba8(0, 0, 255, 255);
+    static GREEN = new Rgba8(0, 127, 0, 255);
+    static MAGENTA = new Rgba8(255, 0, 255, 255);
+    static FUCHSIA = new Rgba8(255, 0, 255, 255);
+    static YELLOW = new Rgba8(255, 255, 0, 255);
+    static CYAN = new Rgba8(0, 255, 255, 255);
+    static TEAL = new Rgba8(0, 255, 255, 255);
 
     constructor(r = 255, g = 255, b = 255, a = 255)
     {

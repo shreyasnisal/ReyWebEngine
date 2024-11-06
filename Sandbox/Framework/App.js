@@ -51,14 +51,14 @@ export default class App
     Render()
     {
         const vertexesToDraw = [
-            new Vertex_PCU(new Vec3(4, 50, 0), new Rgba8(255, 0, 255), Vec2.ZERO),
-            new Vertex_PCU(new Vec3(0, 54, 0), new Rgba8(255, 255, 0), Vec2.ZERO),
-            new Vertex_PCU(new Vec3(0, 46, 0), new Rgba8(0, 255, 255), Vec2.ZERO),
+            new Vertex_PCU(new Vec3(4, 50, 0), Rgba8.MAGENTA, Vec2.ZERO),
+            new Vertex_PCU(new Vec3(0, 54, 0), Rgba8.YELLOW, Vec2.ZERO),
+            new Vertex_PCU(new Vec3(0, 46, 0), Rgba8.CYAN, Vec2.ZERO),
         ];
 
         g_renderer.BeginCamera(this.m_worldCamera);
         g_renderer.ClearScreen(new Rgba8(0, 0, 0));
-        g_renderer.SetModelConstants(Mat44.CreateTranslation2D(new Vec2(10.0, 0.0), Rgba8.WHITE));
+        g_renderer.SetModelConstants(Mat44.CreateTranslation2D(new Vec2(10.0, 0.0)), Rgba8.WHITE);
         g_renderer.DrawVertexArray(vertexesToDraw);
         g_renderer.EndCamera(this.m_worldCamera);
     }

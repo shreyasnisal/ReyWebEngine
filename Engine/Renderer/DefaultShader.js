@@ -23,7 +23,7 @@ export const defaultVertexShader =
     void main(void) {
         vec4 localPosition = vec4(vertexPosition, 1.0);
         gl_Position = projectionMatrix * viewMatrix * modelMatrix * localPosition;
-        vColor = vertexColor;
+        vColor = vertexColor * modelColor;
         vUV = vertexUV;
     }
 `;
