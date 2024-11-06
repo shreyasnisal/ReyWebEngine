@@ -1,0 +1,11 @@
+{
+  "name": "javascript-gameengine",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "run": "npx serve"
+  },
+  "author": "Shreyas 'Rey' Nisal",
+  "license": "ISC"
+}
