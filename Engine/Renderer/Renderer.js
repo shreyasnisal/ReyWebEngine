@@ -4,10 +4,19 @@ import Rgba8 from "../../Engine/Core/Rgba8.js";
 import Vertex_PCU from "../../Engine/Core/Vertex_PCU.js";
 import Vertex_PCUTBN from "../../Engine/Core/Vertex_PCUTBN.js";
 import Mat44 from "../../Engine/Math/Mat44.js"
+import UniformBuffer from "../../Engine/Renderer/UniformBuffer.js";
 import VertexBuffer from "../../Engine/Renderer/VertexBuffer.js";
 
 export const g_viewportWidth = window.innerWidth;
 export const g_viewportHeight = window.innerHeight;
+
+const FLOAT32_SIZE = 4;
+
+const CAMERA_CONSTANTS_NUM_ELEMENTS = 32;
+const SHADER_CAMERA_CONSTANTS_BIND_SLOT = 2;
+
+const MODEL_CONSTANTS_NUM_ELEMENTS = 20;
+const SHADER_MODEL_CONSTANTS_BIND_SLOT = 3;
 
 export class VertexType
 {
@@ -76,60 +85,45 @@ export default class Renderer
         this.m_context.useProgram(this.m_webglProgram);
 
         // Create an immediate vertex buffer to copy data into when passing vertexes
-        this.m_immediateVBO = this.CreateVertexBuffer(Vertex_PCU.NUM_FLOAT32_ELEMENTS * 4);
+        this.m_immediateVBO = this.CreateVertexBuffer(Vertex_PCU.NUM_FLOAT32_ELEMENTS * FLOAT32_SIZE);
+        // Create a uniform buffer to bind camera constants
+        this.m_cameraUBO = this.CreateUniformBuffer(CAMERA_CONSTANTS_NUM_ELEMENTS * FLOAT32_SIZE);
+        // Create a uniform buffer to bind model constants
+        this.m_modelUBO = this.CreateUniformBuffer(MODEL_CONSTANTS_NUM_ELEMENTS * FLOAT32_SIZE);
 
         // Set viewport
         this.m_context.viewport(0, 0, g_viewportWidth, g_viewportHeight);
+
+        // Set uniform block binding for CameraConstants and ModelConstants
+        this.m_context.uniformBlockBinding(this.m_webglProgram, this.m_context.getUniformBlockIndex(this.m_webglProgram, "CameraConstants"), SHADER_CAMERA_CONSTANTS_BIND_SLOT);
+        this.m_context.uniformBlockBinding(this.m_webglProgram, this.m_context.getUniformBlockIndex(this.m_webglProgram, "ModelConstants"), SHADER_MODEL_CONSTANTS_BIND_SLOT);
     }
 
     BeginFrame()
     {
-
     }
 
     EndFrame()
     {
-
     }
 
     Shutdown()
     {
-
     }
 
     BeginCamera(camera)
     {
         this.m_camera = camera;
 
-        const cameraConstantsCpuBuffer = new Float32Array(32);
-
         const viewMatrixValues = camera.GetViewMatrix().m_values;
-
-        for (let i = 0; i < 16; i++)
-        {
-            cameraConstantsCpuBuffer[i] = viewMatrixValues[i];
-        }
-
         const projectionMatrixValues = camera.GetProjectionMatrix().m_values;
-        for (let i = 0; i < 16; i++)
-        {
-            cameraConstantsCpuBuffer[16 + i] = projectionMatrixValues[i];
-        }
 
-        const cameraConstantsGpuBuffer = this.m_context.createBuffer();
-        this.m_context.bindBuffer(this.m_context.UNIFORM_BUFFER, cameraConstantsGpuBuffer);
-        this.m_context.bufferData(this.m_context.UNIFORM_BUFFER, 32 * 4, this.m_context.STATIC_DRAW);
-        this.m_context.bindBufferRange(this.m_context.UNIFORM_BUFFER, 0, cameraConstantsGpuBuffer, 0, 32 * 4);
-
-        this.m_context.uniformBlockBinding(this.m_webglProgram, this.m_context.getUniformBlockIndex(this.m_webglProgram, "CameraConstants"), 0);
-
-        this.m_context.bindBuffer(this.m_context.UNIFORM_BUFFER, cameraConstantsGpuBuffer);
-        this.m_context.bufferSubData(this.m_context.UNIFORM_BUFFER, 0, cameraConstantsCpuBuffer);
+        this.CopyUniformBufferToGPU([...viewMatrixValues, ...projectionMatrixValues], CAMERA_CONSTANTS_NUM_ELEMENTS, this.m_cameraUBO);
+        this.BindUniformBuffer(this.m_cameraUBO, SHADER_CAMERA_CONSTANTS_BIND_SLOT);
     }
 
     EndCamera(camera)
     {
-
     }
 
     ClearScreen(clearColor)
@@ -153,13 +147,10 @@ export default class Renderer
 
     SetModelConstants(modelMatrix = Mat44.IDENTITY, modelColor = Rgba8.WHITE)
     {
-        const modelConstantsCpuBuffer = new Float32Array(20);
-        for (let matrixElemIndex = 0; matrixElemIndex < Mat44.SIZE; matrixElemIndex++)
-        {
-            modelConstantsCpuBuffer[matrixElemIndex] = modelMatrix.m_values[matrixElemIndex];
-        }
-
+        const modelMatrixValues = modelMatrix.m_values;
         const modelColorAsFloats = modelColor.GetAsFloats();
+        this.CopyUniformBufferToGPU([...modelMatrixValues, ...modelColorAsFloats], MODEL_CONSTANTS_NUM_ELEMENTS, this.m_modelUBO);
+        this.BindUniformBuffer(this.m_modelUBO, SHADER_MODEL_CONSTANTS_BIND_SLOT);
     }
 
     CreateVertexBuffer(size, vertexType = VertexType.VERTEX_PCU)
@@ -184,25 +175,25 @@ export default class Renderer
         const numDataElements = vbo.m_size / 4;
 
         // Convert JS number elements to Float32 elements
-        const cpuData = new Float32Array(numDataElements);
+        const float32Data = new Float32Array(numDataElements);
         for (let vertexIndex = 0; vertexIndex < numVertexes; vertexIndex++)
         {
-            cpuData[vertexIndex * vbo.m_stride] = data[vertexIndex].m_position.x;
-            cpuData[vertexIndex * vbo.m_stride + 1] = data[vertexIndex].m_position.y;
-            cpuData[vertexIndex * vbo.m_stride + 2] = data[vertexIndex].m_position.z;
+            float32Data[vertexIndex * vbo.m_stride] = data[vertexIndex].m_position.x;
+            float32Data[vertexIndex * vbo.m_stride + 1] = data[vertexIndex].m_position.y;
+            float32Data[vertexIndex * vbo.m_stride + 2] = data[vertexIndex].m_position.z;
 
             const colorAsFloats = data[vertexIndex].m_color.GetAsFloats();
-            cpuData[vertexIndex * vbo.m_stride + 3] = colorAsFloats[0];
-            cpuData[vertexIndex * vbo.m_stride + 4] = colorAsFloats[1];
-            cpuData[vertexIndex * vbo.m_stride + 5] = colorAsFloats[2];
-            cpuData[vertexIndex * vbo.m_stride + 6] = colorAsFloats[3];
+            float32Data[vertexIndex * vbo.m_stride + 3] = colorAsFloats[0];
+            float32Data[vertexIndex * vbo.m_stride + 4] = colorAsFloats[1];
+            float32Data[vertexIndex * vbo.m_stride + 5] = colorAsFloats[2];
+            float32Data[vertexIndex * vbo.m_stride + 6] = colorAsFloats[3];
 
-            cpuData[vertexIndex * vbo.m_stride + 7] = data[vertexIndex].m_uvTexCoords.x;
-            cpuData[vertexIndex * vbo.m_stride + 8] = data[vertexIndex].m_uvTexCoords.y;
+            float32Data[vertexIndex * vbo.m_stride + 7] = data[vertexIndex].m_uvTexCoords.x;
+            float32Data[vertexIndex * vbo.m_stride + 8] = data[vertexIndex].m_uvTexCoords.y;
         }
 
         this.m_context.bindBuffer(this.m_context.ARRAY_BUFFER, vbo.m_buffer);
-        this.m_context.bufferData(this.m_context.ARRAY_BUFFER, cpuData, this.m_context.DYNAMIC_DRAW);
+        this.m_context.bufferData(this.m_context.ARRAY_BUFFER, float32Data, this.m_context.DYNAMIC_DRAW);
     }
 
     BindVertexBuffer(vbo)
@@ -237,11 +228,27 @@ export default class Renderer
 
     CreateUniformBuffer(size)
     {
-
+        const uniformBuffer = new UniformBuffer(size);
+        uniformBuffer.m_buffer = this.m_context.createBuffer();
+        return uniformBuffer;
     }
 
-    CopyUniformBufferToGPU()
+    CopyUniformBufferToGPU(data, numElements, ubo)
     {
+        const float32Data = new Float32Array(numElements);
+        for (let elemIndex = 0; elemIndex < numElements; elemIndex++)
+        {
+            float32Data[elemIndex] = data[elemIndex];
+        }
 
+        this.m_context.bindBuffer(this.m_context.UNIFORM_BUFFER, ubo.m_buffer);
+        this.m_context.bufferData(this.m_context.UNIFORM_BUFFER, numElements * FLOAT32_SIZE, this.m_context.STATIC_READ);
+        this.m_context.bufferSubData(this.m_context.UNIFORM_BUFFER, 0, float32Data);
+    }
+
+    BindUniformBuffer(ubo, slot)
+    {
+        this.m_context.bindBuffer(this.m_context.UNIFORM_BUFFER, ubo.m_buffer);
+        this.m_context.bindBufferRange(this.m_context.UNIFORM_BUFFER, slot, ubo.m_buffer, 0, ubo.m_size);
     }
 }

@@ -2,6 +2,7 @@ import { g_renderer } from "../../Sandbox/Framework/GameCommon.js"
 
 import Rgba8 from "../../Engine/Core/Rgba8.js"
 import Vertex_PCU from "../../Engine/Core/Vertex_PCU.js"
+import Mat44 from "../../Engine/Math/Mat44.js"
 import Vec2 from "../../Engine/Math/Vec2.js"
 import Vec3 from "../../Engine/Math/Vec3.js"
 import Camera from "../../Engine/Renderer/Camera.js"
@@ -57,6 +58,7 @@ export default class App
 
         g_renderer.BeginCamera(this.m_worldCamera);
         g_renderer.ClearScreen(new Rgba8(0, 0, 0));
+        g_renderer.SetModelConstants(Mat44.CreateTranslation2D(new Vec2(10.0, 0.0), Rgba8.WHITE));
         g_renderer.DrawVertexArray(vertexesToDraw);
         g_renderer.EndCamera(this.m_worldCamera);
     }

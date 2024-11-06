@@ -1,16 +1,16 @@
 export const defaultVertexShader =
 `#version 300 es
     
-    uniform ModelConstants
-    {
-        mat4 modelMatrix;
-        vec4 modelColor;
-    };
-    
     uniform CameraConstants
     {
         mat4 viewMatrix;
         mat4 projectionMatrix;
+    };
+    
+    uniform ModelConstants
+    {
+        mat4 modelMatrix;
+        vec4 modelColor;
     };
 
     in vec3 vertexPosition;
@@ -22,7 +22,7 @@ export const defaultVertexShader =
     
     void main(void) {
         vec4 localPosition = vec4(vertexPosition, 1.0);
-        gl_Position = projectionMatrix * viewMatrix * localPosition;
+        gl_Position = projectionMatrix * viewMatrix * modelMatrix * localPosition;
         vColor = vertexColor;
         vUV = vertexUV;
     }
