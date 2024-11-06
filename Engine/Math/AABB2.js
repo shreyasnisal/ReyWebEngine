@@ -20,19 +20,19 @@ export default class AABB2
 
     GetCenter()
     {
-        return this.m_mins.GetSum(GetDimensions().GetScaled(0.5));
+        return this.m_mins.GetSum(this.GetDimensions().GetScaled(0.5));
     }
 
     SetDimensions(newDimensions)
     {
-        currentDimensions = this.GetDimensions();
+        const currentDimensions = this.GetDimensions();
         this.m_mins.Subtract(newDimensions.GetDifference(currentDimensions));
         this.m_maxs.Add(newDimensions.GetDifference(currentDimensions));
     }
 
     SetCenter(newCenter)
     {
-        const currentCenter = GetCenter();
+        const currentCenter = this.GetCenter();
         const translation = newCenter.Subtract(currentCenter);
         this.m_mins.Add(translation);
         this.m_maxs.Add(translation);

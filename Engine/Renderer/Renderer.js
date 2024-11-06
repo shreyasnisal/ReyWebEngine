@@ -58,8 +58,9 @@ export default class Renderer
         {
             console.error("webgl2 is not supported");
         }
-
         window.addEventListener("resize", this.HandleWindowResize);
+
+        // Initialize variables
     }
 
     Startup()
