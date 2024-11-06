@@ -7,8 +7,8 @@ import Mat44 from "../../Engine/Math/Mat44.js"
 import UniformBuffer from "../../Engine/Renderer/UniformBuffer.js";
 import VertexBuffer from "../../Engine/Renderer/VertexBuffer.js";
 
-export const g_viewportWidth = window.innerWidth;
-export const g_viewportHeight = window.innerHeight;
+export let g_viewportWidth = window.innerWidth;
+export let g_viewportHeight = window.innerHeight;
 
 const FLOAT32_SIZE = 4;
 
@@ -24,6 +24,19 @@ export class VertexType
     static VERTEX_PCUTBN = "Vertex_PCUTBN";
 }
 
+export class CullMode
+{
+    static BACK = "BACK";
+    static FRONT = "FRONT";
+    static NONE = "NONE";
+}
+
+export class DepthMode
+{
+    static ENABLED = "ENABLED";
+    static DISABLED = "DISABLED";
+}
+
 export class RenderConfig
 {
     constructor()
@@ -35,6 +48,8 @@ export default class Renderer
 {
     constructor(config)
     {
+        this.m_config = config;
+
         const canvas = document.getElementById("id_canvas");
         canvas.width = g_viewportWidth;
         canvas.height = g_viewportHeight;
@@ -43,7 +58,8 @@ export default class Renderer
         {
             console.error("webgl2 is not supported");
         }
-        this.m_config = config;
+
+        window.addEventListener("resize", this.HandleWindowResize);
     }
 
     Startup()
@@ -91,9 +107,6 @@ export default class Renderer
         // Create a uniform buffer to bind model constants
         this.m_modelUBO = this.CreateUniformBuffer(MODEL_CONSTANTS_NUM_ELEMENTS * FLOAT32_SIZE);
 
-        // Set viewport
-        this.m_context.viewport(0, 0, g_viewportWidth, g_viewportHeight);
-
         // Set uniform block binding for CameraConstants and ModelConstants
         this.m_context.uniformBlockBinding(this.m_webglProgram, this.m_context.getUniformBlockIndex(this.m_webglProgram, "CameraConstants"), SHADER_CAMERA_CONSTANTS_BIND_SLOT);
         this.m_context.uniformBlockBinding(this.m_webglProgram, this.m_context.getUniformBlockIndex(this.m_webglProgram, "ModelConstants"), SHADER_MODEL_CONSTANTS_BIND_SLOT);
@@ -111,9 +124,20 @@ export default class Renderer
     {
     }
 
+    HandleWindowResize()
+    {
+        g_viewportWidth = window.innerWidth;
+        g_viewportHeight = window.innerHeight;
+        const canvas = document.getElementById("id_canvas");
+        canvas.width = g_viewportWidth;
+        canvas.height = g_viewportHeight;
+    }
+
     BeginCamera(camera)
     {
         this.m_camera = camera;
+
+        this.m_context.viewport(0, 0, g_viewportWidth, g_viewportHeight);
 
         const viewMatrixValues = camera.GetViewMatrix().m_values;
         const projectionMatrixValues = camera.GetProjectionMatrix().m_values;
@@ -250,5 +274,35 @@ export default class Renderer
     {
         this.m_context.bindBuffer(this.m_context.UNIFORM_BUFFER, ubo.m_buffer);
         this.m_context.bindBufferRange(this.m_context.UNIFORM_BUFFER, slot, ubo.m_buffer, 0, ubo.m_size);
+    }
+
+    SetCullMode(cullMode)
+    {
+        if (cullMode === CullMode.NONE)
+        {
+            this.m_context.disable(this.m_context.CULL_FACE);
+        }
+        else if (cullMode === CullMode.BACK)
+        {
+            this.m_context.enable(this.m_context.CULL_FACE);
+            this.m_context.cullFace(this.m_context.BACK);
+        }
+        else if (cullMode === CullMode.FRONT)
+        {
+            this.m_context.enable(this.m_context.CULL_FACE);
+            this.m_context.cullFace(this.m_context.FRONT);
+        }
+    }
+
+    SetDepthMode(depthMode)
+    {
+        if (depthMode === DepthMode.ENABLED)
+        {
+            this.m_context.enable(this.m_context.DEPTH_TEST);
+        }
+        else if (depthMode === DepthMode.DISABLED)
+        {
+            this.m_context.disable(this.m_context.DEPTH_TEST);
+        }
     }
 }

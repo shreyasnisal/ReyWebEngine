@@ -1,27 +1,55 @@
-import { g_renderer } from "../../Sandbox/Framework/GameCommon.js"
+"use strict";
 
-import Rgba8 from "../../Engine/Core/Rgba8.js"
-import Vertex_PCU from "../../Engine/Core/Vertex_PCU.js"
-import Mat44 from "../../Engine/Math/Mat44.js"
-import Vec2 from "../../Engine/Math/Vec2.js"
-import Vec3 from "../../Engine/Math/Vec3.js"
-import Camera from "../../Engine/Renderer/Camera.js"
-import { g_viewportHeight, g_viewportWidth } from "../../Engine/Renderer/Renderer.js"
-import * as MathUtils from "../../Engine/Math/MathUtils.js"
+import { g_renderer, g_input } from "../../Sandbox/Framework/GameCommon.js"
+
+import Rgba8 from "../../Engine/Core/Rgba8.js";
+import Vertex_PCU from "../../Engine/Core/Vertex_PCU.js";
+import EulerAngles from "../../Engine/Math/EulerAngles.js";
+import Mat44 from "../../Engine/Math/Mat44.js";
+import Vec2 from "../../Engine/Math/Vec2.js";
+import Vec3 from "../../Engine/Math/Vec3.js";
+import Camera from "../../Engine/Renderer/Camera.js";
+import { g_viewportHeight, g_viewportWidth, DepthMode, CullMode } from "../../Engine/Renderer/Renderer.js";
+import * as MathUtils from "../../Engine/Math/MathUtils.js";
+import * as VertexUtils from "../../Engine/Core/VertexUtils.js";
+
 
 export default class App
 {
     constructor()
     {
-        this.m_worldCamera = new Camera();
-        // this.m_worldCamera.SetOrthoView(new Vec2(0, 0), new Vec2(g_viewportWidth, g_viewportHeight));
-        this.m_worldCamera.SetOrthoView(new Vec2(0, 0), new Vec2(200, 100));
         this.m_previousFrameTime = Math.floor(Date.now() / 1000);
+
+        this.m_triangleTranslation = Vec2.ZERO;
     }
 
     Startup()
     {
         g_renderer.Startup();
+        g_input.Startup();
+
+        this.m_worldCamera = new Camera();
+        this.m_worldCamera.SetPerspectiveView(g_viewportWidth / g_viewportHeight, 90.0, 0.01, 100);
+        this.m_worldCamera.SetRenderBasis(Vec3.SKYWARD, Vec3.WEST, Vec3.NORTH);
+        this.m_worldCamera.SetTransform(new Vec3(-2.0, 0.0, 0.0));
+
+        // Create a test cube
+        this.m_testCubeVertexes = [];
+        const BLF = new Vec3(-0.5, 0.5, -0.5);
+        const BRF = new Vec3(-0.5, -0.5, -0.5);
+        const TRF = new Vec3(-0.5, -0.5, 0.5);
+        const TLF = new Vec3(-0.5, 0.5, 0.5);
+        const BLB = new Vec3(0.5, 0.5, -0.5);
+        const BRB = new Vec3(0.5, -0.5, -0.5);
+        const TRB = new Vec3(0.5, -0.5, 0.5);
+        const TLB = new Vec3(0.5, 0.5, 0.5);
+        VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BRB, BLB, TLB, TRB, Rgba8.RED); // back face (+X)
+        VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BLF, BRF, TRF, TLF, Rgba8.CYAN); // front face (-X)
+        VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BLB, BLF, TLF, TLB, Rgba8.LIME); // left face (+Y)
+        VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BRF, BRB, TRB, TRF, Rgba8.MAGENTA); // right face (-Y)
+        VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, TLF, TRF, TRB, TLB, Rgba8.BLUE); // top face (+Z)
+        VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BLB, BRB, BRF, BLF, Rgba8.YELLOW); // bottom face (-Z)
+        this.m_cubeOrientation = new EulerAngles(0.0, 0.0, 0.0);
     }
 
     Run()
@@ -41,35 +69,38 @@ export default class App
 
     BeginFrame()
     {
+        g_renderer.BeginFrame();
+        g_input.BeginFrame();
     }
 
     Update(deltaSeconds)
     {
-
+        this.m_cubeOrientation.m_yawDegrees += 45.0 * deltaSeconds;
+        this.m_cubeOrientation.m_pitchDegrees += 30.0 * deltaSeconds;
     }
 
     Render()
     {
-        const vertexesToDraw = [
-            new Vertex_PCU(new Vec3(4, 50, 0), Rgba8.MAGENTA, Vec2.ZERO),
-            new Vertex_PCU(new Vec3(0, 54, 0), Rgba8.YELLOW, Vec2.ZERO),
-            new Vertex_PCU(new Vec3(0, 46, 0), Rgba8.CYAN, Vec2.ZERO),
-        ];
+        const cubeTransform = this.m_cubeOrientation.GetAsMatrix_iFwd_jLeft_kUp();
 
         g_renderer.BeginCamera(this.m_worldCamera);
         g_renderer.ClearScreen(new Rgba8(0, 0, 0));
-        g_renderer.SetModelConstants(Mat44.CreateTranslation2D(new Vec2(10.0, 0.0)), Rgba8.WHITE);
-        g_renderer.DrawVertexArray(vertexesToDraw);
+        g_renderer.SetCullMode(CullMode.BACK);
+        g_renderer.SetDepthMode(DepthMode.ENABLED);
+        g_renderer.SetModelConstants(cubeTransform);
+        g_renderer.DrawVertexArray(this.m_testCubeVertexes);
         g_renderer.EndCamera(this.m_worldCamera);
     }
 
     EndFrame()
     {
-
+        g_input.EndFrame();
+        g_renderer.EndFrame();
     }
 
     Shutdown()
     {
-
+        g_input.Shutdown();
+        g_renderer.Shutdown();
     }
 }

@@ -1,9 +1,12 @@
+"use strict";
 
 import * as MathUtils from "../../Engine/Math/MathUtils.js"
 import Vec2 from "../../Engine/Math/Vec2.js"
 
 export default class AABB2
 {
+    static ZERO_TO_ONE = new AABB2(new Vec2(0.0, 0.0), new Vec2(1.0, 1.0));
+
     constructor(mins = Vec2.ZERO, maxs = Vec2.ZERO)
     {
         this.m_mins = mins;

@@ -39,10 +39,22 @@ export default class Camera
     SetPerspectiveView(aspect, fov, perspectiveNear, perspectiveFar)
     {
         this.m_mode = CameraMode.PERSPECTIVE;
-        this.m_aspect = aspect;
-        this.m_fov = fov;
+        this.m_perspectiveAspect = aspect;
+        this.m_perspectiveFov = fov;
         this.m_perspectiveNear = perspectiveNear;
         this.m_perspectiveFar = perspectiveFar;
+    }
+
+    SetRenderBasis(iBasis, jBasis, kBasis)
+    {
+        this.m_renderIBasis = new Vec4(iBasis.x, iBasis.y, iBasis.z, 0.0);
+        this.m_renderJBasis = new Vec4(jBasis.x, jBasis.y, jBasis.z, 0.0);
+        this.m_renderKBasis = new Vec4(kBasis.x, kBasis.y, kBasis.z, 0.0);
+    }
+
+    SetTransform(position, orientation)
+    {
+        this.m_position = position;
     }
 
     GetOrthoBottomLeft()

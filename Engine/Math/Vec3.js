@@ -14,7 +14,7 @@ export default class Vec3
     {
         this.x = x;
         this.y = y;
-        this.z = 0;
+        this.z = z;
     }
 
     Add(vecToAdd)

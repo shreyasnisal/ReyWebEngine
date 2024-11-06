@@ -162,7 +162,7 @@ export default class Mat44
         perspectiveMatrix.m_values[Mat44.Elements.Kw] = 1.0;
 
         perspectiveMatrix.m_values[Mat44.Elements.Tz] = -1.0 * perspectiveFar * perspectiveNear / (perspectiveFar - perspectiveNear);
-        perspectiveMatrix.m_values[Mat44.Tw] = 0.0;
+        perspectiveMatrix.m_values[Mat44.Elements.Tw] = 0.0;
 
         return perspectiveMatrix;
     }
@@ -310,7 +310,7 @@ export default class Mat44
         }
 
         // Copy values from temporary result into this matrix
-        for (let valueIndex = 0; valueIndex < 4; valueIndex++)
+        for (let valueIndex = 0; valueIndex < Mat44.SIZE; valueIndex++)
         {
             this.m_values[valueIndex] = result.m_values[valueIndex];
         }
@@ -397,7 +397,7 @@ export default class Mat44
         rotationInverseMatrix.Transpose();
 
         const inverseMatrix = rotationInverseMatrix;
-        inverseMatrix.AppendTranslation3D(-this.GetTranslation3D());
+        inverseMatrix.AppendTranslation3D(this.GetTranslation3D().GetScaled(-1.0));
 
         return inverseMatrix;
     }
