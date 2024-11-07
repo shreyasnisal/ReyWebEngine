@@ -33,10 +33,10 @@ export default class Game
         const TLB = new Vec3(0.5, 0.5, 0.5);
         VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BRB, BLB, TLB, TRB, Rgba8.RED); // back face (+X)
         VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BLF, BRF, TRF, TLF, Rgba8.CYAN); // front face (-X)
-        VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BLB, BLF, TLF, TLB, Rgba8.LIME); // left face (+Y)
+        VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BLB, BLF, TLF, TLB, Rgba8.GREEN); // left face (+Y)
         VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BRF, BRB, TRB, TRF, Rgba8.MAGENTA); // right face (-Y)
         VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, TLF, TRF, TRB, TLB, Rgba8.BLUE); // top face (+Z)
-        VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BLB, BRB, BRF, BLF, Rgba8.YELLOW); // bottom face (-Z)
+        VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BLB, BRB, BRF, BLF, Rgba8.WHITE); // bottom face (-Z)
         this.m_cubePosition = new Vec3(2.0, 0.0, 0.0);
         this.m_cubeOrientation = new EulerAngles(0.0, 0.0, 0.0);
 
@@ -46,6 +46,9 @@ export default class Game
         this.InitializeGrid();
 
         document.onpointerlockchange = () => this.HandlePointerLockChange();
+
+        this.m_testTexture = null;
+        g_renderer.CreateOrGetTextureFromFile("../../Sandbox/Data/Images/Test_StbiFlippedAndOpenGL.png").then(texture => { this.m_testTexture = texture; });
     }
 
     HandlePointerLockChange()
@@ -137,15 +140,17 @@ export default class Game
 
     Render()
     {
+        g_renderer.ClearScreen(new Rgba8(0, 0, 0));
+
         const cubeTransform = Mat44.CreateTranslation3D(this.m_cubePosition);
         cubeTransform.Append(this.m_cubeOrientation.GetAsMatrix_iFwd_jLeft_kUp());
 
         g_renderer.BeginCamera(this.m_worldCamera);
         {
-            g_renderer.ClearScreen(new Rgba8(0, 0, 0));
-            g_renderer.SetCullMode(CullMode.BACK);
+            g_renderer.SetCullMode(CullMode.NONE);
             g_renderer.SetDepthMode(DepthMode.ENABLED);
             g_renderer.SetModelConstants(cubeTransform);
+            g_renderer.BindTexture(this.m_testTexture);
             g_renderer.DrawVertexArray(this.m_testCubeVertexes);
         }
         g_renderer.EndCamera(this.m_worldCamera);
@@ -160,6 +165,7 @@ export default class Game
             g_renderer.SetCullMode(CullMode.BACK);
             g_renderer.SetDepthMode(DepthMode.ENABLED);
             g_renderer.SetModelConstants();
+            g_renderer.BindTexture(null);
             g_renderer.DrawVertexArray(this.m_gridStaticVerts);
         }
         g_renderer.EndCamera(this.m_worldCamera);

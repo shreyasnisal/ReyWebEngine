@@ -4,6 +4,8 @@ import Rgba8 from "../../Engine/Core/Rgba8.js";
 import Vertex_PCU from "../../Engine/Core/Vertex_PCU.js";
 import Vertex_PCUTBN from "../../Engine/Core/Vertex_PCUTBN.js";
 import Mat44 from "../../Engine/Math/Mat44.js"
+import Vec2 from "../../Engine/Math/Vec2.js"
+import Texture from "../../Engine/Renderer/Texture.js";
 import UniformBuffer from "../../Engine/Renderer/UniformBuffer.js";
 import VertexBuffer from "../../Engine/Renderer/VertexBuffer.js";
 
@@ -61,6 +63,7 @@ export default class Renderer
         window.addEventListener("resize", this.HandleWindowResize);
 
         // Initialize variables
+        this.m_loadedTextures = [];
     }
 
     Startup()
@@ -107,6 +110,14 @@ export default class Renderer
         this.m_cameraUBO = this.CreateUniformBuffer(CAMERA_CONSTANTS_NUM_ELEMENTS * FLOAT32_SIZE);
         // Create a uniform buffer to bind model constants
         this.m_modelUBO = this.CreateUniformBuffer(MODEL_CONSTANTS_NUM_ELEMENTS * FLOAT32_SIZE);
+
+        // Create a default texture, a 1x1 white pixel
+        this.m_defaultTexture = this.CreateTextureFromData("defaultTexture", 1, 1, new Uint8Array([255, 255, 255, 255]));
+
+        // Set ALPHA blend mode
+        // #ToDo Move to SetBlendMode method
+        this.m_context.enable(this.m_context.BLEND);
+        this.m_context.blendFunc(this.m_context.SRC_ALPHA, this.m_context.ONE_MINUS_SRC_ALPHA);
 
         // Set uniform block binding for CameraConstants and ModelConstants
         this.m_context.uniformBlockBinding(this.m_webglProgram, this.m_context.getUniformBlockIndex(this.m_webglProgram, "CameraConstants"), SHADER_CAMERA_CONSTANTS_BIND_SLOT);
@@ -300,10 +311,78 @@ export default class Renderer
         if (depthMode === DepthMode.ENABLED)
         {
             this.m_context.enable(this.m_context.DEPTH_TEST);
+            this.m_context.depthFunc(this.m_context.LEQUAL);
         }
         else if (depthMode === DepthMode.DISABLED)
         {
             this.m_context.disable(this.m_context.DEPTH_TEST);
         }
+    }
+
+    async CreateOrGetTextureFromFile(filename)
+    {
+        const existingTexture = this.GetTextureFromFile(filename);
+        if (existingTexture != null)
+        {
+            return existingTexture;
+        }
+
+        return await this.CreateTextureFromFile(filename);
+    }
+
+    GetTextureFromFile(filename)
+    {
+        for (let existingTextureIndex = 0; existingTextureIndex < this.m_loadedTextures.length; existingTextureIndex++)
+        {
+            if (this.m_loadedTextures[existingTextureIndex].m_name === filename)
+            {
+                return this.m_loadedTextures[existingTextureIndex];
+            }
+        }
+
+        return null;
+    }
+
+    CreateTextureFromFile(filename)
+    {
+        return new Promise(resolve => {
+            const imageDomElem = new Image();
+            imageDomElem.addEventListener("load", () =>
+            {
+                this.m_context.pixelStorei(this.m_context.UNPACK_FLIP_Y_WEBGL, true);
+                resolve(this.CreateTextureFromData(filename, imageDomElem.width, imageDomElem.height, imageDomElem));
+            });
+            imageDomElem.src = filename;
+        });
+    }
+
+    CreateTextureFromData(textureName, textureWidth, textureHeight, data)
+    {
+        const newTexture = new Texture(textureName);
+        newTexture.m_texture = this.m_context.createTexture();
+        newTexture.m_dimensions = new Vec2(textureWidth, textureHeight);
+        this.m_context.bindTexture(this.m_context.TEXTURE_2D, newTexture.m_texture);
+        this.m_context.texImage2D(this.m_context.TEXTURE_2D, 0, this.m_context.RGBA, textureWidth, textureHeight, 0, this.m_context.RGBA, this.m_context.UNSIGNED_BYTE, data);
+
+        this.m_loadedTextures.push(newTexture);
+
+        return newTexture;
+    }
+
+    BindTexture(textureToBind = null)
+    {
+        if (textureToBind == null)
+        {
+            this.m_context.activeTexture(this.m_context.TEXTURE0);
+            this.m_context.bindTexture(this.m_context.TEXTURE_2D, this.m_defaultTexture.m_texture);
+        }
+        else
+        {
+            this.m_context.activeTexture(this.m_context.TEXTURE0);
+            this.m_context.bindTexture(this.m_context.TEXTURE_2D, textureToBind.m_texture);
+        }
+        this.m_context.texParameteri(this.m_context.TEXTURE_2D, this.m_context.TEXTURE_WRAP_S, this.m_context.CLAMP_TO_EDGE);
+        this.m_context.texParameteri(this.m_context.TEXTURE_2D, this.m_context.TEXTURE_WRAP_T, this.m_context.CLAMP_TO_EDGE);
+        this.m_context.texParameteri(this.m_context.TEXTURE_2D, this.m_context.TEXTURE_MIN_FILTER, this.m_context.LINEAR);
     }
 }

@@ -33,12 +33,16 @@ export const defaultFragmentShader =
     
     precision mediump float;
     
+    uniform sampler2D diffuseSampler;
+    
     in vec4 vColor;
     in vec2 vUV;
     
     out vec4 fragColor;
 
     void main(void) {
-        fragColor = vColor;
+        vec4 diffuseColor = texture(diffuseSampler, vUV);
+    
+        fragColor = vColor * diffuseColor;
     }
 `;
