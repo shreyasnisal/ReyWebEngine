@@ -50,6 +50,7 @@ export default class InputSystem
         window.addEventListener("mousemove", (keyEvent) => this.HandleMouseMove(keyEvent));
         window.addEventListener("mousedown", (keyEvent) => this.HandleMouseButtonDown(keyEvent));
         window.addEventListener("mouseup", (keyEvent) => this.HandleMouseButtonUp(keyEvent));
+        document.onpointerlockerror = () => this.HandlePointerLockError();
     }
 
     BeginFrame()
@@ -199,5 +200,13 @@ export default class InputSystem
     GetCursorClientDelta()
     {
         return this.m_cursorState.m_cursorClientDelta;
+    }
+
+    HandlePointerLockError()
+    {
+        if (this.m_cursorState.m_relativeMode)
+        {
+            this.m_canvas.requestPointerLock();
+        }
     }
 }

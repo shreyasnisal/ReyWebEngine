@@ -7,6 +7,7 @@ import Rgba8 from "../../Engine/Core/Rgba8.js";
 import AABB3 from "../../Engine/Math/AABB3.js";
 import EulerAngles from "../../Engine/Math/EulerAngles.js";
 import Mat44 from "../../Engine/Math/Mat44.js";
+import * as MathUtils from "../../Engine/Math/MathUtils.js";
 import Vec3 from "../../Engine/Math/Vec3.js";
 import Camera from "../../Engine/Renderer/Camera.js";
 import {CullMode, DepthMode, g_viewportHeight, g_viewportWidth} from "../../Engine/Renderer/Renderer.js";
@@ -120,6 +121,7 @@ export default class Game
 
         this.m_playerOrientation.m_yawDegrees += g_input.GetCursorClientDelta().x * 0.15;
         this.m_playerOrientation.m_pitchDegrees -= g_input.GetCursorClientDelta().y * 0.15;
+        this.m_playerOrientation.m_pitchDegrees = MathUtils.GetClamped(this.m_playerOrientation.m_pitchDegrees, -89.0, 89.0);
 
         if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
         {
