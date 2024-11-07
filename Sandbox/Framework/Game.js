@@ -43,6 +43,19 @@ export default class Game
         this.m_playerOrientation = EulerAngles.ZERO;
 
         this.InitializeGrid();
+
+        document.onpointerlockchange = () => this.HandlePointerLockChange();
+    }
+
+    HandlePointerLockChange()
+    {
+        if (document.pointerLockElement)
+        {
+        }
+        else
+        {
+            g_input.SetCursorMode(false, false);
+        }
     }
 
     InitializeGrid()
@@ -108,7 +121,7 @@ export default class Game
         this.m_playerOrientation.m_yawDegrees += g_input.GetCursorClientDelta().x * 0.15;
         this.m_playerOrientation.m_pitchDegrees -= g_input.GetCursorClientDelta().y * 0.15;
 
-        if (g_input.WasLMBJustPressed())
+        if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
         {
             g_input.SetCursorMode(true, true);
         }

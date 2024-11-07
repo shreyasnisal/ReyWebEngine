@@ -186,6 +186,16 @@ export default class InputSystem
         }
     }
 
+    IsCursorRelativeMode()
+    {
+        return this.m_cursorState.m_relativeMode;
+    }
+
+    IsCursorHidden()
+    {
+        return this.m_cursorState.m_hiddenMode;
+    }
+
     GetCursorClientDelta()
     {
         return this.m_cursorState.m_cursorClientDelta;
