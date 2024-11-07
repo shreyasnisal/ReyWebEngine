@@ -17,6 +17,11 @@ export default class Vec3
         this.z = z;
     }
 
+    toString()
+    {
+        return "(" + this.x + "," + this.y + "," + this.z + ")";
+    }
+
     Add(vecToAdd)
     {
         this.x += vecToAdd.x;

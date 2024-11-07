@@ -382,13 +382,13 @@ export default class Mat44
         this.m_values[Mat44.Elements.Jz] = matrixCopy.m_values[Mat44.Elements.Ky];
         this.m_values[Mat44.Elements.Jw] = matrixCopy.m_values[Mat44.Elements.Ty];
 
-        this.m_values[Mat44.Elements.Kx] = matrixCopy.m_values[Mat44.Elements.Jx];
-        this.m_values[Mat44.Elements.Ky] = matrixCopy.m_values[Mat44.Elements.Jx];
-        this.m_values[Mat44.Elements.Kw] = matrixCopy.m_values[Mat44.Elements.Jx];
+        this.m_values[Mat44.Elements.Kx] = matrixCopy.m_values[Mat44.Elements.Iz];
+        this.m_values[Mat44.Elements.Ky] = matrixCopy.m_values[Mat44.Elements.Jz];
+        this.m_values[Mat44.Elements.Kw] = matrixCopy.m_values[Mat44.Elements.Tz];
 
-        this.m_values[Mat44.Elements.Tx] = matrixCopy.m_values[Mat44.Elements.Jx];
-        this.m_values[Mat44.Elements.Ty] = matrixCopy.m_values[Mat44.Elements.Jx];
-        this.m_values[Mat44.Elements.Tz] = matrixCopy.m_values[Mat44.Elements.Jx];
+        this.m_values[Mat44.Elements.Tx] = matrixCopy.m_values[Mat44.Elements.Iw];
+        this.m_values[Mat44.Elements.Ty] = matrixCopy.m_values[Mat44.Elements.Jw];
+        this.m_values[Mat44.Elements.Tz] = matrixCopy.m_values[Mat44.Elements.Kw];
     }
 
     GetOrthonormalInverse()

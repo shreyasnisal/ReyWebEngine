@@ -1,4 +1,5 @@
 import AABB2 from "../../Engine/Math/AABB2.js"
+import EulerAngles from "../../Engine/Math/EulerAngles.js";
 import Mat44 from "../../Engine/Math/Mat44.js"
 import Vec2 from "../../Engine/Math/Vec2.js"
 import Vec3 from "../../Engine/Math/Vec3.js"
@@ -15,6 +16,7 @@ export default class Camera
     constructor()
     {
         this.m_position = Vec3.ZERO;
+        this.m_orientation = EulerAngles.ZERO;
         this.m_mode = CameraMode.ORTHOGRAPHIC;
         this.m_orthoView = new AABB2(Vec2.ZERO, Vec2.ZERO);
         this.m_orthoNear = 0.0;
@@ -55,6 +57,7 @@ export default class Camera
     SetTransform(position, orientation)
     {
         this.m_position = position;
+        this.m_orientation = orientation;
     }
 
     GetOrthoBottomLeft()
@@ -94,7 +97,7 @@ export default class Camera
     GetViewMatrix()
     {
         const lookAtMatrix = Mat44.CreateTranslation3D(this.m_position);
-        // lookAtMatrix.Append(this.m_orientation.GetAsMatrix_iFwd_jLeft_kUp());
+        lookAtMatrix.Append(this.m_orientation.GetAsMatrix_iFwd_jLeft_kUp());
         return lookAtMatrix.GetOrthonormalInverse();
     }
 
