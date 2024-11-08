@@ -38,7 +38,7 @@ export default class Game
         VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BLB, BLF, TLF, TLB, Rgba8.GREEN); // left face (+Y)
         VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BRF, BRB, TRB, TRF, Rgba8.MAGENTA); // right face (-Y)
         VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, TLF, TRF, TRB, TLB, Rgba8.BLUE); // top face (+Z)
-        VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BLB, BRB, BRF, BLF, Rgba8.WHITE); // bottom face (-Z)
+        VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BLB, BRB, BRF, BLF, Rgba8.YELLOW); // bottom face (-Z)
         this.m_cubePosition = new Vec3(2.0, 0.0, 0.0);
         this.m_cubeOrientation = new EulerAngles(0.0, 0.0, 0.0);
 
@@ -203,7 +203,7 @@ export default class Game
             g_renderer.SetCullMode(CullMode.NONE);
             g_renderer.SetDepthMode(DepthMode.ENABLED);
             g_renderer.SetModelConstants(cubeTransform);
-            g_renderer.BindTexture(this.m_testTexture);
+            g_renderer.BindTexture(null);
             g_renderer.DrawVertexArray(this.m_testCubeVertexes);
         }
         g_renderer.EndCamera(this.m_worldCamera);
