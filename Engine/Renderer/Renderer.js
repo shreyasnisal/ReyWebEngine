@@ -11,6 +11,7 @@ import VertexBuffer from "../../Engine/Renderer/VertexBuffer.js";
 
 export let g_viewportWidth = window.innerWidth;
 export let g_viewportHeight = window.innerHeight;
+export let g_aspect = g_viewportWidth / g_viewportHeight;
 
 const FLOAT32_SIZE = 4;
 
@@ -140,6 +141,7 @@ export default class Renderer
     {
         g_viewportWidth = window.innerWidth;
         g_viewportHeight = window.innerHeight;
+        g_aspect = g_viewportWidth / g_viewportHeight;
         const canvas = document.getElementById("id_canvas");
         canvas.width = g_viewportWidth;
         canvas.height = g_viewportHeight;

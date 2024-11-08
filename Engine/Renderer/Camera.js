@@ -15,8 +15,8 @@ export default class Camera
 {
     constructor()
     {
-        this.m_position = Vec3.ZERO;
-        this.m_orientation = EulerAngles.ZERO;
+        this.m_position = new Vec3(Vec3.ZERO.x, Vec3.ZERO.y, Vec3.ZERO.z);
+        this.m_orientation = new EulerAngles(EulerAngles.ZERO.m_yawDegrees, EulerAngles.ZERO.m_pitchDegrees, EulerAngles.ZERO.m_rollDegrees);
         this.m_mode = CameraMode.ORTHOGRAPHIC;
         this.m_orthoView = new AABB2(Vec2.ZERO, Vec2.ZERO);
         this.m_orthoNear = 0.0;
@@ -27,7 +27,7 @@ export default class Camera
         this.m_perspectiveFar = 0.0;
         this.m_renderIBasis = Vec4.EAST;
         this.m_renderJBasis = Vec4.NORTH;
-        this.m_renderKBasis = Vec4.SOUTH;
+        this.m_renderKBasis = Vec4.SKYWARD;
     }
 
     SetOrthoView(mins, maxs, orthoNear = 0.0, orthoFar = 1.0)

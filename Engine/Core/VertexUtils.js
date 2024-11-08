@@ -5,6 +5,28 @@ import Vec2 from "../../Engine/Math/Vec2.js"
 import Vec3 from "../../Engine/Math/Vec3.js"
 import Vertex_PCU from "../../Engine/Core/Vertex_PCU.js";
 
+
+export function AddPCUVertsForAABB2(verts, bounds, color, uvCoords)
+{
+    const vertexBLPosition = bounds.m_mins;
+    const vertexBRPosition = new Vec2(bounds.m_maxs.x, bounds.m_mins.y);
+    const vertexTRPosition = bounds.m_maxs;
+    const vertexTLPosition = new Vec2(bounds.m_mins.x, bounds.m_maxs.y);
+
+    const vertexBL = new Vertex_PCU(vertexBLPosition.GetAsVec3(), color, uvCoords.m_mins);
+    const vertexBR = new Vertex_PCU(vertexBRPosition.GetAsVec3(), color, new Vec2(uvCoords.m_maxs.x, uvCoords.m_mins.y));
+    const vertexTR = new Vertex_PCU(vertexTRPosition.GetAsVec3(), color, uvCoords.m_maxs);
+    const vertexTL = new Vertex_PCU(vertexTLPosition.GetAsVec3(), color, new Vec2(uvCoords.m_mins.x, uvCoords.m_maxs.y));
+
+    verts.push(vertexBL);
+    verts.push(vertexBR);
+    verts.push(vertexTR);
+
+    verts.push(vertexBL);
+    verts.push(vertexTR);
+    verts.push(vertexTL);
+}
+
 export function AddPCUVertsForQuad3D(verts, bottomLeftPosition, bottomRightPosition, topRightPosition, topLeftPosition, color, uvCoords = AABB2.ZERO_TO_ONE)
 {
     const bottomLeftVertex = new Vertex_PCU(bottomLeftPosition, color, uvCoords.m_mins);

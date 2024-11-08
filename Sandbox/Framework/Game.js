@@ -1,6 +1,6 @@
 "use strict";
 
-import { g_renderer, g_input } from "../../Sandbox/Framework/GameCommon.js";
+import {g_renderer, g_input, SCREEN_SIZE_Y} from "../../Sandbox/Framework/GameCommon.js";
 
 import * as VertexUtils from "../../Engine/Core/VertexUtils.js";
 import Rgba8 from "../../Engine/Core/Rgba8.js";
@@ -11,8 +11,10 @@ import Mat44 from "../../Engine/Math/Mat44.js";
 import * as MathUtils from "../../Engine/Math/MathUtils.js";
 import Vec2 from "../../Engine/Math/Vec2.js";
 import Vec3 from "../../Engine/Math/Vec3.js";
+import BitmapFont from "../../Engine/Renderer/BitmapFont.js";
 import Camera from "../../Engine/Renderer/Camera.js";
-import {CullMode, DepthMode, g_viewportHeight, g_viewportWidth} from "../../Engine/Renderer/Renderer.js";
+import {CullMode, DepthMode, g_aspect} from "../../Engine/Renderer/Renderer.js";
+
 
 export default class Game
 {
@@ -22,6 +24,8 @@ export default class Game
         this.m_worldCamera = new Camera();
         this.m_worldCamera.SetRenderBasis(Vec3.SKYWARD, Vec3.WEST, Vec3.NORTH);
         this.m_worldCamera.SetTransform(new Vec3(0.0, 0.0, 0.0));
+        // Initialize screen camera
+        this.m_screenCamera = new Camera();
 
         // Create a test cube
         this.m_testCubeVertexes = [];
@@ -53,6 +57,13 @@ export default class Game
         g_renderer.CreateOrGetTextureFromFile("../../Sandbox/Data/Images/Test_StbiFlippedAndOpenGL.png").then(texture => { this.m_testTexture = texture; });
 
         this.m_hasFocus = false;
+
+        // Load BitmapFont
+        this.m_squirrelFixedFont = null;
+        g_renderer.CreateOrGetTextureFromFile("../../Sandbox/Data/Images/SquirrelFixedFont.png").then(texture =>
+        {
+            this.m_squirrelFixedFont = new BitmapFont("../../Sandbox/Data/Images/SquirrelFixedFont", texture);
+        });
     }
 
     HandlePointerLockChange()
@@ -187,8 +198,9 @@ export default class Game
 
     UpdateCameras()
     {
-        this.m_worldCamera.SetPerspectiveView(g_viewportWidth / g_viewportHeight, 90.0, 0.01, 100);
+        this.m_worldCamera.SetPerspectiveView(g_aspect, 90.0, 0.01, 100);
         this.m_worldCamera.SetTransform(this.m_playerPosition, this.m_playerOrientation);
+        this.m_screenCamera.SetOrthoView(Vec2.ZERO, new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y));
     }
 
     Render()
@@ -200,13 +212,28 @@ export default class Game
 
         g_renderer.BeginCamera(this.m_worldCamera);
         {
-            g_renderer.SetCullMode(CullMode.NONE);
+            g_renderer.SetCullMode(CullMode.BACK);
             g_renderer.SetDepthMode(DepthMode.ENABLED);
             g_renderer.SetModelConstants(cubeTransform);
             g_renderer.BindTexture(null);
             g_renderer.DrawVertexArray(this.m_testCubeVertexes);
         }
         g_renderer.EndCamera(this.m_worldCamera);
+
+        const textVerts = [];
+        g_renderer.BeginCamera(this.m_screenCamera);
+        {
+            if (this.m_squirrelFixedFont != null)
+            {
+                this.m_squirrelFixedFont.AddVertsForText2D(textVerts, new Vec2(0.0, 0.0), 20.0, "Hello, World!", Rgba8.MAGENTA, 1.0);
+                g_renderer.SetCullMode(CullMode.BACK);
+                g_renderer.SetDepthMode(DepthMode.DISABLED);
+                g_renderer.SetModelConstants();
+                g_renderer.BindTexture(this.m_squirrelFixedFont.GetTexture());
+                g_renderer.DrawVertexArray(textVerts);
+            }
+        }
+        g_renderer.EndCamera(this.m_screenCamera);
 
         this.RenderGrid();
     }

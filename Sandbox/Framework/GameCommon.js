@@ -11,3 +11,5 @@ export const g_renderer = new Renderer(renderConfig);
 
 const inputSystemConfig = new InputSystemConfig();
 export const g_input = new InputSystem(inputSystemConfig);
+
+export const SCREEN_SIZE_Y = 800.0;

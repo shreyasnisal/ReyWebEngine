@@ -3,6 +3,7 @@
 import KeyButtonState from "../../Engine/Input/KeyButtonState.js";
 import AnalogJoystick from "../../Engine/Input/AnalogJoystick.js";
 
+
 export class XboxButtonID
 {
     static XBOX_BUTTON_INVALID = -1;

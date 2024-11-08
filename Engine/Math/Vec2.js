@@ -1,5 +1,7 @@
 
 import * as MathUtils from "../../Engine/Math/MathUtils.js"
+import Vec3 from "../../Engine/Math/Vec3.js";
+
 
 export default class Vec2
 {
@@ -18,6 +20,11 @@ export default class Vec2
     toString()
     {
         return "(" + this.x + "," + this.y + ")";
+    }
+
+    GetAsVec3(z = 0.0)
+    {
+        return new Vec3(this.x, this.y, z);
     }
 
     static MakeFromPolarDegrees(orientationDegrees, length = 1)
