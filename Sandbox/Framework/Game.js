@@ -4,10 +4,12 @@ import { g_renderer, g_input } from "../../Sandbox/Framework/GameCommon.js";
 
 import * as VertexUtils from "../../Engine/Core/VertexUtils.js";
 import Rgba8 from "../../Engine/Core/Rgba8.js";
+import { XboxButtonID } from "../../Engine/Input/XboxController.js";
 import AABB3 from "../../Engine/Math/AABB3.js";
 import EulerAngles from "../../Engine/Math/EulerAngles.js";
 import Mat44 from "../../Engine/Math/Mat44.js";
 import * as MathUtils from "../../Engine/Math/MathUtils.js";
+import Vec2 from "../../Engine/Math/Vec2.js";
 import Vec3 from "../../Engine/Math/Vec3.js";
 import Camera from "../../Engine/Renderer/Camera.js";
 import {CullMode, DepthMode, g_viewportHeight, g_viewportWidth} from "../../Engine/Renderer/Renderer.js";
@@ -49,15 +51,19 @@ export default class Game
 
         this.m_testTexture = null;
         g_renderer.CreateOrGetTextureFromFile("../../Sandbox/Data/Images/Test_StbiFlippedAndOpenGL.png").then(texture => { this.m_testTexture = texture; });
+
+        this.m_hasFocus = false;
     }
 
     HandlePointerLockChange()
     {
         if (document.pointerLockElement)
         {
+            this.m_hasFocus = true;
         }
         else
         {
+            this.m_hasFocus = false;
             g_input.SetCursorMode(false, false);
         }
     }
@@ -89,6 +95,21 @@ export default class Game
     }
 
     HandleInput(deltaSeconds)
+    {
+        if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
+        {
+            g_input.SetCursorMode(true, true);
+        }
+
+        if (this.m_hasFocus)
+        {
+            this.HandleKeyboardInput(deltaSeconds);
+            this.HandleControllerInput(deltaSeconds);
+            this.m_playerOrientation.m_pitchDegrees = MathUtils.GetClamped(this.m_playerOrientation.m_pitchDegrees, -89.0, 89.0);
+        }
+    }
+
+    HandleKeyboardInput(deltaSeconds)
     {
         const MOVEMENT_SPEED = 4.0;
 
@@ -124,12 +145,44 @@ export default class Game
 
         this.m_playerOrientation.m_yawDegrees += g_input.GetCursorClientDelta().x * 0.15;
         this.m_playerOrientation.m_pitchDegrees -= g_input.GetCursorClientDelta().y * 0.15;
-        this.m_playerOrientation.m_pitchDegrees = MathUtils.GetClamped(this.m_playerOrientation.m_pitchDegrees, -89.0, 89.0);
+    }
 
-        if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
+    HandleControllerInput(deltaSeconds)
+    {
+        const controller = g_input.GetController(0);
+        if (controller == null)
         {
-            g_input.SetCursorMode(true, true);
+            return;
         }
+
+        const MOVEMENT_SPEED = 4.0;
+        const TURN_RATE = 90.0;
+
+        const playerBasis = this.m_playerOrientation.GetAsVectors_iFwd_jLeft_kUp();
+        const playerFwd = playerBasis[0];
+        const playerLeft = playerBasis[1];
+        const playerUp = playerBasis[2];
+
+        const leftJoystick = controller.GetLeftStick();
+        const rightJoystick = controller.GetRightStick();
+
+        let velocityZ = 0.0;
+        if (controller.IsButtonDown(XboxButtonID.LEFT_SHOULDER))
+        {
+            velocityZ -= 1.0;
+        }
+        if (controller.IsButtonDown(XboxButtonID.RIGHT_SHOULDER))
+        {
+            velocityZ += 1.0;
+        }
+
+        this.m_playerPosition.Add(playerFwd.GetScaled(leftJoystick.m_deadzoneCorrectedCartesianCoordinates.y * MOVEMENT_SPEED * deltaSeconds));
+        this.m_playerPosition.Add(playerLeft.GetScaled(-leftJoystick.m_deadzoneCorrectedCartesianCoordinates.x * MOVEMENT_SPEED * deltaSeconds));
+        this.m_playerPosition.Add(Vec3.SKYWARD.GetScaled(velocityZ * MOVEMENT_SPEED * deltaSeconds));
+
+        this.m_playerOrientation.m_yawDegrees -= rightJoystick.m_deadzoneCorrectedCartesianCoordinates.x * TURN_RATE * deltaSeconds;
+        this.m_playerOrientation.m_pitchDegrees -= rightJoystick.m_deadzoneCorrectedCartesianCoordinates.y * TURN_RATE * deltaSeconds;
+
     }
 
     UpdateCameras()

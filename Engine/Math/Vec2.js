@@ -15,9 +15,14 @@ export default class Vec2
         this.y = y;
     }
 
+    toString()
+    {
+        return "(" + this.x + "," + this.y + ")";
+    }
+
     static MakeFromPolarDegrees(orientationDegrees, length = 1)
     {
-        return new Vec2(length * Math.cos(orientationDegrees), length * Math.sin(orientationDegrees));
+        return new Vec2(length * MathUtils.CosDegrees(orientationDegrees), length * MathUtils.SinDegrees(orientationDegrees));
     }
 
     Add(vecToAdd)
@@ -56,18 +61,18 @@ export default class Vec2
     RotateDegrees(deltaDegrees)
     {
         const length = this.GetLength();
-        const orientationDegrees = MathUtils.Atan2Degrees(this.y, this.x);
+        let orientationDegrees = MathUtils.Atan2Degrees(this.y, this.x);
         orientationDegrees += deltaDegrees;
         this.x = length * MathUtils.CosDegrees(orientationDegrees);
         this.y = length * MathUtils.SinDegrees(orientationDegrees);
     }
 
-    GetRotatedDegrees(degrees)
+    GetRotatedDegrees(deltaDegrees)
     {
         const length = this.GetLength();
-        const orientationDegrees = MathUtils.Atan2Degrees(this.y, this.x);
+        let orientationDegrees = MathUtils.Atan2Degrees(this.y, this.x);
         orientationDegrees += deltaDegrees;
-        return MakeFromPolarDegrees(orientationDegrees, length);
+        return Vec2.MakeFromPolarDegrees(orientationDegrees, length);
     }
 
     Rotate90Degrees()
@@ -90,9 +95,14 @@ export default class Vec2
         return this.x * this.x + this.y * this.y;
     }
 
+    GetOrientationDegrees()
+    {
+        return MathUtils.Atan2Degrees(this.y, this.x);
+    }
+
     Normalize()
     {
-        const scalingFactor = 1 / this.GetLength();
+        const scalingFactor = 1.0 / this.GetLength();
         this.x *= scalingFactor;
         this.y *= scalingFactor;
     }

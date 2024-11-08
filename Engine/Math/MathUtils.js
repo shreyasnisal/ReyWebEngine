@@ -59,7 +59,7 @@ export function GetClampedZeroToOne(value)
     {
         return 0;
     }
-    else if (values > 1)
+    else if (value > 1)
     {
         return 1;
     }

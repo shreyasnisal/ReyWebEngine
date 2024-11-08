@@ -2,6 +2,7 @@
 
 import KeyButtonState from "../../Engine/Input/KeyButtonState.js";
 import Vec2 from "../../Engine/Math/Vec2.js";
+import XboxController from "../../Engine/Input/XboxController.js";
 
 class CursorState
 {
@@ -29,6 +30,9 @@ export default class InputSystem
     constructor(config)
     {
         this.m_config = config;
+
+        // Initialize variables
+        this.m_gamepads = [];
     }
 
     Startup()
@@ -50,6 +54,9 @@ export default class InputSystem
         window.addEventListener("mousemove", (keyEvent) => this.HandleMouseMove(keyEvent));
         window.addEventListener("mousedown", (keyEvent) => this.HandleMouseButtonDown(keyEvent));
         window.addEventListener("mouseup", (keyEvent) => this.HandleMouseButtonUp(keyEvent));
+        window.addEventListener("gamepadconnected", (gamepadEvent) => this.HandleGamepadConnected(gamepadEvent));
+        window.addEventListener("gamepaddisconnected", (gamepadEvent) => this.HandleGamepadDisconnected(gamepadEvent));
+
         document.onpointerlockerror = () => this.HandlePointerLockError();
     }
 
@@ -58,6 +65,12 @@ export default class InputSystem
         if (!this.m_cursorState.m_relativeMode)
         {
             this.m_cursorState.m_cursorClientDelta = Vec2.ZERO;
+        }
+
+        // Poll all gamepads for inputs
+        for (let gamepadIndex = 0; gamepadIndex < this.m_gamepads.length; gamepadIndex++)
+        {
+            this.m_gamepads[gamepadIndex].Update();
         }
     }
 
@@ -208,5 +221,32 @@ export default class InputSystem
         {
             this.m_canvas.requestPointerLock();
         }
+    }
+
+    HandleGamepadConnected(gamepadEvent)
+    {
+        this.m_gamepads.push(new XboxController(gamepadEvent.gamepad.index));
+    }
+
+    HandleGamepadDisconnected(gamepadEvent)
+    {
+        for (let gamepadIndex = 0; gamepadIndex < this.m_gamepads.length; gamepadIndex++)
+        {
+            if (this.m_gamepads[gamepadIndex] === gamepadEvent.gamepad.index)
+            {
+                this.m_gamepads[gamepadIndex].Reset();
+                this.m_gamepads.splice(gamepadIndex, 1);
+            }
+        }
+    }
+
+    GetController(controllerID)
+    {
+        if (this.m_gamepads.length > controllerID)
+        {
+            return this.m_gamepads[controllerID];
+        }
+
+        return null;
     }
 }
