@@ -6,7 +6,20 @@ import Vec3 from "../../Engine/Math/Vec3.js"
 import Vertex_PCU from "../../Engine/Core/Vertex_PCU.js";
 
 
-export function AddPCUVertsForAABB2(verts, bounds, color, uvCoords)
+export function TransformVertexArrayXY3D(verts, uniformScaleXY, rotationDegreesAboutZ, translation)
+{
+
+}
+
+export function TransformVertexArray3D(verts, transform)
+{
+    for (let vertexIndex = 0; vertexIndex < verts.length; vertexIndex++)
+    {
+        verts[vertexIndex].m_position = transform.TransformPosition3D(verts[vertexIndex].m_position);
+    }
+}
+
+export function AddPCUVertsForAABB2(verts, bounds, color, uvCoords = AABB2.ZERO_TO_ONE)
 {
     const vertexBLPosition = bounds.m_mins;
     const vertexBRPosition = new Vec2(bounds.m_maxs.x, bounds.m_mins.y);

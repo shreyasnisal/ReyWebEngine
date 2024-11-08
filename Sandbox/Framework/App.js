@@ -1,10 +1,14 @@
 "use strict";
 
 import Main from "../../Sandbox/Framework/Main.js";
-import { g_renderer, g_input } from "../../Sandbox/Framework/GameCommon.js";
+import {g_renderer, g_input, g_console, SCREEN_SIZE_Y} from "../../Sandbox/Framework/GameCommon.js";
 import Game from "../../Sandbox/Framework/Game.js";
 
 import Clock from "../../Engine/Core/Clock.js";
+import { DevConsoleMode } from "../../Engine/Core/DevConsole.js";
+import Vec2 from "../../Engine/Math/Vec2.js";
+import AABB2 from "../../Engine/Math/AABB2.js";
+import {g_aspect} from "../../Engine/Renderer/Renderer.js";
 
 
 export default class App
@@ -18,6 +22,7 @@ export default class App
     {
         g_renderer.Startup();
         g_input.Startup();
+        g_console.Startup();
 
         this.m_game = new Game();
     }
@@ -38,11 +43,17 @@ export default class App
     {
         g_renderer.BeginFrame();
         g_input.BeginFrame();
+        g_console.BeginFrame();
     }
 
     Update()
     {
         const deltaSeconds = Clock.SystemClock.GetDeltaSeconds();
+
+        if (g_input.WasKeyJustPressed('C'.charCodeAt()))
+        {
+            g_console.ToggleMode(DevConsoleMode.OPENFULL);
+        }
 
         this.m_game.Update(deltaSeconds);
     }
@@ -50,16 +61,20 @@ export default class App
     Render()
     {
         this.m_game.Render();
+
+        g_console.Render(new AABB2(Vec2.ZERO, new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y)));
     }
 
     EndFrame()
     {
+        g_console.EndFrame();
         g_input.EndFrame();
         g_renderer.EndFrame();
     }
 
     Shutdown()
     {
+        g_console.Shutdown();
         g_input.Shutdown();
         g_renderer.Shutdown();
     }

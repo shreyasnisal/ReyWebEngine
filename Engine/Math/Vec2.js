@@ -5,11 +5,11 @@ import Vec3 from "../../Engine/Math/Vec3.js";
 
 export default class Vec2
 {
-    static ZERO = new Vec2(0, 0);
-    static EAST = new Vec2(1, 0);
-    static WEST = new Vec2(-1, 0);
-    static NORTH = new Vec2(0, 1);
-    static SOUTH = new Vec2(0, -1);
+    static ZERO = Object.freeze(new Vec2(0, 0));
+    static EAST = Object.freeze(new Vec2(1, 0));
+    static WEST = Object.freeze(new Vec2(-1, 0));
+    static NORTH = Object.freeze(new Vec2(0, 1));
+    static SOUTH = Object.freeze(new Vec2(0, -1));
 
     constructor(x = 0, y = 0)
     {
@@ -63,6 +63,17 @@ export default class Vec2
     GetScaled(scalingFactor)
     {
         return new Vec2(this.x * scalingFactor, this.y * scalingFactor);
+    }
+
+    GetVectorProduct(vecToMultiply)
+    {
+        return new Vec2(this.x * vecToMultiply.x, this.y * vecToMultiply.y);
+    }
+
+    ScaleByVector(vecToMultiply)
+    {
+        this.x *= vecToMultiply.x;
+        this.y = vecToMultiply.y;
     }
 
     RotateDegrees(deltaDegrees)

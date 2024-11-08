@@ -5,6 +5,7 @@ import Vertex_PCU from "../../Engine/Core/Vertex_PCU.js";
 import Vertex_PCUTBN from "../../Engine/Core/Vertex_PCUTBN.js";
 import Mat44 from "../../Engine/Math/Mat44.js"
 import Vec2 from "../../Engine/Math/Vec2.js"
+import BitmapFont from "../../Engine/Renderer/BitmapFont.js";
 import Texture from "../../Engine/Renderer/Texture.js";
 import UniformBuffer from "../../Engine/Renderer/UniformBuffer.js";
 import VertexBuffer from "../../Engine/Renderer/VertexBuffer.js";
@@ -65,6 +66,7 @@ export default class Renderer
 
         // Initialize variables
         this.m_loadedTextures = [];
+        this.m_loadedFonts = [];
     }
 
     Startup()
@@ -386,5 +388,45 @@ export default class Renderer
         this.m_context.texParameteri(this.m_context.TEXTURE_2D, this.m_context.TEXTURE_WRAP_S, this.m_context.CLAMP_TO_EDGE);
         this.m_context.texParameteri(this.m_context.TEXTURE_2D, this.m_context.TEXTURE_WRAP_T, this.m_context.CLAMP_TO_EDGE);
         this.m_context.texParameteri(this.m_context.TEXTURE_2D, this.m_context.TEXTURE_MIN_FILTER, this.m_context.LINEAR);
+    }
+
+    async CreateOrGetBitmapFont(bitmapFontFilePathWithNoExtension)
+    {
+        const existingFont = this.GetBitmapFontFromFileName(bitmapFontFilePathWithNoExtension);
+        if (existingFont != null)
+        {
+            return existingFont;
+        }
+
+        return await this.CreateBitmapFontFromFile(bitmapFontFilePathWithNoExtension);
+    }
+
+    GetBitmapFontFromFileName(bitmapFontName)
+    {
+        for (let fontIndex = 0; fontIndex < this.m_loadedFonts.length; fontIndex++)
+        {
+            if (this.m_loadedFonts[fontIndex].m_fontFilePathWithNoExtension === bitmapFontName)
+            {
+                return this.m_loadedFonts[fontIndex];
+            }
+        }
+
+        return null;
+    }
+
+    CreateBitmapFontFromFile(bitmapFontFilePathWithNoExtension)
+    {
+        let bitmapFontName = bitmapFontFilePathWithNoExtension;
+        bitmapFontName += ".png";
+
+        return new Promise(resolve =>
+        {
+            this.CreateOrGetTextureFromFile(bitmapFontName).then(texture =>
+            {
+                const newFont = new BitmapFont(bitmapFontFilePathWithNoExtension, texture);
+                this.m_loadedFonts.push(newFont);
+                resolve(newFont);
+            })
+        });
     }
 }

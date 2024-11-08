@@ -1,7 +1,8 @@
 "use strict";
 
-import {g_renderer, g_input, SCREEN_SIZE_Y} from "../../Sandbox/Framework/GameCommon.js";
+import {g_renderer, g_input, g_console, SCREEN_SIZE_Y} from "../../Sandbox/Framework/GameCommon.js";
 
+import * as StringUtils from "../../Engine/Core/StringUtils.js";
 import * as VertexUtils from "../../Engine/Core/VertexUtils.js";
 import Rgba8 from "../../Engine/Core/Rgba8.js";
 import { XboxButtonID } from "../../Engine/Input/XboxController.js";
@@ -60,9 +61,9 @@ export default class Game
 
         // Load BitmapFont
         this.m_squirrelFixedFont = null;
-        g_renderer.CreateOrGetTextureFromFile("../../Sandbox/Data/Images/SquirrelFixedFont.png").then(texture =>
+        g_renderer.CreateOrGetBitmapFont("../../Sandbox/Data/Images/SquirrelFixedFont").then(font =>
         {
-            this.m_squirrelFixedFont = new BitmapFont("../../Sandbox/Data/Images/SquirrelFixedFont", texture);
+            this.m_squirrelFixedFont = font;
         });
     }
 
@@ -114,6 +115,11 @@ export default class Game
 
         if (this.m_hasFocus)
         {
+            if (g_input.WasKeyJustPressed('1'.charCodeAt()))
+            {
+                g_console.AddLine("Hello, World!");
+            }
+
             this.HandleKeyboardInput(deltaSeconds);
             this.HandleControllerInput(deltaSeconds);
             this.m_playerOrientation.m_pitchDegrees = MathUtils.GetClamped(this.m_playerOrientation.m_pitchDegrees, -89.0, 89.0);
@@ -219,6 +225,7 @@ export default class Game
             g_renderer.DrawVertexArray(this.m_testCubeVertexes);
         }
         g_renderer.EndCamera(this.m_worldCamera);
+        this.RenderGrid();
 
         const textVerts = [];
         g_renderer.BeginCamera(this.m_screenCamera);
@@ -234,8 +241,6 @@ export default class Game
             }
         }
         g_renderer.EndCamera(this.m_screenCamera);
-
-        this.RenderGrid();
     }
 
     RenderGrid()
