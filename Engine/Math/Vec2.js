@@ -95,12 +95,26 @@ export default class Vec2
 
     Rotate90Degrees()
     {
-
+        const tempX = this.x;
+        this.x = -this.y;
+        this.y = tempX;
     }
 
     RotateMinus90Degrees()
     {
+        const tempX = this.x;
+        this.x = this.y;
+        this.y = -tempX;
+    }
 
+    GetRotated90Degrees()
+    {
+        return new Vec2(-this.y, this.x);
+    }
+
+    GetRotatedMinus90Degrees()
+    {
+        return new Vec2(this.y, -this.x);
     }
 
     GetLength()

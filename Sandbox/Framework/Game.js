@@ -1,7 +1,9 @@
 "use strict";
 
-import {g_renderer, g_input, g_console, SCREEN_SIZE_Y} from "../../Sandbox/Framework/GameCommon.js";
+import {SCREEN_SIZE_Y} from "../../Sandbox/Framework/GameCommon.js";
+import {g_renderer, g_input, g_console, g_eventSystem} from "../../Engine/Core/EngineCommon.js";
 
+import DevConsole from "../../Engine/Core/DevConsole.js";
 import * as StringUtils from "../../Engine/Core/StringUtils.js";
 import * as VertexUtils from "../../Engine/Core/VertexUtils.js";
 import Rgba8 from "../../Engine/Core/Rgba8.js";
@@ -65,6 +67,23 @@ export default class Game
         {
             this.m_squirrelFixedFont = font;
         });
+
+        // Unit testing event system
+        // #ToDo: Remove this!
+        g_eventSystem.SubscribeEventCallbackFunction("TestEvent", this.HandleTestEvent, "This is a test event!");
+        g_eventSystem.SubscribeEventCallbackFunction("TestEvent", this.HandleTestEvent2, "This is another test event!");
+    }
+
+    HandleTestEvent(args)
+    {
+        g_console.AddLine(args["testArg"]);
+        return true;
+    }
+
+    HandleTestEvent2(args)
+    {
+        g_console.AddLine(DevConsole.ERROR, "EventSystem invoked callback after event was consumed!")
+        return false;
     }
 
     HandlePointerLockChange()
@@ -118,6 +137,13 @@ export default class Game
             if (g_input.WasKeyJustPressed('1'.charCodeAt()))
             {
                 g_console.AddLine("Hello, World!");
+            }
+
+            if (g_input.WasKeyJustPressed('2'.charCodeAt()))
+            {
+                const args = [];
+                args["testArg"] = "Event System works!";
+                g_eventSystem.FireEvent("TestEvent", args);
             }
 
             this.HandleKeyboardInput(deltaSeconds);

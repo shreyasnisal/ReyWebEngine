@@ -7,6 +7,7 @@ import Rgba8 from "../../Engine/Core/Rgba8.js";
 import {CullMode, DepthMode} from "../../Engine/Renderer/Renderer.js";
 import Clock from "../../Engine/Core/Clock.js";
 
+
 export class DevConsoleConfig
 {
     constructor(renderer, camera, fontFilePath, overlayColor = new Rgba8(0, 0, 0, 200), linesToShow = 50.5, fontAspect = 0.7)
@@ -66,6 +67,8 @@ export default class DevConsole
         this.m_frameNumber = 0;
         this.m_isCaretVisible = false;
         this.m_lines = [];
+        this.m_command = "";
+        this.m_caretPosition = 0;
     }
 
     Startup()
@@ -117,6 +120,9 @@ export default class DevConsole
 
             const lineHeight = (this.m_config.m_camera.GetOrthoTopRight().y - this.m_config.m_camera.GetOrthoBottomLeft().y) / this.m_linesToShow;
             const numLines = this.m_lines.length;
+
+            VertexUtils.AddPCUVertsForLineSegment2D(devConsoleVerts, new Vec2(bounds.m_mins.x, bounds.m_mins.y + lineHeight * 2.0), new Vec2(bounds.m_maxs.x, bounds.m_mins.y + lineHeight * 2.0), lineHeight * 0.1, Rgba8.DODGER_BLUE);
+            font.AddVertsForTextInBox2D(devConsoleTextVerts, new AABB2(bounds.m_mins.GetSum(new Vec2((this.m_config.m_camera.GetOrthoTopRight().x - this.m_config.m_camera.GetOrthoBottomLeft().x) * 0.01, lineHeight * 0.3)), new Vec2(bounds.m_maxs.x, bounds.m_mins.y + lineHeight * 1.3)), lineHeight, this.m_command, Rgba8.DODGER_BLUE, fontAspect);
 
             for (let lineIndex = 0; lineIndex < numLines; lineIndex++)
             {

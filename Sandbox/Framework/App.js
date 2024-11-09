@@ -1,7 +1,8 @@
 "use strict";
 
 import Main from "../../Sandbox/Framework/Main.js";
-import {g_renderer, g_input, g_console, SCREEN_SIZE_Y} from "../../Sandbox/Framework/GameCommon.js";
+import { SCREEN_SIZE_Y } from "../../Sandbox/Framework/GameCommon.js";
+import { g_renderer, g_input, g_console } from "../../Engine/Core/EngineCommon.js";
 import Game from "../../Sandbox/Framework/Game.js";
 
 import Clock from "../../Engine/Core/Clock.js";

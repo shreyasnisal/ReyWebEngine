@@ -19,6 +19,30 @@ export function TransformVertexArray3D(verts, transform)
     }
 }
 
+export function AddPCUVertsForLineSegment2D(verts, start, end, thickness, color)
+{
+    const fwdNormal = end.GetDifference(start).GetNormalized();
+    const leftNormal = fwdNormal.GetRotated90Degrees();
+
+    const  vertex1Position = start.GetDifference((fwdNormal.GetSum(leftNormal)).GetScaled(thickness));
+    const  vertex2Position = start.GetDifference((fwdNormal.GetDifference(leftNormal)).GetScaled(thickness));
+    const  vertex3Position = end.GetSum((fwdNormal.GetDifference(leftNormal)).GetScaled(thickness));
+    const  vertex4Position = end.GetSum((fwdNormal.GetSum(leftNormal)).GetScaled(thickness));
+
+    const vertex1 = new Vertex_PCU(vertex1Position.GetAsVec3(), color, Vec2.ZERO);
+    const vertex2 = new Vertex_PCU(vertex2Position.GetAsVec3(), color, Vec2.ZERO);
+    const vertex3 = new Vertex_PCU(vertex3Position.GetAsVec3(), color, Vec2.ZERO);
+    const vertex4 = new Vertex_PCU(vertex4Position.GetAsVec3(), color, Vec2.ZERO);
+
+    verts.push(vertex1);
+    verts.push(vertex3);
+    verts.push(vertex4);
+
+    verts.push(vertex1);
+    verts.push(vertex4);
+    verts.push(vertex2);
+}
+
 export function AddPCUVertsForAABB2(verts, bounds, color, uvCoords = AABB2.ZERO_TO_ONE)
 {
     const vertexBLPosition = bounds.m_mins;
