@@ -1,6 +1,9 @@
-import * as MathUtils from "./MathUtils.js"
-import Vec3 from "../../Engine/Math/Vec3.js"
-import Vec4 from "../../Engine/Math/Vec4.js"
+"use strict";
+
+import * as MathUtils from "/Engine/Math/MathUtils.js"
+import Vec3 from "/Engine/Math/Vec3.js"
+import Vec4 from "/Engine/Math/Vec4.js"
+
 
 export default class Mat44
 {
@@ -14,7 +17,7 @@ export default class Mat44
     static IDENTITY = new Mat44();
     static SIZE = 16;
 
-    constructor(iBasis = Vec4.EAST, jBasis = Vec4.NORTH, kBasis = Vec4.SKYWARD, translation = Vec4.TRANSLATION)
+    constructor(iBasis = Vec4.EAST, jBasis = Vec4.NORTH, kBasis = Vec4.SKYWARD, translation = Vec4.ZERO_TRANSLATION)
     {
         this.m_values = [
             1, 0, 0, 0,
@@ -393,7 +396,7 @@ export default class Mat44
 
     GetOrthonormalInverse()
     {
-        const rotationInverseMatrix = new Mat44(this.GetIBasis4D(), this.GetJBasis4D(), this.GetKBasis4D(), Vec4.TRANSLATION);
+        const rotationInverseMatrix = new Mat44(this.GetIBasis4D(), this.GetJBasis4D(), this.GetKBasis4D(), Vec4.ZERO_TRANSLATION);
         rotationInverseMatrix.Transpose();
 
         const inverseMatrix = rotationInverseMatrix;

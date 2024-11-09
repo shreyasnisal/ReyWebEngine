@@ -1,7 +1,7 @@
 "use strict";
 
-import Mat44 from "../../Engine/Math/Mat44.js";
-import Vec3 from "../../Engine/Math/Vec3.js";
+import Mat44 from "/Engine/Math/Mat44.js";
+import Vec3 from "/Engine/Math/Vec3.js";
 
 
 export default class EulerAngles

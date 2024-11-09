@@ -1,6 +1,7 @@
+"use strict";
 
-import * as MathUtils from "../../Engine/Math/MathUtils.js"
-import Vec3 from "../../Engine/Math/Vec3.js";
+import * as MathUtils from "/Engine/Math/MathUtils.js"
+import Vec3 from "/Engine/Math/Vec3.js";
 
 
 export default class Vec2

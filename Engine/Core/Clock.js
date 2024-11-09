@@ -1,6 +1,6 @@
 "use strict";
 
-import * as MathUtils from "../../Engine/Math/MathUtils.js";
+import * as MathUtils from "/Engine/Math/MathUtils.js";
 
 export default class Clock
 {

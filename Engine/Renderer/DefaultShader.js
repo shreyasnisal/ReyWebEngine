@@ -1,3 +1,6 @@
+"use strict";
+
+
 export const defaultVertexShader =
 `#version 300 es
     

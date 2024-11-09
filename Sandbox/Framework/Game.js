@@ -1,22 +1,20 @@
 "use strict";
 
-import {SCREEN_SIZE_Y} from "../../Sandbox/Framework/GameCommon.js";
-import {g_renderer, g_input, g_console, g_eventSystem} from "../../Engine/Core/EngineCommon.js";
+import {SCREEN_SIZE_Y} from "/Sandbox/Framework/GameCommon.js";
+import {g_renderer, g_input, g_console, g_eventSystem} from "/Engine/Core/EngineCommon.js";
 
-import DevConsole from "../../Engine/Core/DevConsole.js";
-import * as StringUtils from "../../Engine/Core/StringUtils.js";
-import * as VertexUtils from "../../Engine/Core/VertexUtils.js";
-import Rgba8 from "../../Engine/Core/Rgba8.js";
-import { XboxButtonID } from "../../Engine/Input/XboxController.js";
-import AABB3 from "../../Engine/Math/AABB3.js";
-import EulerAngles from "../../Engine/Math/EulerAngles.js";
-import Mat44 from "../../Engine/Math/Mat44.js";
-import * as MathUtils from "../../Engine/Math/MathUtils.js";
-import Vec2 from "../../Engine/Math/Vec2.js";
-import Vec3 from "../../Engine/Math/Vec3.js";
-import BitmapFont from "../../Engine/Renderer/BitmapFont.js";
-import Camera from "../../Engine/Renderer/Camera.js";
-import {CullMode, DepthMode, g_aspect} from "../../Engine/Renderer/Renderer.js";
+import DevConsole from "/Engine/Core/DevConsole.js";
+import * as VertexUtils from "/Engine/Core/VertexUtils.js";
+import Rgba8 from "/Engine/Core/Rgba8.js";
+import { XboxButtonID } from "/Engine/Input/XboxController.js";
+import AABB3 from "/Engine/Math/AABB3.js";
+import EulerAngles from "/Engine/Math/EulerAngles.js";
+import Mat44 from "/Engine/Math/Mat44.js";
+import * as MathUtils from "/Engine/Math/MathUtils.js";
+import Vec2 from "/Engine/Math/Vec2.js";
+import Vec3 from "/Engine/Math/Vec3.js";
+import Camera from "/Engine/Renderer/Camera.js";
+import { CullMode, DepthMode, g_aspect } from "/Engine/Renderer/Renderer.js";
 
 
 export default class Game
@@ -46,55 +44,35 @@ export default class Game
         VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BRF, BRB, TRB, TRF, Rgba8.MAGENTA); // right face (-Y)
         VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, TLF, TRF, TRB, TLB, Rgba8.BLUE); // top face (+Z)
         VertexUtils.AddPCUVertsForQuad3D(this.m_testCubeVertexes, BLB, BRB, BRF, BLF, Rgba8.YELLOW); // bottom face (-Z)
-        this.m_cubePosition = new Vec3(2.0, 0.0, 0.0);
+        this.m_cubePosition = new Vec3(3.0, 0.0, 0.0);
         this.m_cubeOrientation = new EulerAngles(0.0, 0.0, 0.0);
 
-        this.m_playerPosition = Vec3.ZERO;
-        this.m_playerOrientation = EulerAngles.ZERO;
+        this.m_playerPosition = new Vec3(0.0, 0.0, 1.0);
+        this.m_playerOrientation = new EulerAngles();
 
         this.InitializeGrid();
 
         document.onpointerlockchange = () => this.HandlePointerLockChange();
 
         this.m_testTexture = null;
-        g_renderer.CreateOrGetTextureFromFile("../../Sandbox/Data/Images/Test_StbiFlippedAndOpenGL.png").then(texture => { this.m_testTexture = texture; });
-
-        this.m_hasFocus = false;
+        g_renderer.CreateOrGetTextureFromFile("/Sandbox/Data/Images/Test_StbiFlippedAndOpenGL.png").then(texture => { this.m_testTexture = texture; });
 
         // Load BitmapFont
         this.m_squirrelFixedFont = null;
-        g_renderer.CreateOrGetBitmapFont("../../Sandbox/Data/Images/SquirrelFixedFont").then(font =>
+        g_renderer.CreateOrGetBitmapFont("/Sandbox/Data/Images/SquirrelFixedFont").then(font =>
         {
             this.m_squirrelFixedFont = font;
         });
-
-        // Unit testing event system
-        // #ToDo: Remove this!
-        g_eventSystem.SubscribeEventCallbackFunction("TestEvent", this.HandleTestEvent, "This is a test event!");
-        g_eventSystem.SubscribeEventCallbackFunction("TestEvent", this.HandleTestEvent2, "This is another test event!");
-    }
-
-    HandleTestEvent(args)
-    {
-        g_console.AddLine(args["testArg"]);
-        return true;
-    }
-
-    HandleTestEvent2(args)
-    {
-        g_console.AddLine(DevConsole.ERROR, "EventSystem invoked callback after event was consumed!")
-        return false;
     }
 
     HandlePointerLockChange()
     {
         if (document.pointerLockElement)
         {
-            this.m_hasFocus = true;
+            g_input.SetCursorMode(true, true);
         }
         else
         {
-            this.m_hasFocus = false;
             g_input.SetCursorMode(false, false);
         }
     }
@@ -132,24 +110,9 @@ export default class Game
             g_input.SetCursorMode(true, true);
         }
 
-        if (this.m_hasFocus)
-        {
-            if (g_input.WasKeyJustPressed('1'.charCodeAt()))
-            {
-                g_console.AddLine("Hello, World!");
-            }
-
-            if (g_input.WasKeyJustPressed('2'.charCodeAt()))
-            {
-                const args = [];
-                args["testArg"] = "Event System works!";
-                g_eventSystem.FireEvent("TestEvent", args);
-            }
-
-            this.HandleKeyboardInput(deltaSeconds);
-            this.HandleControllerInput(deltaSeconds);
-            this.m_playerOrientation.m_pitchDegrees = MathUtils.GetClamped(this.m_playerOrientation.m_pitchDegrees, -89.0, 89.0);
-        }
+        this.HandleKeyboardInput(deltaSeconds);
+        this.HandleControllerInput(deltaSeconds);
+        this.m_playerOrientation.m_pitchDegrees = MathUtils.GetClamped(this.m_playerOrientation.m_pitchDegrees, -89.0, 89.0);
     }
 
     HandleKeyboardInput(deltaSeconds)
@@ -161,27 +124,27 @@ export default class Game
         const playerLeft = playerBasis[1];
         const playerUp = playerBasis[2];
 
-        if (g_input.IsKeyDown('W'.charCodeAt()))
+        if (g_input.IsKeyDown('W'))
         {
             this.m_playerPosition.Add(playerFwd.GetScaled(MOVEMENT_SPEED * deltaSeconds));
         }
-        if (g_input.IsKeyDown('A'.charCodeAt()))
+        if (g_input.IsKeyDown('A'))
         {
             this.m_playerPosition.Add(playerLeft.GetScaled(MOVEMENT_SPEED * deltaSeconds));
         }
-        if (g_input.IsKeyDown('S'.charCodeAt()))
+        if (g_input.IsKeyDown('S'))
         {
             this.m_playerPosition.Add(playerFwd.GetScaled(-MOVEMENT_SPEED * deltaSeconds));
         }
-        if (g_input.IsKeyDown('D'.charCodeAt()))
+        if (g_input.IsKeyDown('D'))
         {
             this.m_playerPosition.Add(playerLeft.GetScaled(-MOVEMENT_SPEED * deltaSeconds));
         }
-        if (g_input.IsKeyDown('Q'.charCodeAt()))
+        if (g_input.IsKeyDown('Q'))
         {
             this.m_playerPosition.Add(Vec3.GROUNDWARD.GetScaled(MOVEMENT_SPEED * deltaSeconds));
         }
-        if (g_input.IsKeyDown('E'.charCodeAt()))
+        if (g_input.IsKeyDown('E'))
         {
             this.m_playerPosition.Add(Vec3.SKYWARD.GetScaled(MOVEMENT_SPEED * deltaSeconds));
         }
@@ -237,7 +200,7 @@ export default class Game
 
     Render()
     {
-        g_renderer.ClearScreen(new Rgba8(0, 0, 0));
+        g_renderer.ClearScreen(Rgba8.GRAY);
 
         const cubeTransform = Mat44.CreateTranslation3D(this.m_cubePosition);
         cubeTransform.Append(this.m_cubeOrientation.GetAsMatrix_iFwd_jLeft_kUp());
@@ -256,15 +219,6 @@ export default class Game
         const textVerts = [];
         g_renderer.BeginCamera(this.m_screenCamera);
         {
-            if (this.m_squirrelFixedFont != null)
-            {
-                this.m_squirrelFixedFont.AddVertsForText2D(textVerts, new Vec2(0.0, 0.0), 20.0, "Hello, World!", Rgba8.MAGENTA, 1.0);
-                g_renderer.SetCullMode(CullMode.BACK);
-                g_renderer.SetDepthMode(DepthMode.DISABLED);
-                g_renderer.SetModelConstants();
-                g_renderer.BindTexture(this.m_squirrelFixedFont.GetTexture());
-                g_renderer.DrawVertexArray(textVerts);
-            }
         }
         g_renderer.EndCamera(this.m_screenCamera);
     }

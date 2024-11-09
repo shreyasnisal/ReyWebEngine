@@ -1,9 +1,9 @@
 "use strict";
 
-import AABB2 from "../../Engine/Math/AABB2.js";
-import * as MathUtils from "../../Engine/Math/MathUtils.js";
-import Vec2 from "../../Engine/Math/Vec2.js";
-import SpriteDefinition from "../../Engine/Renderer/SpriteDefinition.js";
+import AABB2 from "/Engine/Math/AABB2.js";
+import * as MathUtils from "/Engine/Math/MathUtils.js";
+import Vec2 from "/Engine/Math/Vec2.js";
+import SpriteDefinition from "/Engine/Renderer/SpriteDefinition.js";
 
 
 export default class SpriteSheet

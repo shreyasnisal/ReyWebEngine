@@ -1,6 +1,8 @@
-import Rgba8 from "../../Engine/Core/Rgba8.js";
-import Vec2 from "../../Engine/Math/Vec2.js"
-import Vec3 from "../../Engine/Math/Vec3.js"
+"use strict";
+
+import Rgba8 from "/Engine/Core/Rgba8.js";
+import Vec2 from "/Engine/Math/Vec2.js"
+import Vec3 from "/Engine/Math/Vec3.js"
 
 export default class Vertex_PCUTBN
 {

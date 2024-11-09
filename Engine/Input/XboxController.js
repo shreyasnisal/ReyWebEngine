@@ -1,7 +1,7 @@
 "use strict";
 
-import KeyButtonState from "../../Engine/Input/KeyButtonState.js";
-import AnalogJoystick from "../../Engine/Input/AnalogJoystick.js";
+import KeyButtonState from "/Engine/Input/KeyButtonState.js";
+import AnalogJoystick from "/Engine/Input/AnalogJoystick.js";
 
 
 export class XboxButtonID

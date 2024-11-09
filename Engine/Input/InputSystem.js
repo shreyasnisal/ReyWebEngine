@@ -1,8 +1,9 @@
 "use strict";
 
-import KeyButtonState from "../../Engine/Input/KeyButtonState.js";
-import Vec2 from "../../Engine/Math/Vec2.js";
-import XboxController from "../../Engine/Input/XboxController.js";
+import KeyButtonState from "/Engine/Input/KeyButtonState.js";
+import Vec2 from "/Engine/Math/Vec2.js";
+import XboxController from "/Engine/Input/XboxController.js";
+import InputMapping from "/Engine/Input/InputMapping.js";
 
 
 class CursorState
@@ -19,15 +20,14 @@ class CursorState
 
 export class InputSystemConfig
 {
-    constructor()
+    constructor(windowManager)
     {
+        this.m_windowManager = windowManager;
     }
 }
 
 export default class InputSystem
 {
-    static NUM_KEYS = 256;
-
     constructor(config)
     {
         this.m_config = config;
@@ -39,9 +39,9 @@ export default class InputSystem
     Startup()
     {
         this.m_keys = [];
-        for (let keyIndex = 0; keyIndex < InputSystem.NUM_KEYS; keyIndex++)
+        for (let [keyCode, keyIdentifier] of Object.entries(InputMapping))
         {
-            this.m_keys[keyIndex] = new KeyButtonState();
+            this.m_keys[keyIdentifier] = new KeyButtonState();
         }
 
         this.m_lmb = new KeyButtonState();
@@ -52,13 +52,11 @@ export default class InputSystem
 
         window.addEventListener("keydown", (keyEvent) => this.HandleKeyDown(keyEvent));
         window.addEventListener("keyup", (keyEvent) => this.HandleKeyUp(keyEvent));
-        window.addEventListener("mousemove", (keyEvent) => this.HandleMouseMove(keyEvent));
-        window.addEventListener("mousedown", (keyEvent) => this.HandleMouseButtonDown(keyEvent));
-        window.addEventListener("mouseup", (keyEvent) => this.HandleMouseButtonUp(keyEvent));
-        window.addEventListener("gamepadconnected", (gamepadEvent) => this.HandleGamepadConnected(gamepadEvent));
-        window.addEventListener("gamepaddisconnected", (gamepadEvent) => this.HandleGamepadDisconnected(gamepadEvent));
-
-        document.onpointerlockerror = () => this.HandlePointerLockError();
+        window.addEventListener("mousemove", (mouseEvent) => this.HandleMouseMove(mouseEvent));
+        window.addEventListener("mousedown", (mouseEvent) => this.HandleMouseButtonDown(mouseEvent));
+        window.addEventListener("mouseup", (mouseEvent) => this.HandleMouseButtonUp(mouseEvent));
+        window.addEventListener("gamepadconnected", (gamepadEvent) => this.HandleGamepadConnected(gamepadEvent.gamepad.index));
+        window.addEventListener("gamepaddisconnected", (gamepadEvent) => this.HandleGamepadDisconnected(gamepadEvent.gamepad.index));
     }
 
     BeginFrame()
@@ -77,9 +75,9 @@ export default class InputSystem
 
     EndFrame()
     {
-        for (let keyIndex = 0; keyIndex < InputSystem.NUM_KEYS; keyIndex++)
+        for (let [keyCode, keyIdentifier] of Object.entries(InputMapping))
         {
-            this.m_keys[keyIndex].m_wasPressedLastFrame = this.m_keys[keyIndex].m_isPressed;
+            this.m_keys[keyIdentifier].m_wasPressedLastFrame = this.m_keys[keyIdentifier].m_isPressed;
         }
 
         this.m_cursorState.m_cursorClientDelta = Vec2.ZERO;
@@ -92,68 +90,111 @@ export default class InputSystem
 
     HandleKeyDown(keyEvent)
     {
-        this.m_keys[keyEvent.which].m_isPressed = true;
+        const keyCode = keyEvent.code;
+
+        if (this.m_keys[keyCode] == null)
+        {
+            return;
+        }
+
+        this.m_keys[keyCode].m_isPressed = true;
+        keyEvent.stopImmediatePropagation();
     }
 
     HandleKeyUp(keyEvent)
     {
-        this.m_keys[keyEvent.which].m_isPressed = false;
+        const keyCode = keyEvent.code;
+
+        if (this.m_keys[keyCode] == null)
+        {
+            return;
+        }
+
+        this.m_keys[keyCode].m_isPressed = false;
+        keyEvent.stopImmediatePropagation();
     }
 
-    HandleMouseMove(keyEvent)
+    HandleMouseMove(mouseEvent)
     {
-        this.m_cursorState.m_cursorClientPosition = new Vec2(keyEvent.clientX, keyEvent.clientY);
+        const mousePosition = new Vec2(mouseEvent.clientX, mouseEvent.clientY);
+        const mouseMovement = new Vec2(mouseEvent.movementX, mouseEvent.movementY)
+
+        this.m_cursorState.m_cursorClientPosition = new Vec2(mousePosition.x, mousePosition.y);
         if (this.m_cursorState.m_relativeMode)
         {
-            this.m_cursorState.m_cursorClientDelta = new Vec2(-keyEvent.movementX, -keyEvent.movementY);
+            this.m_cursorState.m_cursorClientDelta = new Vec2(-mouseMovement.x, -mouseMovement.y);
         }
+
+        mouseEvent.stopImmediatePropagation();
     }
 
-    HandleMouseButtonDown(keyEvent)
+    HandleMouseButtonDown(mouseEvent)
     {
-        if (keyEvent.button === 0)
+        const mouseButton = mouseEvent.button;
+
+        if (mouseButton === 0)
         {
             this.m_lmb.m_isPressed = true;
         }
-        else if (keyEvent.button === 1)
+        else if (mouseButton === 1)
         {
             // Mouse wheel button pressed
         }
-        else if (keyEvent.button === 2)
+        else if (mouseButton === 2)
         {
             this.m_rmb.m_isPressed = true;
         }
+
+        mouseEvent.stopImmediatePropagation();
     }
 
-    HandleMouseButtonUp(keyEvent)
+    HandleMouseButtonUp(mouseEvent)
     {
-        if (keyEvent.button === 0)
+        const mouseButton = mouseEvent.button;
+
+        if (mouseButton === 0)
         {
             this.m_lmb.m_isPressed = false;
         }
-        else if (keyEvent.button === 1)
+        else if (mouseButton === 1)
         {
             // Mouse wheel button pressed
         }
-        else if (keyEvent.button === 2)
+        else if (mouseButton === 2)
         {
             this.m_rmb.m_isPressed = false;
         }
+        mouseEvent.stopImmediatePropagation();
     }
 
     IsKeyDown(keyCode)
     {
-        return this.m_keys[keyCode].m_isPressed;
+        if (InputMapping[keyCode] == null)
+        {
+            return false;
+        }
+
+        return this.m_keys[InputMapping[keyCode]].m_isPressed;
     }
 
     WasKeyJustPressed(keyCode)
     {
-        return this.m_keys[keyCode].m_isPressed && !this.m_keys[keyCode].m_wasPressedLastFrame;
+        if (InputMapping[keyCode] == null)
+        {
+            return false;
+        }
+
+        return this.m_keys[InputMapping[keyCode]].m_isPressed && !this.m_keys[InputMapping[keyCode]].m_wasPressedLastFrame;
     }
 
     WasKeyJustReleased(keyCode)
     {
-        return !this.m_keys[keyCode].m_isPressed && this.m_keys[keyCode].m_wasPressedLastFrame;
+        if (InputMapping[keyCode] == null)
+        {
+            return false;
+        }
+
+        return !this.m_keys[InputMapping[keyCode]].m_isPressed && this.m_keys[InputMapping[keyCode]].m_wasPressedLastFrame;
     }
 
     IsLMBDown()
@@ -193,11 +234,11 @@ export default class InputSystem
 
         if (relativeMode)
         {
-            this.m_canvas.requestPointerLock();
+            this.m_config.m_windowManager.SetFocus(true);
         }
         else
         {
-            document.exitPointerLock();
+            this.m_config.m_windowManager.SetFocus(false);
         }
     }
 
@@ -216,24 +257,16 @@ export default class InputSystem
         return this.m_cursorState.m_cursorClientDelta;
     }
 
-    HandlePointerLockError()
+    HandleGamepadConnected(gamepadIndex)
     {
-        if (this.m_cursorState.m_relativeMode)
-        {
-            this.m_canvas.requestPointerLock();
-        }
+        this.m_gamepads.push(new XboxController(gamepadIndex));
     }
 
-    HandleGamepadConnected(gamepadEvent)
-    {
-        this.m_gamepads.push(new XboxController(gamepadEvent.gamepad.index));
-    }
-
-    HandleGamepadDisconnected(gamepadEvent)
+    HandleGamepadDisconnected(gamepadIndex)
     {
         for (let gamepadIndex = 0; gamepadIndex < this.m_gamepads.length; gamepadIndex++)
         {
-            if (this.m_gamepads[gamepadIndex] === gamepadEvent.gamepad.index)
+            if (this.m_gamepads[gamepadIndex].m_index === gamepadIndex)
             {
                 this.m_gamepads[gamepadIndex].Reset();
                 this.m_gamepads.splice(gamepadIndex, 1);

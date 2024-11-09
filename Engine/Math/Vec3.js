@@ -1,14 +1,15 @@
-import * as MathUtils from "../../Engine/Math/MathUtils.js"
+"use strict";
+
 
 export default class Vec3
 {
-    static ZERO = new Vec3(0, 0, 0);
-    static EAST = new Vec3(1, 0, 0);
-    static WEST = new Vec3(-1, 0, 0);
-    static NORTH = new Vec3(0, 1, 0);
-    static SOUTH = new Vec3(0, -1, 0);
-    static SKYWARD = new Vec3(0, 0, 1);
-    static GROUNDWARD = new Vec3(0, 0, -1);
+    static ZERO = Object.freeze(new Vec3(0, 0, 0));
+    static EAST = Object.freeze(new Vec3(1, 0, 0));
+    static WEST = Object.freeze(new Vec3(-1, 0, 0));
+    static NORTH = Object.freeze(new Vec3(0, 1, 0));
+    static SOUTH = Object.freeze(new Vec3(0, -1, 0));
+    static SKYWARD = Object.freeze(new Vec3(0, 0, 1));
+    static GROUNDWARD = Object.freeze(new Vec3(0, 0, -1));
 
     constructor(x = 0, y = 0, z = 0)
     {

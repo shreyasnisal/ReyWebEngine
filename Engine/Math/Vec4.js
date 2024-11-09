@@ -1,14 +1,15 @@
+"use strict";
 
 
 export default class Vec4
 {
-    static EAST = new Vec4(1, 0, 0, 0);
-    static WEST = new Vec4(-1, 0, 0, 0);
-    static NORTH = new Vec4(0, 1, 0, 0);
-    static SOUTH = new Vec4(0, -1, 0, 0);
-    static SKYWARD = new Vec4(0, 0, 1, 0);
-    static GROUNDWARD = new Vec4(0, 0, -1, 0);
-    static TRANSLATION = new Vec4(0, 0, 0, 1);
+    static EAST = Object.freeze(new Vec4(1, 0, 0, 0));
+    static WEST = Object.freeze(new Vec4(-1, 0, 0, 0));
+    static NORTH = Object.freeze(new Vec4(0, 1, 0, 0));
+    static SOUTH = Object.freeze(new Vec4(0, -1, 0, 0));
+    static SKYWARD = Object.freeze(new Vec4(0, 0, 1, 0));
+    static GROUNDWARD = Object.freeze(new Vec4(0, 0, -1, 0));
+    static ZERO_TRANSLATION = Object.freeze(new Vec4(0, 0, 0, 1));
 
     constructor(x = 0, y = 0, z = 0, w = 0)
     {

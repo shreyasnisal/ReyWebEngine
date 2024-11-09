@@ -1,12 +1,12 @@
 "use strict";
 
-import * as StringUtils from "../../Engine/Core/StringUtils.js";
-import * as VertexUtils from "../../Engine/Core/VertexUtils.js";
-import AABB2 from "../../Engine/Math/AABB2.js";
-import Mat44 from "../../Engine/Math/Mat44.js";
-import Vec2 from "../../Engine/Math/Vec2.js";
-import Vec3 from "../../Engine/Math/Vec3.js";
-import SpriteSheet from "../../Engine/Renderer/SpriteSheet.js";
+import * as StringUtils from "/Engine/Core/StringUtils.js";
+import * as VertexUtils from "/Engine/Core/VertexUtils.js";
+import AABB2 from "/Engine/Math/AABB2.js";
+import Mat44 from "/Engine/Math/Mat44.js";
+import Vec2 from "/Engine/Math/Vec2.js";
+import Vec3 from "/Engine/Math/Vec3.js";
+import SpriteSheet from "/Engine/Renderer/SpriteSheet.js";
 
 
 export class TextBoxMode

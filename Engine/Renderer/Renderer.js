@@ -1,14 +1,19 @@
-import * as MathUtils from "../../Engine/Math/MathUtils.js"
-import { defaultVertexShader, defaultFragmentShader } from "../../Engine/Renderer/DefaultShader.js";
-import Rgba8 from "../../Engine/Core/Rgba8.js";
-import Vertex_PCU from "../../Engine/Core/Vertex_PCU.js";
-import Vertex_PCUTBN from "../../Engine/Core/Vertex_PCUTBN.js";
-import Mat44 from "../../Engine/Math/Mat44.js"
-import Vec2 from "../../Engine/Math/Vec2.js"
-import BitmapFont from "../../Engine/Renderer/BitmapFont.js";
-import Texture from "../../Engine/Renderer/Texture.js";
-import UniformBuffer from "../../Engine/Renderer/UniformBuffer.js";
-import VertexBuffer from "../../Engine/Renderer/VertexBuffer.js";
+"use strict";
+
+import * as MathUtils from "/Engine/Math/MathUtils.js"
+import Rgba8 from "/Engine/Core/Rgba8.js";
+import Vertex_PCU from "/Engine/Core/Vertex_PCU.js";
+import Vertex_PCUTBN from "/Engine/Core/Vertex_PCUTBN.js";
+
+import Mat44 from "/Engine/Math/Mat44.js"
+import Vec2 from "/Engine/Math/Vec2.js"
+import BitmapFont from "/Engine/Renderer/BitmapFont.js";
+
+import { defaultVertexShader, defaultFragmentShader } from "/Engine/Renderer/DefaultShader.js";
+import Texture from "/Engine/Renderer/Texture.js";
+import UniformBuffer from "/Engine/Renderer/UniformBuffer.js";
+import VertexBuffer from "/Engine/Renderer/VertexBuffer.js";
+
 
 export let g_viewportWidth = window.innerWidth;
 export let g_viewportHeight = window.innerHeight;

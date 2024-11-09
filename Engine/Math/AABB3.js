@@ -1,5 +1,7 @@
-import * as MathUtils from "../../Engine/Math/MathUtils.js"
-import Vec3 from "../../Engine/Math/Vec3.js"
+"use strict";
+
+import Vec3 from "/Engine/Math/Vec3.js"
+
 
 export default class AABB3
 {

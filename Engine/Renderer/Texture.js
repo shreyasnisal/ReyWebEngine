@@ -1,6 +1,7 @@
 "use strict";
 
-import Vec2 from "../../Engine/Math/Vec2.js"
+import Vec2 from "/Engine/Math/Vec2.js"
+
 
 export default class Texture
 {

@@ -1,9 +1,12 @@
-import AABB2 from "../../Engine/Math/AABB2.js"
-import EulerAngles from "../../Engine/Math/EulerAngles.js";
-import Mat44 from "../../Engine/Math/Mat44.js"
-import Vec2 from "../../Engine/Math/Vec2.js"
-import Vec3 from "../../Engine/Math/Vec3.js"
-import Vec4 from "../../Engine/Math/Vec4.js"
+"use strict";
+
+import AABB2 from "/Engine/Math/AABB2.js"
+import EulerAngles from "/Engine/Math/EulerAngles.js";
+import Mat44 from "/Engine/Math/Mat44.js"
+import Vec2 from "/Engine/Math/Vec2.js"
+import Vec3 from "/Engine/Math/Vec3.js"
+import Vec4 from "/Engine/Math/Vec4.js"
+
 
 class CameraMode
 {
@@ -121,6 +124,6 @@ export default class Camera
 
     GetRenderMatrix()
     {
-        return new Mat44(this.m_renderIBasis, this.m_renderJBasis, this.m_renderKBasis, Vec4.TRANSLATION);
+        return new Mat44(this.m_renderIBasis, this.m_renderJBasis, this.m_renderKBasis, Vec4.ZERO_TRANSLATION);
     }
 }

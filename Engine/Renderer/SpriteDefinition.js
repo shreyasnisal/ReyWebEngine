@@ -1,6 +1,6 @@
 "use strict";
 
-import AABB2 from "../../Engine/Math/AABB2.js";
+import AABB2 from "/Engine/Math/AABB2.js";
 
 
 export default class SpriteDefinition

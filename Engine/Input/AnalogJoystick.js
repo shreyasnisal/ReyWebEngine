@@ -1,7 +1,7 @@
 "use strict";
 
-import * as MathUtils from "../../Engine/Math/MathUtils.js";
-import Vec2 from "../../Engine/Math/Vec2.js";
+import * as MathUtils from "/Engine/Math/MathUtils.js";
+import Vec2 from "/Engine/Math/Vec2.js";
 
 
 export default class AnalogJoystick

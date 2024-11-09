@@ -1,5 +1,9 @@
 "use strict";
 
+import { g_console } from "/Engine/Core/EngineCommon.js";
+import DevConsole from "/Engine/Core/DevConsole.js";
+
+
 export class EventSystemConfig
 {
     constructor()
@@ -40,7 +44,7 @@ export default class EventSystem
     {
     }
 
-    SubscribeEventCallbackFunction(eventName, callback, helpText)
+    SubscribeEventCallbackFunction(eventName, callback, helpText = "")
     {
         const eventSubscription = new EventSubscription(callback, helpText);
 
@@ -65,6 +69,12 @@ export default class EventSystem
 
     FireEvent(eventName, args)
     {
+        if (this.m_subscriptionListByName[eventName] == null)
+        {
+            g_console.AddLine(eventName + " is not recognized as a command", DevConsole.ERROR);
+            return;
+        }
+
         for (let subscriberIndex = 0; subscriberIndex < this.m_subscriptionListByName[eventName].length; subscriberIndex++)
         {
             const callbackReturn = this.m_subscriptionListByName[eventName][subscriberIndex].m_callback(args);
@@ -72,6 +82,14 @@ export default class EventSystem
             {
                 break;
             }
+        }
+    }
+
+    ListAllCommands()
+    {
+        for (let key in this.m_subscriptionListByName)
+        {
+            g_console.AddLine(key + ":\t\t\t\t\t" + this.m_subscriptionListByName[key][0].m_helpText, DevConsole.INFO_MAJOR);
         }
     }
 }

@@ -1,5 +1,8 @@
 "use strict";
 
+import Clock from "/Engine/Core/Clock.js";
+
+
 export default class Stopwatch
 {
     constructor(duration, clock = Clock.SystemClock)

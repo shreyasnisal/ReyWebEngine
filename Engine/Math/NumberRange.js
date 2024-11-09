@@ -30,11 +30,11 @@ export default class FloatRange
 
     Equals(otherFloatRange)
     {
-        return (this.m_min == otherFloatRange.m_min && this.m_max == otherFloatRange.m_max);
+        return (this.m_min === otherFloatRange.m_min && this.m_max === otherFloatRange.m_max);
     }
 
     NotEquals(otherFloatRange)
     {
-        return (this.m_min != otherFloatRange.m_min || this.m_max != otherFloatRange.m_max);
+        return (this.m_min !== otherFloatRange.m_min || this.m_max !== otherFloatRange.m_max);
     }
 }

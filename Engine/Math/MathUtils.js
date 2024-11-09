@@ -1,4 +1,7 @@
-import Vec3 from "../../Engine/Math/Vec3.js"
+"use strict";
+
+import Vec3 from "/Engine/Math/Vec3.js"
+
 
 export function ConvertDegreesToRadians(degrees)
 {

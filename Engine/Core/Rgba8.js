@@ -1,9 +1,10 @@
-
+"use strict";
 
 export default class Rgba8
 {
     static WHITE = Object.freeze(new Rgba8(255, 255, 255, 255));
     static BLACK = Object.freeze(new Rgba8(0, 0, 0, 255));
+    static GRAY = Object.freeze(new Rgba8(127, 127, 127, 255));
     static RED = Object.freeze(new Rgba8(255, 0, 0, 255));
     static LIME = Object.freeze(new Rgba8(0, 255, 0, 255));
     static BLUE = Object.freeze(new Rgba8(0, 0, 255, 255));
