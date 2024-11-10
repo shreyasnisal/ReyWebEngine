@@ -1,14 +1,24 @@
 "use strict";
 
-import Main from "/Sandbox/Framework/Main.js";
-import { SCREEN_SIZE_Y } from "/Sandbox/Framework/GameCommon.js";
-import { g_renderer, g_input, g_console, g_eventSystem, g_windowManager } from "/Engine/Core/EngineCommon.js";
 import Game from "/Sandbox/Framework/Game.js";
+import { SCREEN_SIZE_Y } from "/Sandbox/Framework/GameCommon.js";
+import Main from "/Sandbox/Framework/Main.js";
 
+import {
+    g_renderer,
+    g_input,
+    g_console,
+    g_eventSystem,
+    g_windowManager,
+    g_debugRenderSystem
+} from "/Engine/Core/EngineCommon.js";
+import Rgba8 from "/Engine/Core/Rgba8.js";
 import Clock from "/Engine/Core/Clock.js";
 import { DevConsoleMode } from "/Engine/Core/DevConsole.js";
+
 import Vec2 from "/Engine/Math/Vec2.js";
 import AABB2 from "/Engine/Math/AABB2.js";
+
 import { g_aspect } from "/Engine/Renderer/Renderer.js";
 
 
@@ -16,7 +26,8 @@ export default class App
 {
     constructor()
     {
-        this.m_previousFrameTime = Math.floor(Date.now() / 1000.0);
+        this.m_numFrames = 0;
+        this.m_deltaSecondsSum = 0.0;
     }
 
     Startup()
@@ -24,6 +35,7 @@ export default class App
         g_eventSystem.Startup();
         g_windowManager.Startup();
         g_renderer.Startup();
+        g_debugRenderSystem.Startup();
         g_console.Startup();
         g_input.Startup();
 
@@ -47,6 +59,7 @@ export default class App
         g_eventSystem.BeginFrame();
         g_windowManager.BeginFrame();
         g_renderer.BeginFrame();
+        g_debugRenderSystem.BeginFrame();
         g_console.BeginFrame();
         g_input.BeginFrame();
     }
@@ -54,6 +67,17 @@ export default class App
     Update()
     {
         const deltaSeconds = Clock.SystemClock.GetDeltaSeconds();
+
+        // Compute and display FPS averaged over the past 1 second
+        this.m_deltaSecondsSum += deltaSeconds;
+        this.m_numFrames++;
+        if (this.m_deltaSecondsSum >= 1.0)
+        {
+            const averageDeltaSeconds = this.m_deltaSecondsSum / this.m_numFrames;
+            g_debugRenderSystem.AddScreenText("FPS: " + (1.0 / averageDeltaSeconds).toFixed(2), new Vec2(g_aspect * SCREEN_SIZE_Y - 32.0, SCREEN_SIZE_Y - 32.0), 16.0, new Vec2(1.0, 0.0), 1.0, Rgba8.WHITE, Rgba8.WHITE);
+            this.m_numFrames = 0;
+            this.m_deltaSecondsSum = 0.0;
+        }
 
         if (g_input.WasKeyJustPressed('Tab'))
         {
@@ -74,6 +98,7 @@ export default class App
     {
         g_input.EndFrame();
         g_console.EndFrame();
+        g_debugRenderSystem.EndFrame();
         g_renderer.EndFrame();
         g_windowManager.EndFrame();
         g_eventSystem.EndFrame();
@@ -83,6 +108,7 @@ export default class App
     {
         g_input.Shutdown();
         g_console.Shutdown();
+        g_debugRenderSystem.Shutdown();
         g_renderer.Shutdown();
         g_windowManager.Shutdown();
         g_eventSystem.Shutdown();

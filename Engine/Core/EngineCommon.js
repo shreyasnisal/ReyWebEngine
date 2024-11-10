@@ -7,6 +7,7 @@ import Vec2 from "/Engine/Math/Vec2.js";
 import Camera from "/Engine/Renderer/Camera.js";
 import Renderer, {g_aspect, RenderConfig} from "/Engine/Renderer/Renderer.js";
 import WindowManager, { WindowManagerConfig } from "/Engine/Window/WindowManager.js";
+import DebugRenderSystem, { DebugRenderConfig } from "/Engine/Renderer/DebugRenderSystem.js";
 
 
 const eventSystemConfig = new EventSystemConfig();
@@ -17,6 +18,9 @@ export const g_windowManager = new WindowManager(windowManagerConfig);
 
 const renderConfig = new RenderConfig();
 export const g_renderer = new Renderer(renderConfig);
+
+const debugRenderConfig = new DebugRenderConfig(g_renderer, "/Sandbox/Data/Images/SquirrelFixedFont");
+export const g_debugRenderSystem = new DebugRenderSystem(debugRenderConfig);
 
 const inputSystemConfig = new InputSystemConfig(g_windowManager);
 export const g_input = new InputSystem(inputSystemConfig);

@@ -1,5 +1,8 @@
 "use strict";
 
+import * as MathUtils from "/Engine/Math/MathUtils.js";
+
+
 export default class Rgba8
 {
     static WHITE = Object.freeze(new Rgba8(255, 255, 255, 255));
@@ -34,8 +37,20 @@ export default class Rgba8
         return [this.r / 255, this.g / 255, this.b / 255, this.a / 255];
     }
 
-    static Interpolate(startColor, endColor, fractionTowardsEnd)
+    static Lerp(startColor, endColor, fractionTowardsEnd)
     {
-        
+        let red = MathUtils.Lerp(startColor.r, endColor.r, fractionTowardsEnd);
+        red = MathUtils.RoundDownToInt(red);
+
+        let green = MathUtils.Lerp(startColor.g, endColor.g, fractionTowardsEnd);
+        green = MathUtils.RoundDownToInt(green);
+
+        let blue = MathUtils.Lerp(startColor.b, endColor.b, fractionTowardsEnd);
+        blue = MathUtils.RoundDownToInt(blue);
+
+        let alpha = MathUtils.Lerp(startColor.a, endColor.a, fractionTowardsEnd);
+        alpha = MathUtils.RoundDownToInt(alpha);
+
+        return new Rgba8(red, green, blue, alpha);
     }
 }

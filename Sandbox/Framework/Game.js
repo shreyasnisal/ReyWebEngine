@@ -1,7 +1,7 @@
 "use strict";
 
 import {SCREEN_SIZE_Y} from "/Sandbox/Framework/GameCommon.js";
-import {g_renderer, g_input, g_console, g_eventSystem} from "/Engine/Core/EngineCommon.js";
+import {g_renderer, g_input, g_console, g_eventSystem, g_debugRenderSystem} from "/Engine/Core/EngineCommon.js";
 
 import DevConsole from "/Engine/Core/DevConsole.js";
 import * as VertexUtils from "/Engine/Core/VertexUtils.js";
@@ -110,6 +110,13 @@ export default class Game
             g_input.SetCursorMode(true, true);
         }
 
+        // Unit testing debug render system
+        // #ToDo remove this!
+        if (g_input.WasKeyJustPressed('1'))
+        {
+            g_debugRenderSystem.AddMessage("Debug render message works!", 5.0, Rgba8.MAGENTA, Rgba8.BLUE);
+        }
+
         this.HandleKeyboardInput(deltaSeconds);
         this.HandleControllerInput(deltaSeconds);
         this.m_playerOrientation.m_pitchDegrees = MathUtils.GetClamped(this.m_playerOrientation.m_pitchDegrees, -89.0, 89.0);
@@ -216,11 +223,14 @@ export default class Game
         g_renderer.EndCamera(this.m_worldCamera);
         this.RenderGrid();
 
+        g_debugRenderSystem.RenderWorld(this.m_worldCamera);
+
         const textVerts = [];
         g_renderer.BeginCamera(this.m_screenCamera);
         {
         }
         g_renderer.EndCamera(this.m_screenCamera);
+        g_debugRenderSystem.RenderScreen(this.m_screenCamera);
     }
 
     RenderGrid()

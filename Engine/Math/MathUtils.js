@@ -72,7 +72,7 @@ export function GetClampedZeroToOne(value)
 
 export function Lerp(start, end, fractionTowardsEnd)
 {
-    return start + end * fractionTowardsEnd;
+    return start + (end - start) * fractionTowardsEnd;
 }
 
 export function InverseLerp(value, start, end)
