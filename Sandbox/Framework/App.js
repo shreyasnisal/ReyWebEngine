@@ -10,7 +10,8 @@ import {
     g_console,
     g_eventSystem,
     g_windowManager,
-    g_debugRenderSystem
+    g_debugRenderSystem,
+    g_modelLoader
 } from "/Engine/Core/EngineCommon.js";
 import Rgba8 from "/Engine/Core/Rgba8.js";
 import Clock from "/Engine/Core/Clock.js";
@@ -38,6 +39,7 @@ export default class App
         g_debugRenderSystem.Startup();
         g_console.Startup();
         g_input.Startup();
+        g_modelLoader.Startup();
 
         this.m_game = new Game();
     }
@@ -62,6 +64,7 @@ export default class App
         g_debugRenderSystem.BeginFrame();
         g_console.BeginFrame();
         g_input.BeginFrame();
+        g_modelLoader.BeginFrame();
     }
 
     Update()
@@ -96,6 +99,7 @@ export default class App
 
     EndFrame()
     {
+        g_modelLoader.EndFrame();
         g_input.EndFrame();
         g_console.EndFrame();
         g_debugRenderSystem.EndFrame();
@@ -106,6 +110,7 @@ export default class App
 
     Shutdown()
     {
+        g_modelLoader.Shutdown();
         g_input.Shutdown();
         g_console.Shutdown();
         g_debugRenderSystem.Shutdown();

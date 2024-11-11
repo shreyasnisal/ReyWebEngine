@@ -14,7 +14,7 @@ export default class Mat44
         Tx: 12, Ty: 13, Tz: 14, Tw: 15
       });
 
-    static IDENTITY = new Mat44();
+    static IDENTITY = Object.freeze(new Mat44());
     static SIZE = 16;
 
     constructor(iBasis = Vec4.EAST, jBasis = Vec4.NORTH, kBasis = Vec4.SKYWARD, translation = Vec4.ZERO_TRANSLATION)
@@ -177,7 +177,12 @@ export default class Mat44
 
     TransformVectorQuantity3D(vectorQuantityXYZ)
     {
+        const result = new Vec3();
+        result.x = MathUtils.DotProduct4D(new Vec4(this.m_values[Mat44.Elements.Ix], this.m_values[Mat44.Elements.Jx], this.m_values[Mat44.Elements.Kx], this.m_values[Mat44.Elements.Tx]), new Vec4(vectorQuantityXYZ.x, vectorQuantityXYZ.y, vectorQuantityXYZ.z, 0.0));
+        result.y = MathUtils.DotProduct4D(new Vec4(this.m_values[Mat44.Elements.Iy], this.m_values[Mat44.Elements.Jy], this.m_values[Mat44.Elements.Ky], this.m_values[Mat44.Elements.Ty]), new Vec4(vectorQuantityXYZ.x, vectorQuantityXYZ.y, vectorQuantityXYZ.z, 0.0));
+        result.z = MathUtils.DotProduct4D(new Vec4(this.m_values[Mat44.Elements.Iz], this.m_values[Mat44.Elements.Jz], this.m_values[Mat44.Elements.Kz], this.m_values[Mat44.Elements.Tz]), new Vec4(vectorQuantityXYZ.x, vectorQuantityXYZ.y, vectorQuantityXYZ.z, 0.0));
 
+        return result;
     }
 
     TransformPosition2D(positionXY)
@@ -187,7 +192,13 @@ export default class Mat44
 
     TransformPosition3D(positionXYZ)
     {
+        const result = new Vec3();
 
+        result.x = MathUtils.DotProduct4D(new Vec4(this.m_values[Mat44.Elements.Ix], this.m_values[Mat44.Elements.Jx], this.m_values[Mat44.Elements.Kx], this.m_values[Mat44.Elements.Tx]), new Vec4(positionXYZ.x, positionXYZ.y, positionXYZ.z, 1.0));
+        result.y = MathUtils.DotProduct4D(new Vec4(this.m_values[Mat44.Elements.Iy], this.m_values[Mat44.Elements.Jy], this.m_values[Mat44.Elements.Ky], this.m_values[Mat44.Elements.Ty]), new Vec4(positionXYZ.x, positionXYZ.y, positionXYZ.z, 1.0));
+        result.z = MathUtils.DotProduct4D(new Vec4(this.m_values[Mat44.Elements.Iz], this.m_values[Mat44.Elements.Jz], this.m_values[Mat44.Elements.Kz], this.m_values[Mat44.Elements.Tz]), new Vec4(positionXYZ.x, positionXYZ.y, positionXYZ.z, 1.0));
+
+        return result;
     }
 
     TransformHomogeneous3D(homogeneousPoint3D)

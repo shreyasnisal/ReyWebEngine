@@ -1,11 +1,19 @@
 "use strict";
 
 import {SCREEN_SIZE_Y} from "/Sandbox/Framework/GameCommon.js";
-import {g_renderer, g_input, g_console, g_eventSystem, g_debugRenderSystem} from "/Engine/Core/EngineCommon.js";
+import {
+    g_renderer,
+    g_input,
+    g_console,
+    g_eventSystem,
+    g_debugRenderSystem,
+    g_modelLoader
+} from "/Engine/Core/EngineCommon.js";
 
-import DevConsole from "/Engine/Core/DevConsole.js";
-import * as VertexUtils from "/Engine/Core/VertexUtils.js";
+import * as FileUtils from "/Engine/Core/FileUtils.js";
 import Rgba8 from "/Engine/Core/Rgba8.js";
+import * as VertexUtils from "/Engine/Core/VertexUtils.js";
+
 import { XboxButtonID } from "/Engine/Input/XboxController.js";
 import AABB3 from "/Engine/Math/AABB3.js";
 import EulerAngles from "/Engine/Math/EulerAngles.js";
@@ -13,6 +21,8 @@ import Mat44 from "/Engine/Math/Mat44.js";
 import * as MathUtils from "/Engine/Math/MathUtils.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 import Vec3 from "/Engine/Math/Vec3.js";
+import Vec4 from "/Engine/Math/Vec4.js";
+
 import Camera from "/Engine/Renderer/Camera.js";
 import { CullMode, DepthMode, g_aspect } from "/Engine/Renderer/Renderer.js";
 
@@ -63,6 +73,13 @@ export default class Game
         {
             this.m_squirrelFixedFont = font;
         });
+
+        // Testing ModelLoader
+        this.m_treeModel = null;
+        g_modelLoader.CreateOrGetModelFromFile("/Sandbox/Data/Models/tree", new Mat44(Vec4.SOUTH, Vec4.SKYWARD, Vec4.WEST, Vec4.ZERO_TRANSLATION)).then(model => {
+            this.m_treeModel = model;
+        })
+        this.m_treePosition = new Vec3(5.0, 0.0, 0.0);
     }
 
     HandlePointerLockChange()
@@ -110,11 +127,10 @@ export default class Game
             g_input.SetCursorMode(true, true);
         }
 
-        // Unit testing debug render system
-        // #ToDo remove this!
+        // Unit testing DebugRenderSystem for message position issue
         if (g_input.WasKeyJustPressed('1'))
         {
-            g_debugRenderSystem.AddMessage("Debug render message works!", 5.0, Rgba8.MAGENTA, Rgba8.BLUE);
+            g_debugRenderSystem.AddMessage("Testing debug render system!", 5.0);
         }
 
         this.HandleKeyboardInput(deltaSeconds);
@@ -219,6 +235,12 @@ export default class Game
             g_renderer.SetModelConstants(cubeTransform);
             g_renderer.BindTexture(null);
             g_renderer.DrawVertexArray(this.m_testCubeVertexes);
+
+            if (this.m_treeModel != null)
+            {
+                g_renderer.SetModelConstants(Mat44.CreateTranslation3D(this.m_treePosition));
+                g_renderer.DrawVertexBuffer(this.m_treeModel.m_modelGroups[0].m_gpuMesh.m_vertexBuffer, this.m_treeModel.m_modelGroups[0].m_cpuMesh.m_vertexes.length);
+            }
         }
         g_renderer.EndCamera(this.m_worldCamera);
         this.RenderGrid();

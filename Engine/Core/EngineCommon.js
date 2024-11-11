@@ -2,6 +2,7 @@
 
 import DevConsole, { DevConsoleConfig } from "/Engine/Core/DevConsole.js";
 import EventSystem, { EventSystemConfig } from "/Engine/Core/EventSystem.js";
+import ModelLoader, {ModelLoaderConfig} from "/Engine/Core/Models/ModelLoader.js";
 import InputSystem, { InputSystemConfig } from "/Engine/Input/InputSystem.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 import Camera from "/Engine/Renderer/Camera.js";
@@ -29,4 +30,7 @@ const devConsoleCamera = new Camera();
 devConsoleCamera.SetOrthoView(Vec2.ZERO, new Vec2(g_aspect, 1.0));
 const devConsoleConfig = new DevConsoleConfig(g_eventSystem, g_renderer, devConsoleCamera, "/Sandbox/Data/Images/SquirrelFixedFont");
 export const g_console = new DevConsole(devConsoleConfig);
+
+const modelLoaderConfig = new ModelLoaderConfig();
+export const g_modelLoader = new ModelLoader(modelLoaderConfig);
 
