@@ -30,7 +30,7 @@ export default class BitmapFont
 
     AddVertsForText2D(verts, textMins, cellHeight, text, tint, cellAspect)
     {
-        const characterMins = textMins;
+        const characterMins = new Vec2(textMins.x, textMins.y);
         for (let characterIndex = 0; characterIndex < text.length; characterIndex++)
         {
             const characterBox = new AABB2(characterMins, characterMins.GetSum(new Vec2(cellHeight * cellAspect, cellHeight)));
