@@ -8,7 +8,7 @@ import * as VertexUtils from "/Engine/Core/VertexUtils.js";
 import AABB2 from "/Engine/Math/AABB2.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 
-import {CullMode, DepthMode} from "/Engine/Renderer/Renderer.js";
+import { BlendMode, CullMode, DepthMode } from "/Engine/Renderer/Renderer.js";
 import * as StringUtils from "/Engine/Core/StringUtils.js";
 
 
@@ -176,6 +176,7 @@ export default class DevConsole
             }
         }
 
+        renderer.SetBlendMode(BlendMode.ALPHA);
         renderer.SetDepthMode(DepthMode.DISABLED);
         renderer.SetCullMode(CullMode.BACK);
         renderer.SetModelConstants();

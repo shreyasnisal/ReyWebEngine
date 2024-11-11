@@ -10,5 +10,6 @@ export default class Texture
         this.m_name = imageFilePath;
         this.m_dimensions = Vec2.ZERO;
         this.m_texture = null;
+        this.m_frameBuffer = null;
     }
 }

@@ -24,7 +24,7 @@ import Vec3 from "/Engine/Math/Vec3.js";
 import Vec4 from "/Engine/Math/Vec4.js";
 
 import Camera from "/Engine/Renderer/Camera.js";
-import { CullMode, DepthMode, g_aspect } from "/Engine/Renderer/Renderer.js";
+import  {BlendMode, CullMode, DepthMode, g_aspect } from "/Engine/Renderer/Renderer.js";
 
 
 export default class Game
@@ -128,6 +128,7 @@ export default class Game
         }
 
         // Unit testing DebugRenderSystem for message position issue
+        // #ToDo remove this
         if (g_input.WasKeyJustPressed('1'))
         {
             g_debugRenderSystem.AddMessage("Testing debug render system!", 5.0);
@@ -230,6 +231,7 @@ export default class Game
 
         g_renderer.BeginCamera(this.m_worldCamera);
         {
+            g_renderer.SetBlendMode(BlendMode.OPAQUE);
             g_renderer.SetCullMode(CullMode.BACK);
             g_renderer.SetDepthMode(DepthMode.ENABLED);
             g_renderer.SetModelConstants(cubeTransform);
@@ -259,6 +261,7 @@ export default class Game
     {
         g_renderer.BeginCamera(this.m_worldCamera);
         {
+            g_renderer.SetBlendMode(BlendMode.OPAQUE);
             g_renderer.SetCullMode(CullMode.BACK);
             g_renderer.SetDepthMode(DepthMode.ENABLED);
             g_renderer.SetModelConstants();

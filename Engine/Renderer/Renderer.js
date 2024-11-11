@@ -33,6 +33,13 @@ export class VertexType
     static VERTEX_PCUTBN = "Vertex_PCUTBN";
 }
 
+export class BlendMode
+{
+    static ALPHA = "ALPHA";
+    static ADDITIVE = "ADDITIVE";
+    static OPAQUE = "OPAQUE";
+}
+
 export class CullMode
 {
     static BACK = "BACK";
@@ -72,6 +79,13 @@ export default class Renderer
         // Initialize variables
         this.m_loadedTextures = [];
         this.m_loadedFonts = [];
+
+        this.m_currentBlendMode = null;
+        this.m_desiredBlendMode = BlendMode.ALPHA;
+        this.m_currentCullMode = null;
+        this.m_desiredCullMode = CullMode.BACK;
+        this.m_currentDepthMode = null;
+        this.m_desiredDepthMode = DepthMode.ENABLED;
     }
 
     Startup()
@@ -122,10 +136,18 @@ export default class Renderer
         // Create a default texture, a 1x1 white pixel
         this.m_defaultTexture = this.CreateTextureFromData("defaultTexture", 1, 1, new Uint8Array([255, 255, 255, 255]));
 
-        // Set ALPHA blend mode
-        // #ToDo Move to SetBlendMode method
+        // Enable depth testing
+        // Changing depth mode between enabled and disabled is just changing the depth function
+        this.m_context.enable(this.m_context.DEPTH_TEST);
+
+        // Enable blending
+        // Changing blend mode is just changing the blend function
         this.m_context.enable(this.m_context.BLEND);
-        this.m_context.blendFunc(this.m_context.SRC_ALPHA, this.m_context.ONE_MINUS_SRC_ALPHA);
+
+        // // Set ALPHA blend mode
+        // // #ToDo Move to SetBlendMode method
+        // this.m_context.enable(this.m_context.BLEND);
+        // this.m_context.blendFunc(this.m_context.SRC_ALPHA, this.m_context.ONE_MINUS_SRC_ALPHA);
 
         // Set uniform block binding for CameraConstants and ModelConstants
         this.m_context.uniformBlockBinding(this.m_webglProgram, this.m_context.getUniformBlockIndex(this.m_webglProgram, "CameraConstants"), SHADER_CAMERA_CONSTANTS_BIND_SLOT);
@@ -186,6 +208,7 @@ export default class Renderer
 
     DrawVertexBuffer(vbo, numVertexes)
     {
+        this.SetStatesIfChanged();
         this.BindVertexBuffer(vbo);
         this.m_context.drawArrays(this.m_context.TRIANGLES, 0, numVertexes);
     }
@@ -299,33 +322,96 @@ export default class Renderer
 
     SetCullMode(cullMode)
     {
-        if (cullMode === CullMode.NONE)
-        {
-            this.m_context.disable(this.m_context.CULL_FACE);
-        }
-        else if (cullMode === CullMode.BACK)
-        {
-            this.m_context.enable(this.m_context.CULL_FACE);
-            this.m_context.cullFace(this.m_context.BACK);
-        }
-        else if (cullMode === CullMode.FRONT)
-        {
-            this.m_context.enable(this.m_context.CULL_FACE);
-            this.m_context.cullFace(this.m_context.FRONT);
-        }
+        this.m_desiredCullMode = cullMode;
     }
 
     SetDepthMode(depthMode)
     {
-        if (depthMode === DepthMode.ENABLED)
+        this.m_desiredDepthMode = depthMode;
+    }
+
+    SetBlendMode(blendMode)
+    {
+        this.m_desiredBlendMode = blendMode;
+    }
+
+    SetStatesIfChanged()
+    {
+        // Set Blend mode if changed
+        this.SetBlendModeIfChanged();
+
+        // Set Cull mode if changed
+        this.SetCullModeIfChanged();
+
+        // Set Depth mode if changed
+        this.SetDepthModeIfChanged();
+    }
+
+    SetBlendModeIfChanged()
+    {
+        if (this.m_currentBlendMode === this.m_desiredBlendMode)
         {
-            this.m_context.enable(this.m_context.DEPTH_TEST);
+            return;
+        }
+
+        if (this.m_desiredBlendMode === BlendMode.ALPHA)
+        {
+            this.m_context.blendFunc(this.m_context.SRC_ALPHA, this.m_context.ONE_MINUS_SRC_ALPHA);
+        }
+        else if (this.m_desiredBlendMode === BlendMode.ADDITIVE)
+        {
+            this.m_context.blendFunc(this.m_context.ONE, this.m_context.ONE);
+        }
+        else if (this.m_desiredBlendMode === BlendMode.OPAQUE)
+        {
+            this.m_context.blendFunc(this.m_context.ONE, this.m_context.ZERO);
+        }
+
+        this.m_currentBlendMode = this.m_desiredBlendMode;
+    }
+
+    SetCullModeIfChanged()
+    {
+        if (this.m_currentCullMode === this.m_desiredCullMode)
+        {
+            return;
+        }
+
+        if (this.m_desiredCullMode === CullMode.NONE)
+        {
+            this.m_context.disable(this.m_context.CULL_FACE);
+        }
+        else if (this.m_desiredCullMode === CullMode.BACK)
+        {
+            this.m_context.enable(this.m_context.CULL_FACE);
+            this.m_context.cullFace(this.m_context.BACK);
+        }
+        else if (this.m_desiredCullMode === CullMode.FRONT)
+        {
+            this.m_context.enable(this.m_context.CULL_FACE);
+            this.m_context.cullFace(this.m_context.FRONT);
+        }
+
+        this.m_currentCullMode = this.m_desiredCullMode;
+    }
+
+    SetDepthModeIfChanged()
+    {
+        if (this.m_currentDepthMode === this.m_desiredDepthMode)
+        {
+            return;
+        }
+
+        if (this.m_desiredDepthMode === DepthMode.ENABLED)
+        {
             this.m_context.depthFunc(this.m_context.LEQUAL);
         }
-        else if (depthMode === DepthMode.DISABLED)
+        else if (this.m_desiredDepthMode === DepthMode.DISABLED)
         {
-            this.m_context.disable(this.m_context.DEPTH_TEST);
+            this.m_context.depthFunc(this.m_context.ALWAYS);
         }
+
+        this.m_currentDepthMode = this.m_desiredDepthMode;
     }
 
     async CreateOrGetTextureFromFile(filename)

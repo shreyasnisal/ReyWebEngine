@@ -7,8 +7,8 @@ import Stopwatch from "/Engine/Core/Stopwatch.js";
 import AABB2 from "/Engine/Math/AABB2.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 
-import { CullMode, DepthMode } from "/Engine/Renderer/Renderer.js";
 import { TextBoxMode } from "/Engine/Renderer/BitmapFont.js";
+import { BlendMode, CullMode, DepthMode } from "/Engine/Renderer/Renderer.js";
 
 
 export class DebugRenderConfig
@@ -147,6 +147,7 @@ export default class DebugRenderSystem
             {
                 const screenGeometry = this.m_screenGeometry[screenGeometryIndex];
                 const geometryColor = screenGeometry.m_durationTimer ? Rgba8.Lerp(screenGeometry.m_startColor, screenGeometry.m_endColor, screenGeometry.m_durationTimer.GetElapsedFraction()) : screenGeometry.m_startColor;
+                this.m_config.m_renderer.SetBlendMode(BlendMode.ALPHA);
                 this.m_config.m_renderer.SetCullMode(CullMode.BACK);
                 this.m_config.m_renderer.SetDepthMode(DepthMode.DISABLED);
                 this.m_config.m_renderer.SetModelConstants();
@@ -192,6 +193,7 @@ export default class DebugRenderSystem
                 this.m_debugRenderSystemFont.AddVertsForText2D(textVerts, messageTextMins, messageHeight, message.m_text, textColor, 0.7);
             }
 
+            this.m_config.m_renderer.SetBlendMode(BlendMode.ALPHA);
             this.m_config.m_renderer.SetDepthMode(DepthMode.DISABLED);
             this.m_config.m_renderer.SetCullMode(CullMode.BACK);
             this.m_config.m_renderer.SetModelConstants();
