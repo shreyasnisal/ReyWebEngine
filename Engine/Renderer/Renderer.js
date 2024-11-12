@@ -641,25 +641,4 @@ export default class Renderer
         this.CopyUniformBufferToGPU([sunDirection.x, sunDirection.y, sunDirection.z, sunIntensity, ambientIntensity], LIGHT_CONSTANTS_NUM_ELEMENTS, this.m_lightUBO);
         this.BindUniformBuffer(this.m_lightUBO, SHADER_LIGHT_CONSTANTS_BIND_SLOT);
     }
-
-
-    setXRSession(xrSession, xrReferenceSpace) {
-        this.xrSession = xrSession;
-        this.xrReferenceSpace = xrReferenceSpace;
-
-        if (xrSession) {
-            // Configure the WebGL context for XR framebuffer
-            this.m_context.makeXRCompatible();
-            this.xrLayer = new XRWebGLLayer(xrSession, this.m_context);
-            xrSession.updateRenderState({ baseLayer: this.xrLayer });
-        } else {
-            this.xrLayer = null;
-        }
-    }
-
-    BeginRenderForVR() {
-        // For VR, bind the WebXR framebuffer
-        const baseLayer = this.xrSession.renderState.baseLayer;
-        this.m_context.bindFramebuffer(this.m_context.FRAMEBUFFER, baseLayer.framebuffer);
-    }
 }

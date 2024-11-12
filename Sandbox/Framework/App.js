@@ -20,6 +20,7 @@ import { DevConsoleMode } from "/Engine/Core/DevConsole.js";
 import AABB2 from "/Engine/Math/AABB2.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 
+import Camera from "/Engine/Renderer/Camera.js";
 import { g_aspect } from "/Engine/Renderer/Renderer.js";
 
 
@@ -40,28 +41,8 @@ export default class App
         g_console.Startup();
         g_input.Startup();
         g_modelLoader.Startup();
-        g_webXR.Startup();
 
         this.m_game = new Game();
-    }
-
-    RunXRFrame(time, frame) {
-        this.BeginFrame(frame);
-        this.Update();
-
-        // Render to each Eye
-        const hmdPosition = g_webXR.GetHMDPosition();
-        const hmdOrientation = g_webXR.GetHMDOrientation();
-
-        g_renderer.BeginRenderForVR();
-        this.m_game.m_worldCamera.SetTransform(hmdPosition, hmdOrientation);
-        this.Render();
-        this.Render();
-
-        this.EndFrame();
-
-        // Queue the next XR frame
-        g_webXR.m_xrSession.requestAnimationFrame(this.RunXRFrame.bind(this));
     }
 
     RunFrame()
@@ -83,10 +64,6 @@ export default class App
         g_console.BeginFrame();
         g_input.BeginFrame();
         g_modelLoader.BeginFrame();
-        if (g_webXR.m_initialized)
-        {
-            g_webXR.BeginFrame(frame);
-        }
     }
 
     Update()
@@ -121,7 +98,6 @@ export default class App
 
     EndFrame()
     {
-        g_webXR.EndFrame();
         g_modelLoader.EndFrame();
         g_input.EndFrame();
         g_console.EndFrame();
@@ -133,7 +109,6 @@ export default class App
 
     Shutdown()
     {
-        g_webXR.Shutdown();
         g_modelLoader.Shutdown();
         g_input.Shutdown();
         g_console.Shutdown();

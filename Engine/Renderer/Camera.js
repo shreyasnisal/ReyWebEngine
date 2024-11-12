@@ -12,6 +12,7 @@ class CameraMode
 {
     static ORTHOGRAPHIC = "ORTHOGRAPHIC";
     static PERSPECTIVE = "PERSPECTIVE";
+    static VR_PERSPECTIVE = "VR_PERSPECTIVE";
 }
 
 export default class Camera

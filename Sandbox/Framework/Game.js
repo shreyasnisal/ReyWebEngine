@@ -89,12 +89,6 @@ export default class Game
         // Add helper messages
         g_debugRenderSystem.AddMessage("Esc to release mouse cursor (if locked)", -1.0, Rgba8.CYAN, Rgba8.CYAN);
         g_debugRenderSystem.AddMessage("TAB to open DevConsole", -1.0, Rgba8.YELLOW, Rgba8.YELLOW);
-
-        const button = document.createElement("button");
-        button.innerText = "VR Mode";
-        const buttonContainer = document.getElementById("vr-button");
-        buttonContainer.appendChild(button);
-        button.addEventListener("click", () => { g_webXR.StartXRSession(); });
     }
 
     HandlePointerLockChange()
@@ -137,14 +131,10 @@ export default class Game
 
     HandleInput(deltaSeconds)
     {
-        // if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
-        // {
-        //     g_input.SetCursorMode(true, true);
-        //     if (!g_webXR.m_initialized)
-        //     {
-        //         g_webXR.StartXRSession();
-        //     }
-        // }
+        if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
+        {
+            g_input.SetCursorMode(true, true);
+        }
 
         this.HandleKeyboardInput(deltaSeconds);
         this.HandleControllerInput(deltaSeconds);
@@ -263,13 +253,6 @@ export default class Game
         this.RenderGrid();
 
         g_debugRenderSystem.RenderWorld(this.m_worldCamera);
-
-        const textVerts = [];
-        g_renderer.BeginCamera(this.m_screenCamera);
-        {
-        }
-        g_renderer.EndCamera(this.m_screenCamera);
-        g_debugRenderSystem.RenderScreen(this.m_screenCamera);
     }
 
     RenderGrid()

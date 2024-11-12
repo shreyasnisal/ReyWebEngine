@@ -22,11 +22,10 @@ export default class WebXR
 
         // Initialize variables
         this.m_initialized = false;
-        this.m_hmdPosition = new Vec3();
-        this.m_hmdOrientation = new EulerAngles();
-
-        this.m_leftController = null;
-        this.m_rightController = null;
+        this.m_leftEyePosition = new Vec3();
+        this.m_leftEyeOrientation = new EulerAngles();
+        this.m_rightEyePosition = new Vec3();
+        this.m_rightEyeOrientation = new EulerAngles();
     }
 
     Startup()
@@ -42,25 +41,27 @@ export default class WebXR
         // Configure renderer for XR and set session state
         g_renderer.setXRSession(this.m_xrSession, this.m_xrReferenceSpace);
         this.m_initialized = true;
-
-        // this.m_xrSession.addEventListener("inputsourceschange", (inputSourceEvent) => { this.HandleNewInputSource(inputSourceEvent); } );
-    }
-
-    GetHMDPosition()
-    {
-        return this.m_hmdPosition;
-    }
-
-    GetHMDOrientation()
-    {
-        return this.m_hmdOrientation;
     }
 
     BeginFrame(frame)
     {
         const pose = frame.getViewerPose(this.m_xrReferenceSpace);
-        this.m_hmdPosition = new Vec3(-pose.transform.position.z, -pose.transform.position.x, pose.transform.position.y);
-        this.m_hmdOrientation = MathUtils.GetEulerAnglesFromQuaternion(-pose.transform.orientation.z, -pose.transform.orientation.x, pose.transform.orientation.y, pose.transform.orientation.w);
+        if (pose)
+        {
+            for (let view in pose.views)
+            {
+                if (view.eye === "left")
+                {
+                    this.m_leftEyePosition = new Vec3(-view.transform.position.z, -view.transform.position.x, view.transform.position.y);
+                    this.m_leftEyeOrientation = MathUtils.GetEulerAnglesFromQuaternion(-view.transform.orientation.z, -view.transform.orientation.x, view.transform.orientation.y, view.transform.orientation.w);
+                }
+                else if (view.eye === "right")
+                {
+                    this.m_rightEyePosition = new Vec3(-view.transform.position.z, -view.transform.position.x, view.transform.position.y);
+                    this.m_rightEyeOrientation = MathUtils.GetEulerAnglesFromQuaternion(-view.transform.orientation.z, -view.transform.orientation.x, view.transform.orientation.y, view.transform.orientation.w);
+                }
+            }
+        }
     }
 
     EndFrame()
@@ -71,23 +72,6 @@ export default class WebXR
     Shutdown()
     {
 
-    }
-
-    HandleNewInputSource(inputSourceEvent)
-    {
-        inputSourceEvent.added.foreach((newInputSource) => {
-            if (newInputSource.targetRayMode === "tracked-pointer" && newInputSource.gamepad)
-            {
-                if (newInputSource.handedness === "left")
-                {
-                    this.m_leftController = new VRController(newInputSource.gamepad);
-                }
-                else if (newInputSource.handedness === "right")
-                {
-                    this.m_rightController = new VRController(newInputSource.gamepad);
-                }
-            }
-        });
     }
 }
 
