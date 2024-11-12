@@ -85,6 +85,10 @@ export default class Game
         g_renderer.CreateOrGetShaderFromFiles("Diffuse", "/Sandbox/Data/Shaders/Diffuse_Vertex", "/Sandbox/Data/Shaders/Diffuse_Fragment", VertexType.VERTEX_PCUTBN).then(shader => {
             this.m_diffuseShader = shader;
         });
+
+        // Add helper messages
+        g_debugRenderSystem.AddMessage("Esc to release mouse cursor (if locked)", -1.0, Rgba8.CYAN, Rgba8.CYAN);
+        g_debugRenderSystem.AddMessage("TAB to open DevConsole", -1.0, Rgba8.YELLOW, Rgba8.YELLOW);
     }
 
     HandlePointerLockChange()
