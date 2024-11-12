@@ -94,7 +94,7 @@ export default class Game
         button.innerText = "VR Mode";
         const buttonContainer = document.getElementById("vr-button");
         buttonContainer.appendChild(button);
-        button.addEventListener("click", g_webXR.StartXRSession);
+        button.addEventListener("click", () => { g_webXR.StartXRSession(); });
     }
 
     HandlePointerLockChange()
@@ -137,14 +137,14 @@ export default class Game
 
     HandleInput(deltaSeconds)
     {
-        if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
-        {
-            g_input.SetCursorMode(true, true);
-            // if (!g_webXR.m_initialized)
-            // {
-            //     g_webXR.StartXRSession();
-            // }
-        }
+        // if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
+        // {
+        //     g_input.SetCursorMode(true, true);
+        //     if (!g_webXR.m_initialized)
+        //     {
+        //         g_webXR.StartXRSession();
+        //     }
+        // }
 
         this.HandleKeyboardInput(deltaSeconds);
         this.HandleControllerInput(deltaSeconds);
