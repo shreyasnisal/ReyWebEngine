@@ -1,6 +1,8 @@
 "use strict";
 
+import EulerAngles from "/Engine/Math/EulerAngles.js";
 import Vec3 from "/Engine/Math/Vec3.js"
+import Vec4 from "/Engine/Math/Vec4.js"
 
 
 export function ConvertDegreesToRadians(degrees)
@@ -125,6 +127,44 @@ export function CrossProduct3D(vecA, vecB)
         vecA.z * vecB.x - vecA.x * vecB.z,
         vecA.x * vecB.y - vecA.y * vecB.x
     );
+}
+
+export function GetEulerAnglesFromQuaternion(quaternionX, quaternionY, quaternionZ, quaternionW)
+{
+    const quaternionLength = new Vec4(quaternionX, quaternionY, quaternionZ, quaternionW).GetLength();
+    if (quaternionLength === 0.0)
+    {
+        return new EulerAngles();
+    }
+
+    const normalizedQX = quaternionX / quaternionLength;
+    const normalizedQY = quaternionY / quaternionLength;
+    const normalizedQZ = quaternionZ / quaternionLength;
+    const normalizedQW = quaternionW / quaternionLength;
+
+    // Roll
+    const sinR_cosP = 2.0 * (normalizedQW * normalizedQX + normalizedQY * normalizedQZ);
+    const cosR_cosP = 1.0 - 2.0 * (normalizedQX * normalizedQX + normalizedQY * normalizedQY);
+    const roll = Math.atan2(sinR_cosP, cosR_cosP);
+
+    // Pitch
+    const sinP = 2.0 * (normalizedQW * normalizedQY - normalizedQZ * normalizedQX);
+    let pitch;
+    if (Math.abs(sinP) >= 1.0)
+    {
+        pitch = Math.abs(Math.PI / 2.0) * Math.sign(sinP);
+    }
+    else
+    {
+        pitch = Math.asin(sinP);
+    }
+
+    // Yaw
+    const sinY_cosP = 2.0 * (normalizedQW * normalizedQZ + normalizedQX * normalizedQY);
+    const cosY_cosP = 1.0 - 2.0 * (normalizedQY * normalizedQY + normalizedQZ * normalizedQZ);
+    const yaw = Math.atan2(sinY_cosP, cosY_cosP);
+
+    return new EulerAngles(ConvertRadiansToDegrees(yaw), ConvertRadiansToDegrees(pitch), ConvertRadiansToDegrees(roll));
 }
 
 

@@ -1,7 +1,7 @@
 "use strict";
 
 import Game from "/Sandbox/Framework/Game.js";
-import { SCREEN_SIZE_Y } from "/Sandbox/Framework/GameCommon.js";
+import {g_app, SCREEN_SIZE_Y} from "/Sandbox/Framework/GameCommon.js";
 import Main from "/Sandbox/Framework/Main.js";
 
 import {
@@ -11,14 +11,14 @@ import {
     g_eventSystem,
     g_windowManager,
     g_debugRenderSystem,
-    g_modelLoader
+    g_modelLoader, g_webXR
 } from "/Engine/Core/EngineCommon.js";
 import Rgba8 from "/Engine/Core/Rgba8.js";
 import Clock from "/Engine/Core/Clock.js";
 import { DevConsoleMode } from "/Engine/Core/DevConsole.js";
 
-import Vec2 from "/Engine/Math/Vec2.js";
 import AABB2 from "/Engine/Math/AABB2.js";
+import Vec2 from "/Engine/Math/Vec2.js";
 
 import { g_aspect } from "/Engine/Renderer/Renderer.js";
 
@@ -40,8 +40,28 @@ export default class App
         g_console.Startup();
         g_input.Startup();
         g_modelLoader.Startup();
+        g_webXR.Startup();
 
         this.m_game = new Game();
+    }
+
+    RunXRFrame(time, frame) {
+        this.BeginFrame(frame);
+        this.Update();
+
+        // Render to each Eye
+        const hmdPosition = g_webXR.GetHMDPosition();
+        const hmdOrientation = g_webXR.GetHMDOrientation();
+
+        g_renderer.BeginRenderForVR();
+        this.m_game.m_worldCamera.SetTransform(hmdPosition, hmdOrientation);
+        this.Render();
+        this.Render();
+
+        this.EndFrame();
+
+        // Queue the next XR frame
+        g_webXR.m_xrSession.requestAnimationFrame(this.RunXRFrame.bind(this));
     }
 
     RunFrame()
@@ -52,11 +72,9 @@ export default class App
         this.Update();
         this.Render();
         this.EndFrame();
-
-        requestAnimationFrame(Main);
     }
 
-    BeginFrame()
+    BeginFrame(frame)
     {
         g_eventSystem.BeginFrame();
         g_windowManager.BeginFrame();
@@ -65,6 +83,10 @@ export default class App
         g_console.BeginFrame();
         g_input.BeginFrame();
         g_modelLoader.BeginFrame();
+        if (g_webXR.m_initialized)
+        {
+            g_webXR.BeginFrame(frame);
+        }
     }
 
     Update()
@@ -99,6 +121,7 @@ export default class App
 
     EndFrame()
     {
+        g_webXR.EndFrame();
         g_modelLoader.EndFrame();
         g_input.EndFrame();
         g_console.EndFrame();
@@ -110,6 +133,7 @@ export default class App
 
     Shutdown()
     {
+        g_webXR.Shutdown();
         g_modelLoader.Shutdown();
         g_input.Shutdown();
         g_console.Shutdown();

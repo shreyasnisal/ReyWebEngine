@@ -9,6 +9,7 @@ import Camera from "/Engine/Renderer/Camera.js";
 import Renderer, {g_aspect, RenderConfig} from "/Engine/Renderer/Renderer.js";
 import WindowManager, { WindowManagerConfig } from "/Engine/Window/WindowManager.js";
 import DebugRenderSystem, { DebugRenderConfig } from "/Engine/Renderer/DebugRenderSystem.js";
+import WebXR, { WebXRConfig } from "/Engine/VirtualReality/WebXR.js";
 
 
 const eventSystemConfig = new EventSystemConfig();
@@ -33,4 +34,8 @@ export const g_console = new DevConsole(devConsoleConfig);
 
 const modelLoaderConfig = new ModelLoaderConfig();
 export const g_modelLoader = new ModelLoader(modelLoaderConfig);
+
+const webXRConfig = new WebXRConfig();
+export const g_webXR = new WebXR(webXRConfig);
+
 

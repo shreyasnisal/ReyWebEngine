@@ -1,13 +1,13 @@
 "use strict";
 
-import {SCREEN_SIZE_Y} from "/Sandbox/Framework/GameCommon.js";
+import {g_app, SCREEN_SIZE_Y} from "/Sandbox/Framework/GameCommon.js";
 import {
     g_renderer,
     g_input,
     g_console,
     g_eventSystem,
     g_debugRenderSystem,
-    g_modelLoader
+    g_modelLoader, g_webXR
 } from "/Engine/Core/EngineCommon.js";
 
 import * as FileUtils from "/Engine/Core/FileUtils.js";
@@ -134,13 +134,10 @@ export default class Game
         if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
         {
             g_input.SetCursorMode(true, true);
-        }
-
-        // Unit testing DebugRenderSystem for message position issue
-        // #ToDo remove this
-        if (g_input.WasKeyJustPressed('1'))
-        {
-            g_debugRenderSystem.AddMessage("Testing debug render system!", 5.0);
+            // if (!g_webXR.m_initialized)
+            // {
+            //     g_webXR.StartXRSession();
+            // }
         }
 
         this.HandleKeyboardInput(deltaSeconds);

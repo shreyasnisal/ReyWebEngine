@@ -85,4 +85,9 @@ export default class Vec4
         this.z = copyVec4.z;
         this.w = copyVec4.w;
     }
+
+    GetLength()
+    {
+        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+    }
 }
