@@ -89,6 +89,12 @@ export default class Game
         // Add helper messages
         g_debugRenderSystem.AddMessage("Esc to release mouse cursor (if locked)", -1.0, Rgba8.CYAN, Rgba8.CYAN);
         g_debugRenderSystem.AddMessage("TAB to open DevConsole", -1.0, Rgba8.YELLOW, Rgba8.YELLOW);
+
+        const button = document.createElement("button");
+        button.innerText = "VR Mode";
+        const buttonContainer = document.getElementById("vr-button");
+        buttonContainer.appendChild(button);
+        button.addEventListener("click", g_webXR.StartXRSession);
     }
 
     HandlePointerLockChange()

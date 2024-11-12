@@ -6,6 +6,8 @@ import EulerAngles from "/Engine/Math/EulerAngles.js";
 import * as MathUtils from "/Engine/Math/MathUtils.js";
 import Vec3 from "/Engine/Math/Vec3.js";
 
+import VRController from "/Engine/VirtualReality/VRController.js";
+
 
 export class WebXRConfig
 {
@@ -22,6 +24,9 @@ export default class WebXR
         this.m_initialized = false;
         this.m_hmdPosition = new Vec3();
         this.m_hmdOrientation = new EulerAngles();
+
+        this.m_leftController = null;
+        this.m_rightController = null;
     }
 
     Startup()
@@ -37,6 +42,8 @@ export default class WebXR
         // Configure renderer for XR and set session state
         g_renderer.setXRSession(this.m_xrSession, this.m_xrReferenceSpace);
         this.m_initialized = true;
+
+        // this.m_xrSession.addEventListener("inputsourceschange", (inputSourceEvent) => { this.HandleNewInputSource(inputSourceEvent); } );
     }
 
     GetHMDPosition()
@@ -66,19 +73,21 @@ export default class WebXR
 
     }
 
-    renderXR(time, frame)
+    HandleNewInputSource(inputSourceEvent)
     {
-        const session = frame.session;
-        const glLayer = session.renderState.baseLayer;
-        session.requestAnimationFrame(this.renderXR.bind(this));
-        const pose = frame.getViewerPose(g_webXR.m_xrReferenceSpace);
-        g_renderer.m_context.bindFramebuffer(g_renderer.m_context.FRAMEBUFFER, glLayer.framebuffer);
-        g_renderer.m_context.clear(g_renderer.m_context.COLOR_BUFFER_BIT | g_renderer.m_context.DEPTH_BUFFER_BIT);
-        for (const view of pose.views) {
-            let viewport = glLayer.getViewport(view);
-            g_renderer.m_context.viewport(viewport.x, viewport.y,
-                viewport.width, viewport.height);
-        }
+        inputSourceEvent.added.foreach((newInputSource) => {
+            if (newInputSource.targetRayMode === "tracked-pointer" && newInputSource.gamepad)
+            {
+                if (newInputSource.handedness === "left")
+                {
+                    this.m_leftController = new VRController(newInputSource.gamepad);
+                }
+                else if (newInputSource.handedness === "right")
+                {
+                    this.m_rightController = new VRController(newInputSource.gamepad);
+                }
+            }
+        });
     }
 }
 
