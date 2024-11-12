@@ -24,7 +24,7 @@ import Vec3 from "/Engine/Math/Vec3.js";
 import Vec4 from "/Engine/Math/Vec4.js";
 
 import Camera from "/Engine/Renderer/Camera.js";
-import  {BlendMode, CullMode, DepthMode, g_aspect } from "/Engine/Renderer/Renderer.js";
+import { BlendMode, CullMode, DepthMode, g_aspect, VertexType } from "/Engine/Renderer/Renderer.js";
 
 
 export default class Game
@@ -80,6 +80,11 @@ export default class Game
             this.m_treeModel = model;
         })
         this.m_treePosition = new Vec3(5.0, 0.0, 0.0);
+
+        this.m_diffuseShader = null;
+        g_renderer.CreateOrGetShaderFromFiles("Diffuse", "/Sandbox/Data/Shaders/Diffuse_Vertex", "/Sandbox/Data/Shaders/Diffuse_Fragment", VertexType.VERTEX_PCUTBN).then(shader => {
+            this.m_diffuseShader = shader;
+        });
     }
 
     HandlePointerLockChange()
@@ -236,11 +241,14 @@ export default class Game
             g_renderer.SetDepthMode(DepthMode.ENABLED);
             g_renderer.SetModelConstants(cubeTransform);
             g_renderer.BindTexture(null);
+            g_renderer.BindShader(null);
             g_renderer.DrawVertexArray(this.m_testCubeVertexes);
 
             if (this.m_treeModel != null)
             {
                 g_renderer.SetModelConstants(Mat44.CreateTranslation3D(this.m_treePosition));
+                g_renderer.BindShader(this.m_diffuseShader);
+                g_renderer.SetLightConstants(new Vec3(2.0, -1.0, -1.0).GetNormalized(), 0.9, 0.1);
                 g_renderer.DrawVertexBuffer(this.m_treeModel.m_modelGroups[0].m_gpuMesh.m_vertexBuffer, this.m_treeModel.m_modelGroups[0].m_cpuMesh.m_vertexes.length);
             }
         }
@@ -266,6 +274,7 @@ export default class Game
             g_renderer.SetDepthMode(DepthMode.ENABLED);
             g_renderer.SetModelConstants();
             g_renderer.BindTexture(null);
+            g_renderer.BindShader(null);
             g_renderer.DrawVertexArray(this.m_gridStaticVerts);
         }
         g_renderer.EndCamera(this.m_worldCamera);

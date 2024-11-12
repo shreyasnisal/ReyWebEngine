@@ -58,4 +58,34 @@ export default class Vec3
     {
         return new Vec3(this.x * scalingFactor, this.y * scalingFactor, this.z * scalingFactor);
     }
+
+    GetLength()
+    {
+        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+    }
+
+    Normalize()
+    {
+        const length = this.GetLength();
+        if (length === 0)
+        {
+            return;
+        }
+        const scalingFactor = 1.0 / length;
+
+        this.x *= scalingFactor;
+        this.y *= scalingFactor;
+        this.z *= scalingFactor;
+    }
+
+    GetNormalized()
+    {
+        const length = this.GetLength();
+        if (length === 0)
+        {
+            return this;
+        }
+        const scalingFactor = 1.0 / length;
+        return new Vec3(this.x * scalingFactor, this.y * scalingFactor, this.z * scalingFactor);
+    }
 }

@@ -1,5 +1,6 @@
 "use strict";
 
+import * as FileUtils from "/Engine/Core/FileUtils.js";
 import * as MathUtils from "/Engine/Math/MathUtils.js"
 import Rgba8 from "/Engine/Core/Rgba8.js";
 import Vertex_PCU from "/Engine/Core/Vertex_PCU.js";
@@ -10,6 +11,7 @@ import Vec2 from "/Engine/Math/Vec2.js"
 import BitmapFont from "/Engine/Renderer/BitmapFont.js";
 
 import { defaultVertexShader, defaultFragmentShader } from "/Engine/Renderer/DefaultShader.js";
+import Shader from "/Engine/Renderer/Shader.js";
 import Texture from "/Engine/Renderer/Texture.js";
 import UniformBuffer from "/Engine/Renderer/UniformBuffer.js";
 import VertexBuffer from "/Engine/Renderer/VertexBuffer.js";
@@ -22,10 +24,13 @@ export let g_aspect = g_viewportWidth / g_viewportHeight;
 const FLOAT32_SIZE = 4;
 
 const CAMERA_CONSTANTS_NUM_ELEMENTS = 32;
-const SHADER_CAMERA_CONSTANTS_BIND_SLOT = 2;
+const SHADER_CAMERA_CONSTANTS_BIND_SLOT = 0;
 
 const MODEL_CONSTANTS_NUM_ELEMENTS = 20;
-const SHADER_MODEL_CONSTANTS_BIND_SLOT = 3;
+const SHADER_MODEL_CONSTANTS_BIND_SLOT = 1;
+
+const LIGHT_CONSTANTS_NUM_ELEMENTS = 5;
+const SHADER_LIGHT_CONSTANTS_BIND_SLOT = 2;
 
 export class VertexType
 {
@@ -79,6 +84,7 @@ export default class Renderer
         // Initialize variables
         this.m_loadedTextures = [];
         this.m_loadedFonts = [];
+        this.m_loadedShaders = [];
 
         this.m_currentBlendMode = null;
         this.m_desiredBlendMode = BlendMode.ALPHA;
@@ -86,45 +92,15 @@ export default class Renderer
         this.m_desiredCullMode = CullMode.BACK;
         this.m_currentDepthMode = null;
         this.m_desiredDepthMode = DepthMode.ENABLED;
+
+        this.m_currentShader = null;
+        this.m_defaultShader = null;
     }
 
     Startup()
     {
-        // Create the WebGL program
-        this.m_webglProgram = this.m_context.createProgram();
-
-        // Create, compile and attach vertex shader to the WebGL program
-        const vertexShader = this.m_context.createShader(this.m_context.VERTEX_SHADER);
-        this.m_context.shaderSource(vertexShader, defaultVertexShader);
-        this.m_context.compileShader(vertexShader);
-        if (!this.m_context.getShaderParameter(vertexShader, this.m_context.COMPILE_STATUS))
-        {
-            const compileError = this.m_context.getShaderInfoLog(vertexShader);
-            console.error(compileError);
-        }
-        this.m_context.attachShader(this.m_webglProgram, vertexShader);
-
-        // Create, compile and attach fragment shader to the WebGL program
-        const fragmentShader = this.m_context.createShader(this.m_context.FRAGMENT_SHADER);
-        this.m_context.shaderSource(fragmentShader, defaultFragmentShader);
-        this.m_context.compileShader(fragmentShader);
-        if (!this.m_context.getShaderParameter(fragmentShader, this.m_context.COMPILE_STATUS))
-        {
-            const compileError = this.m_context.getShaderInfoLog(fragmentShader);
-            console.error(compileError);
-        }
-        this.m_context.attachShader(this.m_webglProgram, fragmentShader);
-
-        // Link the program
-        this.m_context.linkProgram(this.m_webglProgram);
-        if (!this.m_context.getProgramParameter(this.m_webglProgram, this.m_context.LINK_STATUS))
-        {
-            const linkError = this.m_context.getProgramInfoLog(this.m_webglProgram);
-            console.error(linkError);
-        }
-
-        // Set the program as the currently used program
-        this.m_context.useProgram(this.m_webglProgram);
+        this.m_defaultShader = this.CreateShaderFromSource("DefaultShader", defaultVertexShader, defaultFragmentShader);
+        this.BindShader(this.m_defaultShader);
 
         // Create an immediate vertex buffer to copy data into when passing vertexes
         this.m_immediateVBO = this.CreateVertexBuffer(Vertex_PCU.NUM_FLOAT32_ELEMENTS * FLOAT32_SIZE);
@@ -132,6 +108,8 @@ export default class Renderer
         this.m_cameraUBO = this.CreateUniformBuffer(CAMERA_CONSTANTS_NUM_ELEMENTS * FLOAT32_SIZE);
         // Create a uniform buffer to bind model constants
         this.m_modelUBO = this.CreateUniformBuffer(MODEL_CONSTANTS_NUM_ELEMENTS * FLOAT32_SIZE);
+        // Create a uniform buffer to bind light constants
+        this.m_lightUBO = this.CreateUniformBuffer(LIGHT_CONSTANTS_NUM_ELEMENTS * FLOAT32_SIZE);
 
         // Create a default texture, a 1x1 white pixel
         this.m_defaultTexture = this.CreateTextureFromData("defaultTexture", 1, 1, new Uint8Array([255, 255, 255, 255]));
@@ -144,14 +122,11 @@ export default class Renderer
         // Changing blend mode is just changing the blend function
         this.m_context.enable(this.m_context.BLEND);
 
-        // // Set ALPHA blend mode
-        // // #ToDo Move to SetBlendMode method
-        // this.m_context.enable(this.m_context.BLEND);
-        // this.m_context.blendFunc(this.m_context.SRC_ALPHA, this.m_context.ONE_MINUS_SRC_ALPHA);
-
         // Set uniform block binding for CameraConstants and ModelConstants
-        this.m_context.uniformBlockBinding(this.m_webglProgram, this.m_context.getUniformBlockIndex(this.m_webglProgram, "CameraConstants"), SHADER_CAMERA_CONSTANTS_BIND_SLOT);
-        this.m_context.uniformBlockBinding(this.m_webglProgram, this.m_context.getUniformBlockIndex(this.m_webglProgram, "ModelConstants"), SHADER_MODEL_CONSTANTS_BIND_SLOT);
+        // this.m_context.uniformBlockBinding(this.m_currentShader.m_program, this.m_context.getUniformBlockIndex(this.m_currentShader.m_program, "CameraConstants"), SHADER_CAMERA_CONSTANTS_BIND_SLOT);
+        // this.m_context.uniformBlockBinding(this.m_currentShader.m_program, this.m_context.getUniformBlockIndex(this.m_currentShader.m_program, "ModelConstants"), SHADER_MODEL_CONSTANTS_BIND_SLOT);
+        // this.m_context.uniformBlockBinding(this.m_currentShader.m_program, this.m_context.getUniformBlockIndex(this.m_currentShader.m_program, "LightConstants"), SHADER_LIGHT_CONSTANTS_BIND_SLOT);
+
     }
 
     BeginFrame()
@@ -258,6 +233,23 @@ export default class Renderer
 
             float32Data[vertexIndex * vbo.m_stride + 7] = data[vertexIndex].m_uvTexCoords.x;
             float32Data[vertexIndex * vbo.m_stride + 8] = data[vertexIndex].m_uvTexCoords.y;
+
+            if (vbo.m_stride === Vertex_PCU.NUM_FLOAT32_ELEMENTS)
+            {
+                continue;
+            }
+
+            float32Data[vertexIndex * vbo.m_stride + 9] = data[vertexIndex].m_tangent.x;
+            float32Data[vertexIndex * vbo.m_stride + 10] = data[vertexIndex].m_tangent.y;
+            float32Data[vertexIndex * vbo.m_stride + 11] = data[vertexIndex].m_tangent.z;
+
+            float32Data[vertexIndex * vbo.m_stride + 12] = data[vertexIndex].m_bitangent.x;
+            float32Data[vertexIndex * vbo.m_stride + 13] = data[vertexIndex].m_bitangent.y;
+            float32Data[vertexIndex * vbo.m_stride + 14] = data[vertexIndex].m_bitangent.z;
+
+            float32Data[vertexIndex * vbo.m_stride + 15] = data[vertexIndex].m_normal.x;
+            float32Data[vertexIndex * vbo.m_stride + 16] = data[vertexIndex].m_normal.y;
+            float32Data[vertexIndex * vbo.m_stride + 17] = data[vertexIndex].m_normal.z;
         }
 
         this.m_context.bindBuffer(this.m_context.ARRAY_BUFFER, vbo.m_buffer);
@@ -266,32 +258,64 @@ export default class Renderer
 
     BindVertexBuffer(vbo)
     {
-        const vertexPositionAttributeLocation = this.m_context.getAttribLocation(this.m_webglProgram, "vertexPosition");
+        const vertexPositionAttributeLocation = this.m_context.getAttribLocation(this.m_currentShader.m_program, "in_vertexPosition");
         if (vertexPositionAttributeLocation < 0)
         {
-            console.error("Failed to get attribute for vertexPosition. Please create a \"vertexPosition\" attribute in your shader!");
+            console.error("Failed to get attribute for vertexPosition. Please create a \"in_vertexPosition\" attribute in your shader!");
         }
         this.m_context.enableVertexAttribArray(vertexPositionAttributeLocation);
         this.m_context.bindBuffer(this.m_context.ARRAY_BUFFER, vbo.m_buffer);
         this.m_context.vertexAttribPointer(vertexPositionAttributeLocation, 3, this.m_context.FLOAT, false, vbo.m_stride * 4, 0);
 
-        const vertexColorAttributeLocation = this.m_context.getAttribLocation(this.m_webglProgram, "vertexColor");
+        const vertexColorAttributeLocation = this.m_context.getAttribLocation(this.m_currentShader.m_program, "in_vertexColor");
         if (vertexColorAttributeLocation < 0)
         {
-            console.error("Failed to get attribute for vertexColor. Please create a \"vertexColor\" attribute in your shader!");
+            console.error("Failed to get attribute for vertexColor. Please create a \"in_vertexColor\" attribute in your shader!");
         }
         this.m_context.enableVertexAttribArray(vertexColorAttributeLocation);
         this.m_context.bindBuffer(this.m_context.ARRAY_BUFFER, vbo.m_buffer);
         this.m_context.vertexAttribPointer(vertexColorAttributeLocation, 4, this.m_context.FLOAT, false, vbo.m_stride * 4, 12);
 
-        const vertexUVAttributeLocation = this.m_context.getAttribLocation(this.m_webglProgram, "vertexUV");
+        const vertexUVAttributeLocation = this.m_context.getAttribLocation(this.m_currentShader.m_program, "in_vertexUV");
         if (vertexUVAttributeLocation < 0)
         {
-            console.error("Failed to get attribute for vertexUV. Please create a \"vertexUV\" attribute in your shader!");
+            console.error("Failed to get attribute for vertexUV. Please create a \"in_vertexUV\" attribute in your shader!");
         }
         this.m_context.enableVertexAttribArray(vertexUVAttributeLocation);
         this.m_context.bindBuffer(this.m_context.ARRAY_BUFFER, vbo.m_buffer);
         this.m_context.vertexAttribPointer(vertexUVAttributeLocation, 2, this.m_context.FLOAT, false, vbo.m_stride * 4, 28);
+
+        if (this.m_currentShader.m_vertexType === VertexType.VERTEX_PCU)
+        {
+            return;
+        }
+
+        const vertexTangentAttributeLocation = this.m_context.getAttribLocation(this.m_currentShader.m_program, "in_vertexTangent");
+        if (vertexTangentAttributeLocation < 0)
+        {
+            console.error("Failed to get attribute for vertexTangent in shader\"" + this.m_currentShader.m_name + "\". Please create a \"in_vertexTangent\" attribute in your shader!");
+        }
+        this.m_context.enableVertexAttribArray(vertexTangentAttributeLocation);
+        this.m_context.bindBuffer(this.m_context.ARRAY_BUFFER, vbo.m_buffer);
+        this.m_context.vertexAttribPointer(vertexTangentAttributeLocation, 3, this.m_context.FLOAT, false, vbo.m_stride * 4, 36);
+
+        const vertexBitangentAttributeLocation = this.m_context.getAttribLocation(this.m_currentShader.m_program, "in_vertexBitangent");
+        if (vertexTangentAttributeLocation < 0)
+        {
+            console.error("Failed to get attribute for vertexBitangent in shader\"" + this.m_currentShader.m_name + "\". Please create a \"in_vertexBitangent\" attribute in your shader!");
+        }
+        this.m_context.enableVertexAttribArray(vertexBitangentAttributeLocation);
+        this.m_context.bindBuffer(this.m_context.ARRAY_BUFFER, vbo.m_buffer);
+        this.m_context.vertexAttribPointer(vertexBitangentAttributeLocation, 3, this.m_context.FLOAT, false, vbo.m_stride * 4, 48);
+
+        const vertexNormalAttributeLocation = this.m_context.getAttribLocation(this.m_currentShader.m_program, "in_vertexNormal");
+        if (vertexTangentAttributeLocation < 0)
+        {
+            console.error("Failed to get attribute for vertexNormal in shader\"" + this.m_currentShader.m_name + "\". Please create a \"in_vertexNormal\" attribute in your shader!");
+        }
+        this.m_context.enableVertexAttribArray(vertexNormalAttributeLocation);
+        this.m_context.bindBuffer(this.m_context.ARRAY_BUFFER, vbo.m_buffer);
+        this.m_context.vertexAttribPointer(vertexNormalAttributeLocation, 3, this.m_context.FLOAT, false, vbo.m_stride * 4, 60);
     }
 
     CreateUniformBuffer(size)
@@ -519,5 +543,102 @@ export default class Renderer
                 resolve(newFont);
             })
         });
+    }
+
+    async CreateOrGetShaderFromFiles(shaderName, vertexShaderFilePathWithNoExtension, fragmentShaderFilePathWithNoExtension, vertexType = VertexType.VERTEX_PCU)
+    {
+        const existingShader = this.GetShaderFromName(shaderName);
+        if (existingShader)
+        {
+            return existingShader;
+        }
+
+        return await this.CreateShaderFromFiles(shaderName, vertexShaderFilePathWithNoExtension, fragmentShaderFilePathWithNoExtension, vertexType);
+    }
+
+    GetShaderFromName(shaderName)
+    {
+        for (let shaderIndex = 0; shaderIndex < this.m_loadedShaders.length; shaderIndex++)
+        {
+            if (this.m_loadedShaders[shaderIndex].m_name === shaderName)
+            {
+                return this.m_loadedShaders[shaderIndex];
+            }
+        }
+
+        return null;
+    }
+
+    async CreateShaderFromFiles(shaderName, vertexShaderFilePathWithNoExtension, fragmentShaderFilePathWithNoExtension, vertexType = VertexType.VERTEX_PCU)
+    {
+        const vertexShaderSource = await FileUtils.ReadToString(vertexShaderFilePathWithNoExtension + ".glsl");
+        const fragmentShaderSource = await FileUtils.ReadToString(fragmentShaderFilePathWithNoExtension + ".glsl");
+        return this.CreateShaderFromSource(shaderName, vertexShaderSource, fragmentShaderSource, vertexType);
+    }
+
+    CreateShaderFromSource(shaderName, vertexShaderSource, fragmentShaderSource, vertexType = VertexType.VERTEX_PCU)
+    {
+        const newShader = new Shader(shaderName);
+        newShader.m_vertexType = vertexType;
+        newShader.m_program = this.m_context.createProgram();
+
+        // Create, compile and attach vertex shader to the WebGL program
+        newShader.m_vertexShader = this.m_context.createShader(this.m_context.VERTEX_SHADER);
+        this.m_context.shaderSource(newShader.m_vertexShader, vertexShaderSource);
+        this.m_context.compileShader(newShader.m_vertexShader);
+        if (!this.m_context.getShaderParameter(newShader.m_vertexShader, this.m_context.COMPILE_STATUS))
+        {
+            const compileError = this.m_context.getShaderInfoLog(newShader.m_vertexShader);
+            console.error(compileError);
+        }
+        this.m_context.attachShader(newShader.m_program, newShader.m_vertexShader);
+
+        // Create, compile and attach fragment shader to the WebGL program
+        newShader.m_fragmentShader = this.m_context.createShader(this.m_context.FRAGMENT_SHADER);
+        this.m_context.shaderSource(newShader.m_fragmentShader, fragmentShaderSource);
+        this.m_context.compileShader(newShader.m_fragmentShader);
+        if (!this.m_context.getShaderParameter(newShader.m_fragmentShader, this.m_context.COMPILE_STATUS))
+        {
+            const compileError = this.m_context.getShaderInfoLog(newShader.m_fragmentShader);
+            console.error(compileError);
+        }
+        this.m_context.attachShader(newShader.m_program, newShader.m_fragmentShader);
+
+        // Link the program
+        this.m_context.linkProgram(newShader.m_program);
+        if (!this.m_context.getProgramParameter(newShader.m_program, this.m_context.LINK_STATUS))
+        {
+            const linkError = this.m_context.getProgramInfoLog(newShader.m_program);
+            console.error(linkError);
+        }
+
+        this.m_loadedShaders.push(newShader);
+        return newShader;
+    }
+
+    BindShader(shaderToBind = null)
+    {
+        if (shaderToBind == null)
+        {
+            this.m_context.useProgram(this.m_defaultShader.m_program);
+            this.m_currentShader = this.m_defaultShader;
+            return;
+        }
+
+        this.m_context.useProgram(shaderToBind.m_program);
+        this.m_currentShader = shaderToBind;
+
+        this.m_context.uniformBlockBinding(this.m_currentShader.m_program, this.m_context.getUniformBlockIndex(this.m_currentShader.m_program, "CameraConstants"), SHADER_CAMERA_CONSTANTS_BIND_SLOT);
+        this.m_context.uniformBlockBinding(this.m_currentShader.m_program, this.m_context.getUniformBlockIndex(this.m_currentShader.m_program, "ModelConstants"), SHADER_MODEL_CONSTANTS_BIND_SLOT);
+        if (shaderToBind.m_vertexType === VertexType.VERTEX_PCUTBN)
+        {
+            this.m_context.uniformBlockBinding(this.m_currentShader.m_program, this.m_context.getUniformBlockIndex(this.m_currentShader.m_program, "LightConstants"), SHADER_LIGHT_CONSTANTS_BIND_SLOT);
+        }
+    }
+
+    SetLightConstants(sunDirection, sunIntensity, ambientIntensity)
+    {
+        this.CopyUniformBufferToGPU([sunDirection.x, sunDirection.y, sunDirection.z, sunIntensity, ambientIntensity], LIGHT_CONSTANTS_NUM_ELEMENTS, this.m_lightUBO);
+        this.BindUniformBuffer(this.m_lightUBO, SHADER_LIGHT_CONSTANTS_BIND_SLOT);
     }
 }
