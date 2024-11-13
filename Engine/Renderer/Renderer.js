@@ -361,24 +361,6 @@ export default class Renderer
 
     SetCullMode(cullMode)
     {
-        if (this.m_currentEye === "none")
-        {
-            this.m_desiredCullMode = cullMode;
-            return;
-        }
-
-        // WebXR flips the coordinate system so now backface culling should change to frontface culling!
-        if (cullMode === CullMode.BACK)
-        {
-            this.m_desiredCullMode = CullMode.FRONT;
-            return;
-        }
-        if (cullMode === CullMode.FRONT)
-        {
-            this.m_desiredCullMode = CullMode.BACK;
-            return;
-        }
-
         this.m_desiredCullMode = cullMode;
     }
 

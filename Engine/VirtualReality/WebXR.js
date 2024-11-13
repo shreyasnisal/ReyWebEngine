@@ -107,10 +107,10 @@ export default class WebXR
         const projectionMatrix = this.m_views[eye].projectionMatrix;
 
         // Obscure code to extract fovs from WebXR projection matrix;
-        fovs["left"] = Math.atan(1.0 / projectionMatrix[0]);
-        fovs["right"] = -fovs["left"];
-        fovs["up"] = Math.atan(1.0 / projectionMatrix[5]);
-        fovs["down"] = -fovs["up"];
+        fovs["left"] = Math.atan((projectionMatrix[8] - 1.0) / projectionMatrix[0]);
+        fovs["right"] = Math.atan((projectionMatrix[8] + 1.0) / projectionMatrix[0]);
+        fovs["up"] = Math.atan((projectionMatrix[9] + 1.0) / projectionMatrix[5]);
+        fovs["down"] = Math.atan((projectionMatrix[9] - 1.0) / projectionMatrix[5]);
 
         return fovs;
     }
