@@ -22,20 +22,26 @@ export default class WebXR
         this.m_config = config;
 
         // Initialize variables
+        this.m_isImmersiveSupported = false;
         this.m_initialized = false;
         this.m_views = [];
-        this.m_glLayer = null;
         this.m_leftController = null;
         this.m_rightController = null;
     }
 
     Startup()
     {
+        this.SetVRSupported();
+    }
+
+    async SetVRSupported()
+    {
+        this.m_isImmersiveSupported = await navigator.xr.isSessionSupported("immersive-vr");
     }
 
     IsVRSupported()
     {
-        return navigator.xr.isSessionSupported("immersive-vr");
+        return this.m_isImmersiveSupported;
     }
 
     async StartXRSession(callback)
