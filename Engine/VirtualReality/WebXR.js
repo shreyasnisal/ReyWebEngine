@@ -25,10 +25,17 @@ export default class WebXR
         this.m_initialized = false;
         this.m_views = [];
         this.m_glLayer = null;
+        this.m_leftController = null;
+        this.m_rightController = null;
     }
 
     Startup()
     {
+    }
+
+    IsVRSupported()
+    {
+        return navigator.xr.isSessionSupported("immersive-vr");
     }
 
     async StartXRSession(callback)
@@ -40,6 +47,8 @@ export default class WebXR
         this.m_xrSession.updateRenderState({ baseLayer: this.m_xrLayer });
         this.m_initialized = true;
         this.m_xrSession.requestAnimationFrame(callback);
+
+        this.m_xrSession.addEventListener("inputsourceschange", (inputSourcesEvent) => { this.HandleNewInputSources(inputSourcesEvent); });
     }
 
     BeginFrame(frame)
@@ -56,6 +65,15 @@ export default class WebXR
             {
                 this.m_views[view.eye] = view;
             }
+        }
+
+        if (this.m_leftController)
+        {
+            this.m_leftController.Update(frame);
+        }
+        if (this.m_rightController)
+        {
+            this.m_rightController.Update(frame);
         }
     }
 
@@ -123,6 +141,33 @@ export default class WebXR
     Shutdown()
     {
 
+    }
+
+    HandleNewInputSources(inputSourcesEvent)
+    {
+        inputSourcesEvent.added.forEach(newInputSource => {
+            if (newInputSource.targetRayMode === "tracked-pointer" && newInputSource)
+            {
+                if (newInputSource.handedness === "left")
+                {
+                    this.m_leftController = new VRController("left", newInputSource);
+                }
+                else if (newInputSource.handedness === "right")
+                {
+                    this.m_rightController = new VRController("right", newInputSource);
+                }
+            }
+        });
+    }
+
+    GetLeftController()
+    {
+        return this.m_leftController;
+    }
+
+    GetRightController()
+    {
+        return this.m_rightController;
     }
 }
 

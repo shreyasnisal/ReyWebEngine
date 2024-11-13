@@ -137,13 +137,14 @@ export default class Game
 
     HandleInput(deltaSeconds)
     {
-        if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
+        if (!g_webXR.IsVRSupported() && g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
         {
             g_input.SetCursorMode(true, true);
         }
 
         this.HandleKeyboardInput(deltaSeconds);
         this.HandleControllerInput(deltaSeconds);
+        this.HandleVRInput(deltaSeconds);
         this.m_playerOrientation.m_pitchDegrees = MathUtils.GetClamped(this.m_playerOrientation.m_pitchDegrees, -89.0, 89.0);
     }
 
@@ -220,7 +221,37 @@ export default class Game
 
         this.m_playerOrientation.m_yawDegrees -= rightJoystick.m_deadzoneCorrectedCartesianCoordinates.x * TURN_RATE * deltaSeconds;
         this.m_playerOrientation.m_pitchDegrees -= rightJoystick.m_deadzoneCorrectedCartesianCoordinates.y * TURN_RATE * deltaSeconds;
+    }
 
+    HandleVRInput(deltaSeconds)
+    {
+        if (!g_webXR.m_initialized)
+        {
+            return;
+        }
+
+        const leftController = g_webXR.GetLeftController();
+        const rightController = g_webXR.GetRightController();
+
+        if (leftController == null || rightController == null)
+        {
+            return;
+        }
+
+        const MOVEMENT_SPEED = 4.0;
+        const TURN_RATE = 90.0;
+
+        const playerBasis = this.m_playerOrientation.GetAsVectors_iFwd_jLeft_kUp();
+        const playerFwd = playerBasis[0];
+        const playerLeft = playerBasis[1];
+        const playerUp = playerBasis[2];
+
+        this.m_playerPosition.Add(playerFwd.GetScaled(leftController.GetJoystick().m_deadzoneCorrectedCartesianCoordinates.y * MOVEMENT_SPEED * deltaSeconds));
+        this.m_playerPosition.Add(playerLeft.GetScaled(-leftController.GetJoystick().m_deadzoneCorrectedCartesianCoordinates.x * MOVEMENT_SPEED * deltaSeconds));
+        // this.m_playerPosition.Add(Vec3.SKYWARD.GetScaled(velocityZ * MOVEMENT_SPEED * deltaSeconds));
+
+        // this.m_playerOrientation.m_yawDegrees -= rightJoystick.m_deadzoneCorrectedCartesianCoordinates.x * TURN_RATE * deltaSeconds;
+        // this.m_playerOrientation.m_pitchDegrees -= rightJoystick.m_deadzoneCorrectedCartesianCoordinates.y * TURN_RATE * deltaSeconds;
     }
 
     UpdateCameras()
