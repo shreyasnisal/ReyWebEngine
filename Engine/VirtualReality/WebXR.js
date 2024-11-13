@@ -31,15 +31,15 @@ export default class WebXR
     {
     }
 
-    async StartXRSession()
+    async StartXRSession(callback)
     {
         this.m_xrSession = await navigator.xr.requestSession("immersive-vr");
         this.m_xrReferenceSpace = await this.m_xrSession.requestReferenceSpace("local");
-        this.m_initialized = true;
         g_renderer.m_context.makeXRCompatible();
         this.m_xrLayer = new XRWebGLLayer(this.m_xrSession, g_renderer.m_context);
         this.m_xrSession.updateRenderState({ baseLayer: this.m_xrLayer });
-        // this.m_glLayer = this.m_xrSession.renderState.baseLayer;
+        this.m_initialized = true;
+        this.m_xrSession.requestAnimationFrame(callback);
     }
 
     BeginFrame(frame)

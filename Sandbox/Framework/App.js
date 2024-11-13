@@ -138,13 +138,13 @@ export default class App
         {
             this.m_leftEyeCamera.SetVRPerspectiveView(leftFoVs["left"], leftFoVs["right"], leftFoVs["up"], leftFoVs["down"], 0.01, 100.0);
         }
-        this.m_leftEyeCamera.SetTransform(g_webXR.GetPositionForEye_iFwd_jLeft_kUp("left"), g_webXR.GetOrientationForEye_iFwd_jLeft_kUp("left"));
+        this.m_leftEyeCamera.SetTransform(this.m_game.m_playerPosition.GetSum(g_webXR.GetPositionForEye_iFwd_jLeft_kUp("left")), g_webXR.GetOrientationForEye_iFwd_jLeft_kUp("left"));
         const rightFoVs = g_webXR.GetFoVsForEye("right");
         if (rightFoVs)
         {
             this.m_rightEyeCamera.SetVRPerspectiveView(rightFoVs["left"], rightFoVs["right"], rightFoVs["up"], rightFoVs["down"], 0.01, 100.0);
         }
-        this.m_rightEyeCamera.SetTransform(g_webXR.GetPositionForEye_iFwd_jLeft_kUp("right"), g_webXR.GetOrientationForEye_iFwd_jLeft_kUp("right"));
+        this.m_rightEyeCamera.SetTransform(this.m_game.m_playerPosition.GetSum(g_webXR.GetPositionForEye_iFwd_jLeft_kUp("right")), g_webXR.GetOrientationForEye_iFwd_jLeft_kUp("right"));
 
     }
 

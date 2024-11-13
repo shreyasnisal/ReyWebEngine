@@ -20,7 +20,7 @@ void main(void) {
 	float ambient = v2f_ambientIntensity;
 	float directional = v2f_lightIntensity * clamp(dot(normalize(v2f_vertexNormal.xyz), -v2f_lightDirection), 0.0, 1.0);
 	vec4 lightColor = vec4(ambient + directional, ambient + directional, ambient + directional, 1.0);
-	
+
 	vec4 textureColor = texture(diffuseSampler, v2f_vertexUV);
 
 	fragColor = lightColor * textureColor * v2f_vertexColor;

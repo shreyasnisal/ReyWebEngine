@@ -92,7 +92,7 @@ export default class Game
 
         const vrButton = document.createElement("button");
         vrButton.innerText = "VR Mode";
-        vrButton.addEventListener("click", () => { g_webXR.StartXRSession(); });
+        vrButton.addEventListener("click", async () => { await g_webXR.StartXRSession(g_app.RunFrame.bind(g_app)); });
         const vrButtonContainer = document.getElementById("vrbutton-container");
         vrButtonContainer.appendChild(vrButton);
     }
@@ -137,10 +137,10 @@ export default class Game
 
     HandleInput(deltaSeconds)
     {
-        // if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
-        // {
-        //     g_input.SetCursorMode(true, true);
-        // }
+        if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
+        {
+            g_input.SetCursorMode(true, true);
+        }
 
         this.HandleKeyboardInput(deltaSeconds);
         this.HandleControllerInput(deltaSeconds);
@@ -239,19 +239,19 @@ export default class Game
 
         // g_renderer.BeginCamera(this.m_worldCamera);
         {
+            g_renderer.BindShader(null);
             g_renderer.SetBlendMode(BlendMode.OPAQUE);
             g_renderer.SetCullMode(CullMode.BACK);
             g_renderer.SetDepthMode(DepthMode.ENABLED);
             g_renderer.SetModelConstants(cubeTransform);
             g_renderer.BindTexture(null);
-            g_renderer.BindShader(null);
             g_renderer.DrawVertexArray(this.m_testCubeVertexes);
 
-            if (this.m_treeModel != null)
+            if (this.m_treeModel != null && this.m_diffuseShader != null)
             {
-                g_renderer.SetModelConstants(Mat44.CreateTranslation3D(this.m_treePosition));
                 g_renderer.BindShader(this.m_diffuseShader);
                 g_renderer.SetLightConstants(new Vec3(2.0, -1.0, -1.0).GetNormalized(), 0.9, 0.1);
+                g_renderer.SetModelConstants(Mat44.CreateTranslation3D(this.m_treePosition));
                 g_renderer.DrawVertexBuffer(this.m_treeModel.m_modelGroups[0].m_gpuMesh.m_vertexBuffer, this.m_treeModel.m_modelGroups[0].m_cpuMesh.m_vertexes.length);
             }
         }
@@ -266,12 +266,12 @@ export default class Game
     {
         // g_renderer.BeginCamera(this.m_worldCamera);
         {
+            g_renderer.BindShader(null);
             g_renderer.SetBlendMode(BlendMode.OPAQUE);
             g_renderer.SetCullMode(CullMode.BACK);
             g_renderer.SetDepthMode(DepthMode.ENABLED);
             g_renderer.SetModelConstants();
             g_renderer.BindTexture(null);
-            g_renderer.BindShader(null);
             g_renderer.DrawVertexArray(this.m_gridStaticVerts);
         }
         // g_renderer.EndCamera(this.m_worldCamera);

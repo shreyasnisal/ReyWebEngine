@@ -15,16 +15,19 @@ layout(std140) uniform ModelConstants
 layout(std140) uniform LightConstants
 {
 	vec3 uSunDirection;
+	float padding0;
 	float uSunIntensity;
 	float uAmbientIntensity;
+	float padding1;
+	float padding2;
 };
 
-in vec3 in_vertexPosition;
-in vec4 in_vertexColor;
-in vec2 in_vertexUV;
-in vec3 in_vertexTangent;
-in vec3 in_vertexBitangent;
-in vec3 in_vertexNormal;
+layout(location = 0) in vec3 in_vertexPosition;
+layout(location = 1) in vec4 in_vertexColor;
+layout(location = 2) in vec2 in_vertexUV;
+layout(location = 3) in vec3 in_vertexTangent;
+layout(location = 4) in vec3 in_vertexBitangent;
+layout(location = 5) in vec3 in_vertexNormal;
 
 out vec4 v2f_vertexColor;
 out vec2 v2f_vertexUV;
