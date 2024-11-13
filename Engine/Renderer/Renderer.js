@@ -1,5 +1,6 @@
 "use strict";
 
+import {g_webXR} from "/Engine/Core/EngineCommon.js";
 import * as FileUtils from "/Engine/Core/FileUtils.js";
 import * as MathUtils from "/Engine/Math/MathUtils.js"
 import Rgba8 from "/Engine/Core/Rgba8.js";
@@ -95,6 +96,8 @@ export default class Renderer
 
         this.m_currentShader = null;
         this.m_defaultShader = null;
+
+        this.m_currentEye = "none";
     }
 
     Startup()
@@ -131,6 +134,10 @@ export default class Renderer
 
     BeginFrame()
     {
+        if (!g_webXR.m_initialized)
+        {
+            this.m_context.bindFramebuffer(this.m_context.FRAMEBUFFER, null);
+        }
     }
 
     EndFrame()
@@ -155,7 +162,15 @@ export default class Renderer
     {
         this.m_camera = camera;
 
-        this.m_context.viewport(0, 0, g_viewportWidth, g_viewportHeight);
+        if (this.m_currentEye === "none" || !g_webXR.m_initialized)
+        {
+            this.m_context.viewport(0, 0, g_viewportWidth, g_viewportHeight);
+        }
+        else
+        {
+            const viewportXYAndDimensions = g_webXR.GetViewportForEye(this.m_currentEye);
+            this.m_context.viewport(viewportXYAndDimensions[0].x, viewportXYAndDimensions[0].y, viewportXYAndDimensions[1].x, viewportXYAndDimensions[1].y);
+        }
 
         const viewMatrixValues = camera.GetViewMatrix().m_values;
         const projectionMatrixValues = camera.GetProjectionMatrix().m_values;
@@ -346,6 +361,24 @@ export default class Renderer
 
     SetCullMode(cullMode)
     {
+        if (this.m_currentEye === "none")
+        {
+            this.m_desiredCullMode = cullMode;
+            return;
+        }
+
+        // WebXR flips the coordinate system so now backface culling should change to frontface culling!
+        if (cullMode === CullMode.BACK)
+        {
+            this.m_desiredCullMode = CullMode.FRONT;
+            return;
+        }
+        if (cullMode === CullMode.FRONT)
+        {
+            this.m_desiredCullMode = CullMode.BACK;
+            return;
+        }
+
         this.m_desiredCullMode = cullMode;
     }
 
@@ -640,5 +673,26 @@ export default class Renderer
     {
         this.CopyUniformBufferToGPU([sunDirection.x, sunDirection.y, sunDirection.z, sunIntensity, ambientIntensity], LIGHT_CONSTANTS_NUM_ELEMENTS, this.m_lightUBO);
         this.BindUniformBuffer(this.m_lightUBO, SHADER_LIGHT_CONSTANTS_BIND_SLOT);
+    }
+
+    SetFrameBuffer(frameBuffer = null)
+    {
+        this.m_context.bindFramebuffer(this.m_context.FRAMEBUFFER, frameBuffer);
+    }
+
+    SetVREye(eye)
+    {
+        this.m_currentEye = eye;
+    }
+
+    BeginRenderForVR()
+    {
+        if (!g_webXR.m_initialized)
+        {
+            return;
+        }
+
+        const frameBuffer = g_webXR.GetFrameBuffer();
+        this.m_context.bindFramebuffer(this.m_context.FRAMEBUFFER, frameBuffer);
     }
 }

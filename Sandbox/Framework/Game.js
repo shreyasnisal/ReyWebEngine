@@ -89,6 +89,12 @@ export default class Game
         // Add helper messages
         g_debugRenderSystem.AddMessage("Esc to release mouse cursor (if locked)", -1.0, Rgba8.CYAN, Rgba8.CYAN);
         g_debugRenderSystem.AddMessage("TAB to open DevConsole", -1.0, Rgba8.YELLOW, Rgba8.YELLOW);
+
+        const vrButton = document.createElement("button");
+        vrButton.innerText = "VR Mode";
+        vrButton.addEventListener("click", () => { g_webXR.StartXRSession(); });
+        const vrButtonContainer = document.getElementById("vrbutton-container");
+        vrButtonContainer.appendChild(vrButton);
     }
 
     HandlePointerLockChange()
@@ -131,10 +137,10 @@ export default class Game
 
     HandleInput(deltaSeconds)
     {
-        if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
-        {
-            g_input.SetCursorMode(true, true);
-        }
+        // if (g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
+        // {
+        //     g_input.SetCursorMode(true, true);
+        // }
 
         this.HandleKeyboardInput(deltaSeconds);
         this.HandleControllerInput(deltaSeconds);
@@ -226,12 +232,12 @@ export default class Game
 
     Render()
     {
-        g_renderer.ClearScreen(Rgba8.GRAY);
+        // g_renderer.ClearScreen(Rgba8.GRAY);
 
         const cubeTransform = Mat44.CreateTranslation3D(this.m_cubePosition);
         cubeTransform.Append(this.m_cubeOrientation.GetAsMatrix_iFwd_jLeft_kUp());
 
-        g_renderer.BeginCamera(this.m_worldCamera);
+        // g_renderer.BeginCamera(this.m_worldCamera);
         {
             g_renderer.SetBlendMode(BlendMode.OPAQUE);
             g_renderer.SetCullMode(CullMode.BACK);
@@ -249,15 +255,16 @@ export default class Game
                 g_renderer.DrawVertexBuffer(this.m_treeModel.m_modelGroups[0].m_gpuMesh.m_vertexBuffer, this.m_treeModel.m_modelGroups[0].m_cpuMesh.m_vertexes.length);
             }
         }
-        g_renderer.EndCamera(this.m_worldCamera);
+        // g_renderer.EndCamera(this.m_worldCamera);
         this.RenderGrid();
 
-        g_debugRenderSystem.RenderWorld(this.m_worldCamera);
+        // g_debugRenderSystem.RenderWorld(this.m_worldCamera);
+        // g_debugRenderSystem.RenderScreen(this.m_screenCamera);
     }
 
     RenderGrid()
     {
-        g_renderer.BeginCamera(this.m_worldCamera);
+        // g_renderer.BeginCamera(this.m_worldCamera);
         {
             g_renderer.SetBlendMode(BlendMode.OPAQUE);
             g_renderer.SetCullMode(CullMode.BACK);
@@ -267,6 +274,6 @@ export default class Game
             g_renderer.BindShader(null);
             g_renderer.DrawVertexArray(this.m_gridStaticVerts);
         }
-        g_renderer.EndCamera(this.m_worldCamera);
+        // g_renderer.EndCamera(this.m_worldCamera);
     }
 }

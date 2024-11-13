@@ -29,6 +29,12 @@ export default class Camera
         this.m_perspectiveFov = 0.0;
         this.m_perspectiveNear = 0.0;
         this.m_perspectiveFar = 0.0;
+        this.m_vrFovLeft = 0.0;
+        this.m_vrFovRight = 0.0;
+        this.m_vrFovUp = 0.0;
+        this.m_vrFovDown = 0.0;
+        this.m_vrNear = 0.0;
+        this.m_vrFar = 0.0;
         this.m_renderIBasis = Vec4.EAST;
         this.m_renderJBasis = Vec4.NORTH;
         this.m_renderKBasis = Vec4.SKYWARD;
@@ -49,6 +55,18 @@ export default class Camera
         this.m_perspectiveFov = fov;
         this.m_perspectiveNear = perspectiveNear;
         this.m_perspectiveFar = perspectiveFar;
+    }
+
+    SetVRPerspectiveView(fovLeft, fovRight, fovUp, fovDown, near, far)
+    {
+        this.m_mode = CameraMode.VR_PERSPECTIVE;
+        this.m_vrFovLeft = fovLeft;
+        this.m_vrFovRight = fovRight;
+        this.m_vrFovUp = fovUp;
+        this.m_vrFovDown = fovDown;
+        this.m_vrNear = near;
+        this.m_vrFar = far;
+
     }
 
     SetRenderBasis(iBasis, jBasis, kBasis)
@@ -98,6 +116,11 @@ export default class Camera
         return Mat44.CreatePerspectiveProjection(this.m_perspectiveFov, this.m_perspectiveAspect, this.m_perspectiveNear, this.m_perspectiveFar);
     }
 
+    GetVRPerspectiveMatrix()
+    {
+        return Mat44.CreateOffCenterPerspectiveProjection(this.m_vrFovLeft, this.m_vrFovRight, this.m_vrFovUp, this.m_vrFovDown, this.m_vrNear, this.m_vrFar);
+    }
+
     GetViewMatrix()
     {
         const lookAtMatrix = Mat44.CreateTranslation3D(this.m_position);
@@ -113,9 +136,13 @@ export default class Camera
         {
             projectionMatrix = this.GetOrthoMatrix();
         }
-        else
+        else if (this.m_mode === CameraMode.PERSPECTIVE)
         {
             projectionMatrix = this.GetPerspectiveMatrix();
+        }
+        else
+        {
+            projectionMatrix = this.GetVRPerspectiveMatrix();
         }
 
         const renderMatrix = this.GetRenderMatrix();

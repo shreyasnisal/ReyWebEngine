@@ -9,7 +9,7 @@
                 content="Hi, I'm Shreyas, aka Rey! Welcome to my JavaScript game engine..."
                 property="og:description">
         <meta property="og:type" content="website" />
-        <link rel="shortcut icon" type="image/png" href="./Logo.png" />
+        <link rel="shortcut icon" type="image/png" href="Logo.png" />
         <title>Rey's Game Engine</title>
 
         <style>
@@ -18,12 +18,23 @@
                 margin: 0px;
                 display: flex;
             }
+            #vrbutton-container
+            {
+                position: absolute;
+                right: 0px;
+                bottom: 0px;
+            }
+            #vrbutton-container > button
+            {
+                width: 100px;
+                height: 50px;
+            }
         </style>
     </head>
 
     <body>
         <script type="module" src="Sandbox/Framework/Main.js"></script>
         <canvas id="id_canvas"></canvas>
-        </div>
+        <div id="vrbutton-container"></div>
     </body>
 </html>

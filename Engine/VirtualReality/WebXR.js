@@ -4,6 +4,7 @@ import {g_renderer, g_webXR} from "/Engine/Core/EngineCommon.js";
 
 import EulerAngles from "/Engine/Math/EulerAngles.js";
 import * as MathUtils from "/Engine/Math/MathUtils.js";
+import Vec2 from "/Engine/Math/Vec2.js";
 import Vec3 from "/Engine/Math/Vec3.js";
 
 import VRController from "/Engine/VirtualReality/VRController.js";
@@ -22,10 +23,8 @@ export default class WebXR
 
         // Initialize variables
         this.m_initialized = false;
-        this.m_leftEyePosition = new Vec3();
-        this.m_leftEyeOrientation = new EulerAngles();
-        this.m_rightEyePosition = new Vec3();
-        this.m_rightEyeOrientation = new EulerAngles();
+        this.m_views = [];
+        this.m_glLayer = null;
     }
 
     Startup()
@@ -34,34 +33,86 @@ export default class WebXR
 
     async StartXRSession()
     {
-        // Request a VR session
         this.m_xrSession = await navigator.xr.requestSession("immersive-vr");
         this.m_xrReferenceSpace = await this.m_xrSession.requestReferenceSpace("local");
-
-        // Configure renderer for XR and set session state
-        g_renderer.setXRSession(this.m_xrSession, this.m_xrReferenceSpace);
         this.m_initialized = true;
+        g_renderer.m_context.makeXRCompatible();
+        this.m_xrLayer = new XRWebGLLayer(this.m_xrSession, g_renderer.m_context);
+        this.m_xrSession.updateRenderState({ baseLayer: this.m_xrLayer });
+        // this.m_glLayer = this.m_xrSession.renderState.baseLayer;
     }
 
     BeginFrame(frame)
     {
+        if (!frame)
+        {
+            return;
+        }
+
         const pose = frame.getViewerPose(this.m_xrReferenceSpace);
         if (pose)
         {
-            for (let view in pose.views)
+            for (let view of pose.views)
             {
-                if (view.eye === "left")
-                {
-                    this.m_leftEyePosition = new Vec3(-view.transform.position.z, -view.transform.position.x, view.transform.position.y);
-                    this.m_leftEyeOrientation = MathUtils.GetEulerAnglesFromQuaternion(-view.transform.orientation.z, -view.transform.orientation.x, view.transform.orientation.y, view.transform.orientation.w);
-                }
-                else if (view.eye === "right")
-                {
-                    this.m_rightEyePosition = new Vec3(-view.transform.position.z, -view.transform.position.x, view.transform.position.y);
-                    this.m_rightEyeOrientation = MathUtils.GetEulerAnglesFromQuaternion(-view.transform.orientation.z, -view.transform.orientation.x, view.transform.orientation.y, view.transform.orientation.w);
-                }
+                this.m_views[view.eye] = view;
             }
         }
+    }
+
+    GetViewportForEye(eye)
+    {
+        if (!this.m_views[eye])
+        {
+            return [new Vec2(), new Vec2()];
+        }
+
+        const viewport = this.m_xrLayer.getViewport(this.m_views[eye]);
+        return [new Vec2(viewport.x, viewport.y) , new Vec2(viewport.width, viewport.height)];
+    }
+
+    GetFrameBuffer()
+    {
+        return this.m_xrLayer.framebuffer;
+    }
+
+    GetPositionForEye_iFwd_jLeft_kUp(eye)
+    {
+        if (!this.m_views[eye])
+        {
+            return new Vec3();
+        }
+
+        return new Vec3(-this.m_views[eye].transform.position.z, -this.m_views[eye].transform.position.x, this.m_views[eye].transform.position.y);
+    }
+
+    GetOrientationForEye_iFwd_jLeft_kUp(eye)
+    {
+        if (!this.m_views[eye])
+        {
+            return new EulerAngles();
+        }
+
+        return MathUtils.GetEulerAnglesFromQuaternion(-this.m_views[eye].transform.orientation.z, -this.m_views[eye].transform.orientation.x, this.m_views[eye].transform.orientation.y, this.m_views[eye].transform.orientation.w);
+    }
+
+    GetFoVsForEye(eye)
+    {
+        if (!this.m_views[eye])
+        {
+            return;
+        }
+
+        const fovs = [];
+
+        const projectionMatrix = this.m_views[eye].projectionMatrix;
+
+        // Obscure code to extract fovs from WebXR projection matrix;
+        fovs["left"] = Math.atan(1.0 / projectionMatrix[0]);
+        fovs["right"] = -fovs["left"];
+        fovs["up"] = Math.atan(1.0 / projectionMatrix[5]);
+        fovs["down"] = -fovs["up"];
+
+        return fovs;
     }
 
     EndFrame()

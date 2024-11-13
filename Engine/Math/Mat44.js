@@ -170,6 +170,34 @@ export default class Mat44
         return perspectiveMatrix;
     }
 
+    static CreateOffCenterPerspectiveProjection(angleLeft, angleRight, angleUp, angleDown, perspectiveNear, perspectiveFar)
+    {
+        const tanLeft = Math.tan(angleLeft);
+        const tanRight = Math.tan(angleRight);
+        const tanUp = Math.tan(angleUp);
+        const tanDown = Math.tan(angleDown);
+
+        const left = perspectiveNear * tanLeft;
+        const right = perspectiveNear * tanRight;
+        const top = perspectiveNear * tanUp;
+        const bottom = perspectiveNear * tanDown;
+
+        const offCenterPespectiveMatrix = new Mat44();
+
+        offCenterPespectiveMatrix.m_values[Mat44.Elements.Ix] = 2.0 * perspectiveNear / (right - left);
+        offCenterPespectiveMatrix.m_values[Mat44.Elements.Jy] = 2.0 * perspectiveNear / (top - bottom);
+
+        offCenterPespectiveMatrix.m_values[Mat44.Elements.Kx] = (left + right) / (right - left);
+        offCenterPespectiveMatrix.m_values[Mat44.Elements.Ky] = (top + bottom) / (top - bottom);
+        offCenterPespectiveMatrix.m_values[Mat44.Elements.Kz] = perspectiveFar / (perspectiveNear - perspectiveFar);
+        offCenterPespectiveMatrix.m_values[Mat44.Elements.Kw] = -1.0;
+
+        offCenterPespectiveMatrix.m_values[Mat44.Elements.Tz] = -1.0 * perspectiveFar * perspectiveNear / (perspectiveFar - perspectiveNear);
+        offCenterPespectiveMatrix.m_values[Mat44.Elements.Tw] = 0.0;
+
+        return offCenterPespectiveMatrix;
+    }
+
     TransformVectorQuantity2D(vectorQuantityXY)
     {
 
