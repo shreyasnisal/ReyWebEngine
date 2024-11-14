@@ -7,7 +7,7 @@ import {
     g_console,
     g_eventSystem,
     g_debugRenderSystem,
-    g_modelLoader, g_webXR
+    g_modelLoader, g_webXR, g_windowManager
 } from "/Engine/Core/EngineCommon.js";
 
 import * as FileUtils from "/Engine/Core/FileUtils.js";
@@ -62,8 +62,6 @@ export default class Game
 
         this.InitializeGrid();
 
-        document.onpointerlockchange = () => this.HandlePointerLockChange();
-
         this.m_testTexture = null;
         g_renderer.CreateOrGetTextureFromFile("/Sandbox/Data/Images/Test_StbiFlippedAndOpenGL.png").then(texture => { this.m_testTexture = texture; });
 
@@ -90,22 +88,24 @@ export default class Game
         g_debugRenderSystem.AddMessage("Esc to release mouse cursor (if locked)", -1.0, Rgba8.CYAN, Rgba8.CYAN);
         g_debugRenderSystem.AddMessage("TAB to open DevConsole", -1.0, Rgba8.YELLOW, Rgba8.YELLOW);
 
-        const vrButton = document.createElement("button");
-        vrButton.innerText = "VR Mode";
-        vrButton.addEventListener("click", async () => { await g_webXR.StartXRSession(g_app.RunFrame.bind(g_app)); });
-        const vrButtonContainer = document.getElementById("vrbutton-container");
-        vrButtonContainer.appendChild(vrButton);
+        // const vrButton = document.createElement("button");
+        // vrButton.innerText = "VR Mode";
+        // vrButton.addEventListener("click", async () => { await g_webXR.StartXRSession(g_app.RunFrame.bind(g_app)); });
+        // const vrButtonContainer = document.getElementById("vrbutton-container");
+        // vrButtonContainer.appendChild(vrButton);
+
+        document.getElementById("id_canvas").addEventListener("click", () => { this.HandleCanvasClicked() });
     }
 
-    HandlePointerLockChange()
+    HandleCanvasClicked()
     {
-        if (document.pointerLockElement)
+        if (g_webXR.IsVRSupported())
         {
-            g_input.SetCursorMode(true, true);
+            g_webXR.StartXRSession(g_app.RunFrame.bind(g_app));
         }
         else
         {
-            g_input.SetCursorMode(false, false);
+            g_input.SetCursorMode(true, true);
         }
     }
 
@@ -137,10 +137,10 @@ export default class Game
 
     HandleInput(deltaSeconds)
     {
-        if (!g_webXR.IsVRSupported() && g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
-        {
-            g_input.SetCursorMode(true, true);
-        }
+        // if (!g_webXR.IsVRSupported() && g_input.WasLMBJustPressed() && !g_input.IsCursorRelativeMode())
+        // {
+        //     g_input.SetCursorMode(true, true);
+        // }
 
         this.HandleKeyboardInput(deltaSeconds);
         this.HandleControllerInput(deltaSeconds);

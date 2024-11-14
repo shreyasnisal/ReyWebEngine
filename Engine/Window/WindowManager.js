@@ -26,7 +26,7 @@ export default class WindowManager
         window.addEventListener("mousedown", (mouseEvent) => this.HandleMouseButtonDown(mouseEvent));
         window.addEventListener("mouseup", (mouseEvent) => this.HandleMouseButtonUp(mouseEvent));
 
-        document.onpointerlockerror = () => this.HandlePointerLockError();
+        document.onpointerlockchange = (pointerLockEvent) => { this.SetFocus(document.pointerLockElement ? true : false); }
     }
 
     BeginFrame()
@@ -55,50 +55,54 @@ export default class WindowManager
 
     HandleKeyDown(keyEvent)
     {
-        if (keyEvent.code === "Escape")
+        if (this.m_hasFocus)
         {
-            this.SetFocus(false);
+            keyEvent.preventDefault();
         }
         else
         {
-            if (this.m_hasFocus)
-            {
-                keyEvent.preventDefault();
-            }
-            else
-            {
-                keyEvent.stopImmediatePropagation();
-            }
+            keyEvent.stopImmediatePropagation();
         }
     }
 
     HandleMouseMove(mouseEvent)
     {
+        if (this.m_hasFocus)
+        {
+            mouseEvent.preventDefault();
+        }
+        else
+        {
+            mouseEvent.stopImmediatePropagation();
+        }
     }
 
     HandleMouseButtonDown(mouseEvent)
     {
+        if (this.m_hasFocus)
+        {
+            mouseEvent.preventDefault();
+        }
+        else
+        {
+            mouseEvent.stopImmediatePropagation();
+        }
     }
 
     HandleMouseButtonUp(mouseEvent)
     {
-    }
-
-    HandlePointerLockError()
-    {
-        this.m_canvas.requestPointerLock();
+        if (this.m_hasFocus)
+        {
+            mouseEvent.preventDefault();
+        }
+        else
+        {
+            mouseEvent.stopImmediatePropagation();
+        }
     }
 
     SetFocus(focus)
     {
         this.m_hasFocus = focus;
-        if (focus)
-        {
-            this.m_canvas.requestPointerLock();
-        }
-        else
-        {
-            document.exitPointerLock();
-        }
     }
 }

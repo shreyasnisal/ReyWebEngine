@@ -50,6 +50,8 @@ export default class InputSystem
         this.m_cursorState = new CursorState();
         this.m_canvas = document.getElementById("id_canvas");
 
+        this.m_touches = new Map();
+
         window.addEventListener("keydown", (keyEvent) => this.HandleKeyDown(keyEvent));
         window.addEventListener("keyup", (keyEvent) => this.HandleKeyUp(keyEvent));
         window.addEventListener("mousemove", (mouseEvent) => this.HandleMouseMove(mouseEvent));
@@ -57,6 +59,11 @@ export default class InputSystem
         window.addEventListener("mouseup", (mouseEvent) => this.HandleMouseButtonUp(mouseEvent));
         window.addEventListener("gamepadconnected", (gamepadEvent) => this.HandleGamepadConnected(gamepadEvent.gamepad.index));
         window.addEventListener("gamepaddisconnected", (gamepadEvent) => this.HandleGamepadDisconnected(gamepadEvent.gamepad.index));
+        window.addEventListener("touchstart", (touchEvent) => { this.HandleTouchStart(touchEvent); });
+        window.addEventListener("touchend", (touchEvent) => { this.HandleTouchEnd(touchEvent); })
+        window.addEventListener("touchmove", (touchEvent) => { this.HandleTouchMove(touchEvent) });
+
+        document.onpointerlockerror = () => this.HandlePointerLockError();
     }
 
     BeginFrame()
@@ -81,6 +88,16 @@ export default class InputSystem
         }
 
         this.m_cursorState.m_cursorClientDelta = Vec2.ZERO;
+
+        for (const [touchIdentifier, touchState] of this.m_touches)
+        {
+            touchState.m_wasTouchedLastFrame = touchState.m_isTouched;
+
+            if (!touchState.m_isTouched && !touchState.m_wasPressedLastFrame)
+            {
+                this.m_touches.delete(touchIdentifier);
+            }
+        }
     }
 
     Shutdown()
@@ -234,12 +251,17 @@ export default class InputSystem
 
         if (relativeMode)
         {
-            this.m_config.m_windowManager.SetFocus(true);
+            this.m_canvas.requestPointerLock();
         }
         else
         {
-            this.m_config.m_windowManager.SetFocus(false);
+            document.exitPointerLock();
         }
+    }
+
+    HandlePointerLockError()
+    {
+        this.m_canvas.requestPointerLock();
     }
 
     IsCursorRelativeMode()
@@ -282,5 +304,48 @@ export default class InputSystem
         }
 
         return null;
+    }
+
+    HandleTouchStart(touchEvent)
+    {
+        for (const touch of touchEvent.changedTouches)
+        {
+            // Check if the map already includes a touch with this touch identifier
+            if (!this.m_touches.has(touch.identifier))
+            {
+                const touchState = new TouchState();
+                touchState.m_position = new Vec2(touch.clientX, touch.clientY);
+                this.m_touches.set(touch.identifier, touchState);
+            }
+        }
+    }
+
+    HandleTouchMove(touchEvent)
+    {
+        for (const touch of touchEvent.changedTouches)
+        {
+            const touchState = this.m_touches.get(touch.identifier);
+            if (touchState)
+            {
+                touchState.m_position = new Vec2(touch.clientX, touch.clientY);
+            }
+        }
+    }
+
+    HandleTouchEnd(touchEvent)
+    {
+        for (const touch of touchEvent.changedTouches)
+        {
+            const touchState = this.m_touches.get(touch.identifier);
+            if (touchState)
+            {
+                touchState.m_isTouched = false;
+            }
+        }
+    }
+
+    GetActiveTouches()
+    {
+        return Array.from(this.m_touches.values());
     }
 }
