@@ -17,10 +17,10 @@ export default class SpriteSheet
         for (let spriteIndex = 0; spriteIndex < numSprites; spriteIndex++)
         {
             const minsX = spriteIndex % simpleGridLayout.x;
-            const minsY = simpleGridLayout.y - 1.0 - MathUtils.RoundDownToInt(spriteIndex / simpleGridLayout.y);
+            const minsY = simpleGridLayout.y - 1.0 - MathUtils.RoundDownToInt(spriteIndex / simpleGridLayout.x);
 
-            const samplingCorrectionFactorX = 1.0 / (1.0 * texture.m_dimensions.x);
-            const samplingCorrectionFactorY = 1.0 / (1.0 * texture.m_dimensions.y);
+            const samplingCorrectionFactorX = 1.0 / texture.m_dimensions.x;
+            const samplingCorrectionFactorY = 1.0 / texture.m_dimensions.y;
 
             let uvAtMinsX = minsX / simpleGridLayout.x;
             let uvAtMaxsX = uvAtMinsX + (1.0 / simpleGridLayout.x);

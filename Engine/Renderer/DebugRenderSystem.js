@@ -123,7 +123,6 @@ export default class DebugRenderSystem
     {
         this.m_config.m_renderer.BeginCamera(worldCamera);
         {
-
         }
         this.m_config.m_renderer.EndCamera(worldCamera);
     }

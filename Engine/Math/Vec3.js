@@ -1,5 +1,9 @@
 "use strict";
 
+import * as StringUtils from "/Engine/Core/StringUtils.js";
+
+import Vec2 from "/Engine/Math/Vec2.js";
+
 
 export default class Vec3
 {
@@ -21,6 +25,27 @@ export default class Vec3
     toString()
     {
         return "(" + this.x + "," + this.y + "," + this.z + ")";
+    }
+
+    SetFromString(vec3Str)
+    {
+        if (vec3Str == null)
+        {
+            console.error("Attempting to set Vec3 from invalid string!");
+            return;
+        }
+
+        const splitStrings = [];
+        StringUtils.SplitStringOnDelimiter(splitStrings, vec3Str, ',', false);
+        if (splitStrings.length !== 3)
+        {
+            console.error("Invalid number of literals in Vec3 string!");
+            return;
+        }
+
+        this.x = parseFloat(splitStrings[0]);
+        this.y = parseFloat(splitStrings[1]);
+        this.z = parseFloat(splitStrings[2]);
     }
 
     Add(vecToAdd)
@@ -59,6 +84,11 @@ export default class Vec3
         return new Vec3(this.x * scalingFactor, this.y * scalingFactor, this.z * scalingFactor);
     }
 
+    GetProduct(vecToMultiply)
+    {
+        return new Vec3(this.x * vecToMultiply.x, this.y * vecToMultiply.y, this.z * vecToMultiply.z);
+    }
+
     GetLength()
     {
         return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
@@ -87,5 +117,10 @@ export default class Vec3
         }
         const scalingFactor = 1.0 / length;
         return new Vec3(this.x * scalingFactor, this.y * scalingFactor, this.z * scalingFactor);
+    }
+
+    GetXY()
+    {
+        return new Vec2(this.x, this.y);
     }
 }

@@ -165,7 +165,7 @@ export default class App
 
         this.m_game.Render();
 
-        // g_console.Render(new AABB2(Vec2.ZERO, new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y)));
+        g_console.Render(new AABB2(Vec2.ZERO, new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y)));
 
         if (this.m_currentEye === "none")
         {

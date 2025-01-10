@@ -1,8 +1,11 @@
 "use strict";
 
+import AABB2 from "/Engine/Math/AABB2.js"
+import AABB3 from "/Engine/Math/AABB3.js";
 import EulerAngles from "/Engine/Math/EulerAngles.js";
-import Vec3 from "/Engine/Math/Vec3.js"
-import Vec4 from "/Engine/Math/Vec4.js"
+import NumberRange from "/Engine/Math/NumberRange.js";
+import Vec3 from "/Engine/Math/Vec3.js";
+import Vec4 from "/Engine/Math/Vec4.js";
 
 
 export function ConvertDegreesToRadians(degrees)
@@ -167,4 +170,84 @@ export function GetEulerAnglesFromQuaternion(quaternionX, quaternionY, quaternio
     return new EulerAngles(ConvertRadiansToDegrees(yaw), ConvertRadiansToDegrees(pitch), ConvertRadiansToDegrees(roll));
 }
 
+export function GetDistance2D(vecA, vecB)
+{
+    return Math.sqrt(
+        ((vecB.x - vecA.x) * (vecB.x - vecA.x)) +
+           ((vecB.y - vecA.y) * (vecB.y - vecA.y))
+    );
+}
 
+export function GetDistanceSquared2D(vecA, vecB)
+{
+    return (
+        ((vecB.x - vecA.x) * (vecB.x - vecA.x)) +
+        ((vecB.y - vecA.y) * (vecB.y - vecA.y))
+    );
+}
+
+export function IsPointInsideDisc2D(referencePoint, discCenter, discRadius)
+{
+    return GetDistanceSquared2D(referencePoint, discCenter) < (discRadius * discRadius);
+}
+
+export function DoDiscAndAABB2Overlap(discCenter, discRadius, box)
+{
+    const nearestPointOnBox = box.GetNearestPoint(discCenter);
+    return IsPointInsideDisc2D(nearestPointOnBox, discCenter, discRadius);
+}
+
+export function DoAABB3AndCylinerOverlap(box, cylinderBaseCenter, cylinderTopCenter, cylinderRadius)
+{
+    if (!DoDiscAndAABB2Overlap(cylinderBaseCenter.GetXY(), cylinderRadius, new AABB2(box.m_mins.GetXY(), box.m_maxs.GetXY())))
+    {
+        return false;
+    }
+    const cylinderZRange = new NumberRange(cylinderBaseCenter.z, cylinderTopCenter.z);
+    const boxZRange = new NumberRange(box.m_mins.z, box.m_maxs.z);
+    return cylinderZRange.IsOverlappingWith(boxZRange);
+}
+
+export function PushZCylinderOutOfFixedAABB3(cylinderBaseCenter, cylinderTopCenter, cylinderRadius, box)
+{
+    const topViewBox2D = new AABB2(box.m_mins.GetXY(), box.m_maxs.GetXY());
+    if (!DoDiscAndAABB2Overlap(cylinderBaseCenter.GetXY(), cylinderRadius, topViewBox2D))
+    {
+        return false;
+    }
+
+    const cylinderZRange = new NumberRange(cylinderBaseCenter.z, cylinderTopCenter.z);
+    const boxZRange = new NumberRange(box.m_mins.z, box.m_maxs.z);
+
+    if (!cylinderZRange.IsOverlappingWith(boxZRange))
+    {
+        return false;
+    }
+
+    const nearestPointOnTopViewBox2D = topViewBox2D.GetNearestPoint(cylinderBaseCenter.GetXY());
+    const topViewPushDistance = cylinderRadius - GetDistance2D(nearestPointOnTopViewBox2D, cylinderBaseCenter.GetXY());
+
+    const downwardPushDistance = Math.abs(cylinderZRange.m_max - boxZRange.m_min);
+    const upwardPushDistance = Math.abs(cylinderZRange.m_min - boxZRange.m_max);
+    let verticalPushDistance = upwardPushDistance;
+    let verticalPushDirection = Vec3.SKYWARD;
+    if (upwardPushDistance > downwardPushDistance)
+    {
+        verticalPushDistance = downwardPushDistance;
+        verticalPushDirection = Vec3.GROUNDWARD;
+    }
+
+    const horizontalPushDir = cylinderBaseCenter.GetXY().GetDifference(nearestPointOnTopViewBox2D).GetAsVec3().GetNormalized();
+    if (verticalPushDistance < topViewPushDistance)
+    {
+        cylinderBaseCenter.Add(verticalPushDirection.GetScaled(verticalPushDistance));
+        cylinderTopCenter.Add(verticalPushDirection.GetScaled(verticalPushDistance));
+
+        return true;
+    }
+
+    cylinderBaseCenter.Add(horizontalPushDir.GetScaled(topViewPushDistance));
+    cylinderTopCenter.Add(horizontalPushDir.GetScaled(topViewPushDistance));
+
+    return true;
+}

@@ -1,5 +1,6 @@
 "use strict";
 
+import * as MathUtils from "/Engine/Math/MathUtils.js";
 import Vec2 from "/Engine/Math/Vec2.js"
 
 
@@ -21,6 +22,11 @@ export default class AABB2
     GetCenter()
     {
         return this.m_mins.GetSum(this.GetDimensions().GetScaled(0.5));
+    }
+
+    GetNearestPoint(referencePoint)
+    {
+        return new Vec2(MathUtils.GetClamped(referencePoint.x, this.m_mins.x, this.m_maxs.x), MathUtils.GetClamped(referencePoint.y, this.m_mins.y, this.m_maxs.y));
     }
 
     SetDimensions(newDimensions)

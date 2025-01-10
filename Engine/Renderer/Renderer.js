@@ -75,7 +75,7 @@ export default class Renderer
         const canvas = document.getElementById("id_canvas");
         canvas.width = g_viewportWidth;
         canvas.height = g_viewportHeight;
-        this.m_context = canvas.getContext("webgl2", { xrCompatible: true });
+        this.m_context = canvas.getContext("webgl2", { xrCompatible: true, antialias: true });
         if (!this.m_context)
         {
             console.error("webgl2 is not supported");
@@ -493,6 +493,12 @@ export default class Renderer
         this.m_loadedTextures.push(newTexture);
 
         return newTexture;
+    }
+
+    UpdateTextureFromData(texture, data)
+    {
+        this.m_context.bindTexture(this.m_context.TEXTURE_2D, texture.m_texture);
+        this.m_context.texImage2D(this.m_context.TEXTURE_2D, 0, this.m_context.RGBA, texture.m_dimensions.x, texture.m_dimensions.y, 0, this.m_context.RGBA, this.m_context.UNSIGNED_BYTE, data);
     }
 
     BindTexture(textureToBind = null)

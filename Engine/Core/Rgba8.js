@@ -1,5 +1,7 @@
 "use strict";
 
+import * as StringUtils from "/Engine/Core/StringUtils.js";
+
 import * as MathUtils from "/Engine/Math/MathUtils.js";
 
 
@@ -18,6 +20,7 @@ export default class Rgba8
     static CYAN = Object.freeze(new Rgba8(0, 255, 255, 255));
     static TEAL = Object.freeze(new Rgba8(0, 255, 255, 255));
     static DODGER_BLUE = Object.freeze(new Rgba8(30, 144, 255, 255));
+    static DEEP_SKY_BLUE = Object.freeze(new Rgba8(0, 191, 255, 255));
 
     constructor(r = 255, g = 255, b = 255, a = 255)
     {
@@ -27,9 +30,37 @@ export default class Rgba8
         this.a = a;
     }
 
-    ToRgbaString()
+    toString()
     {
         return `rgba(${this.r}, ${this.g}, ${this.b}, ${this.a / 255})`;
+    }
+
+    SetFromString(rgbaStr)
+    {
+        let splitStrings = [];
+        StringUtils.SplitStringOnDelimiter(splitStrings, rgbaStr, ',', false);
+        if (splitStrings.length !== 3 && splitStrings.length !== 4)
+        {
+            console.error("Invalid number of literals in Rgba8 string!");
+            return;
+        }
+
+        this.r = parseInt(splitStrings[0]);
+        this.g = parseInt(splitStrings[1]);
+        this.b = parseInt(splitStrings[2]);
+        if (splitStrings.length === 3)
+        {
+            this.a = 255;
+        }
+        else
+        {
+            this.a = parseInt(splitStrings[3]);
+        }
+    }
+
+    Equals(colorToCompare)
+    {
+        return this.r === colorToCompare.r && this.g === colorToCompare.g && this.b === colorToCompare.b && this.a === colorToCompare.a;
     }
 
     GetAsFloats()

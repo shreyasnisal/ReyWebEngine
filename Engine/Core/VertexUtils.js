@@ -1,9 +1,13 @@
 "use strict";
 
+import Rgba8 from "/Engine/Core/Rgba8.js";
+import Vertex_PCU from "/Engine/Core/Vertex_PCU.js";
+import Vertex_PCUTBN from "/Engine/Core/Vertex_PCUTBN.js";
+
 import AABB2 from "/Engine/Math/AABB2.js"
+import * as MathUtils from "/Engine/Math/MathUtils.js";
 import Vec2 from "/Engine/Math/Vec2.js"
 import Vec3 from "/Engine/Math/Vec3.js"
-import Vertex_PCU from "/Engine/Core/Vertex_PCU.js";
 
 
 export function TransformVertexArrayXY3D(verts, uniformScaleXY, rotationDegreesAboutZ, translation)
@@ -19,7 +23,7 @@ export function TransformVertexArray3D(verts, transform)
     }
 }
 
-export function AddPCUVertsForLineSegment2D(verts, start, end, thickness, color)
+export function AddPCUVertsForLineSegment2D(verts, start, end, thickness, color = Rgba8.WHITE)
 {
     const fwdNormal = end.GetDifference(start).GetNormalized();
     const leftNormal = fwdNormal.GetRotated90Degrees();
@@ -43,7 +47,7 @@ export function AddPCUVertsForLineSegment2D(verts, start, end, thickness, color)
     verts.push(vertex2);
 }
 
-export function AddPCUVertsForAABB2(verts, bounds, color, uvCoords = AABB2.ZERO_TO_ONE)
+export function AddPCUVertsForAABB2(verts, bounds, color = Rgba8.WHITE, uvCoords = AABB2.ZERO_TO_ONE)
 {
     const vertexBLPosition = bounds.m_mins;
     const vertexBRPosition = new Vec2(bounds.m_maxs.x, bounds.m_mins.y);
@@ -64,7 +68,7 @@ export function AddPCUVertsForAABB2(verts, bounds, color, uvCoords = AABB2.ZERO_
     verts.push(vertexTL);
 }
 
-export function AddPCUVertsForQuad3D(verts, bottomLeftPosition, bottomRightPosition, topRightPosition, topLeftPosition, color, uvCoords = AABB2.ZERO_TO_ONE)
+export function AddPCUVertsForQuad3D(verts, bottomLeftPosition, bottomRightPosition, topRightPosition, topLeftPosition, color = Rgba8.WHITE, uvCoords = AABB2.ZERO_TO_ONE)
 {
     const bottomLeftVertex = new Vertex_PCU(bottomLeftPosition, color, uvCoords.m_mins);
     const bottomRightVertex = new Vertex_PCU(bottomRightPosition, color, new Vec2(uvCoords.m_maxs.x, uvCoords.m_mins.y));
@@ -80,7 +84,24 @@ export function AddPCUVertsForQuad3D(verts, bottomLeftPosition, bottomRightPosit
     verts.push(topLeftVertex);
 }
 
-export function AddPCUVertsForAABB3(verts, bounds, color, uvCoords = AABB2.ZERO_TO_ONE)
+export function AddPCUTBNVertsForQuad3D(verts, bottomLeftPosition, bottomRightPosition, topRightPosition, topLeftPosition, color = Rgba8.WHITE, uvCoords = AABB2.ZERO_TO_ONE)
+{
+    const normal = MathUtils.CrossProduct3D(bottomRightPosition.GetDifference(bottomLeftPosition), topLeftPosition.GetDifference(bottomLeftPosition));
+    const bottomLeftVertex = new Vertex_PCUTBN(bottomLeftPosition, color, uvCoords.m_mins, Vec3.ZERO, Vec3.ZERO, normal);
+    const bottomRightVertex = new Vertex_PCUTBN(bottomRightPosition, color, new Vec2(uvCoords.m_maxs.x, uvCoords.m_mins.y), Vec3.ZERO, Vec3.ZERO, normal);
+    const topRightVertex = new Vertex_PCUTBN(topRightPosition, color, uvCoords.m_maxs, Vec3.ZERO, Vec3.ZERO, normal);
+    const topLeftVertex = new Vertex_PCUTBN(topLeftPosition, color, new Vec2(uvCoords.m_mins.x, uvCoords.m_maxs.y), Vec3.ZERO, Vec3.ZERO, normal);
+
+    verts.push(bottomLeftVertex);
+    verts.push(bottomRightVertex);
+    verts.push(topRightVertex);
+
+    verts.push(bottomLeftVertex);
+    verts.push(topRightVertex);
+    verts.push(topLeftVertex);
+}
+
+export function AddPCUVertsForAABB3(verts, bounds, color = Rgba8.WHITE, uvCoords = AABB2.ZERO_TO_ONE)
 {
     const mins = bounds.m_mins;
     const maxs = bounds.m_maxs;
@@ -100,4 +121,26 @@ export function AddPCUVertsForAABB3(verts, bounds, color, uvCoords = AABB2.ZERO_
     AddPCUVertsForQuad3D(verts, BRF, BRB, TRB, TRF, color, uvCoords); // -Y
     AddPCUVertsForQuad3D(verts, TLF, TRF, TRB, TLB, color, uvCoords); // +Z
     AddPCUVertsForQuad3D(verts, BLB, BRB, BRF, BLF, color, uvCoords); // -Z
+}
+
+export function AddPCUTBNVertsForAABB3(verts, bounds, color = Rgba8.WHITE, uvCoords = AABB2.ZERO_TO_ONE)
+{
+    const mins = bounds.m_mins;
+    const maxs = bounds.m_maxs;
+
+    const BLF = new Vec3(mins.x, maxs.y, mins.z);
+    const BRF = new Vec3(mins.x, mins.y, mins.z);
+    const TRF = new Vec3(mins.x, mins.y, maxs.z);
+    const TLF = new Vec3(mins.x, maxs.y, maxs.z);
+    const BLB = new Vec3(maxs.x, maxs.y, mins.z);
+    const BRB = new Vec3(maxs.x, mins.y, mins.z);
+    const TRB = new Vec3(maxs.x, mins.y, maxs.z);
+    const TLB = new Vec3(maxs.x, maxs.y, maxs.z);
+
+    AddPCUTBNVertsForQuad3D(verts, BRB, BLB, TLB, TRB, color, uvCoords); // +X
+    AddPCUTBNVertsForQuad3D(verts, BLF, BRF, TRF, TLF, color, uvCoords); // -X
+    AddPCUTBNVertsForQuad3D(verts, BLB, BLF, TLF, TLB, color, uvCoords); // +Y
+    AddPCUTBNVertsForQuad3D(verts, BRF, BRB, TRB, TRF, color, uvCoords); // -Y
+    AddPCUTBNVertsForQuad3D(verts, TLF, TRF, TRB, TLB, color, uvCoords); // +Z
+    AddPCUTBNVertsForQuad3D(verts, BLB, BRB, BRF, BLF, color, uvCoords); // -Z
 }

@@ -1,0 +1,153 @@
+{
+  "StaticEntityDefinitions": [
+    {
+      "name": "LoungeDesignSofa",
+      "mapImageColor": "0,127,0",
+      "texture": "default",
+      "orientation": "0,0,0",
+      "scale": 2.0,
+      "model": "/PortfolioGame/Data/Models/loungeDesignSofa",
+      "bounds": "-0.4,0.0,0.0,0.0,1.125,0.4"
+    },
+    {
+      "name": "LoungeSofa",
+      "mapImageColor": "0,55,0",
+      "texture": "default",
+      "orientation": "-90,0,0",
+      "scale": 2.0,
+      "model": "/PortfolioGame/Data/Models/loungeSofa",
+      "bounds": "-0.4,0.0,0.0,0.0,1.0,0.4"
+    },
+    {
+      "name": "LoungeChair",
+      "mapImageColor": "0,80,0",
+      "texture": "default",
+      "position": "0.0,0.5,0.0",
+      "orientation": "-25,0,0",
+      "scale": 2.0,
+      "model": "/PortfolioGame/Data/Models/loungeChair",
+      "bounds": "-0.5,-0.2,0.0,0.0,0.6,0.4"
+    },
+    {
+      "name": "TableRound",
+      "mapImageColor": "0,25,0",
+      "texture": "default",
+      "orientation": "0,0,0",
+      "position": "0.0,0.5,0.5",
+      "scale": 2.0,
+      "model": "/PortfolioGame/Data/Models/tableRound",
+      "bounds": "-0.8,0.0,-0.25,0.0,0.8,0.1"
+    },
+    {
+      "name": "TelevisionCabinet",
+      "mapImageColor": "0,30,0",
+      "texture": "default",
+      "position": "-0.5,0.1,0",
+      "orientation": "90,0,0",
+      "scale": 2.0,
+      "model": "/PortfolioGame/Data/Models/cabinetTelevision",
+      "bounds": "-0.4,0.0,0.0,0.0,0.8,0.4"
+    },
+    {
+      "name": "Television",
+      "mapImageColor": "0,50,50",
+      "texture": "default",
+      "position": "-1.0,0.1,-0.4",
+      "orientation": "90,0,0",
+      "scale": 2.0,
+      "model": "/PortfolioGame/Data/Models/televisionModern",
+      "bounds": "0.0,-0.25,0.0,0.1,0.25,0.4"
+    },
+    {
+      "name": "CeilingFan",
+      "mapImageColor": "0,20,20",
+      "texture": "default",
+      "position": "0,1,1",
+      "orientation": "0,0,0",
+      "scale": 2.0,
+      "angularVelocity": "30,0,0",
+      "model": "/PortfolioGame/Data/Models/ceilingFan",
+      "bounds": "-0.4,0.0,0.0,0.0,1.0,0.4"
+    },
+    {
+      "name": "SideTableDrawers",
+      "mapImageColor": "0,120,0",
+      "texture": "default",
+      "position": "1.0,0,0",
+      "orientation": "180,0,0",
+      "scale": 2.0,
+      "model": "/PortfolioGame/Data/Models/sideTableDrawers",
+      "bounds": "-0.4,0.0,0.0,0.0,1.0,0.4"
+    },
+    {
+      "name": "PottedPlant",
+      "mapImageColor": "0,120,120",
+      "texture": "default",
+      "position": "0.8,0.5,-0.25",
+      "orientation": "180,0,0",
+      "scale": 1.0,
+      "model": "/PortfolioGame/Data/Models/pottedPlant",
+      "bounds": "0.0,0.0,0.0,0.0,0.0,0.0"
+    },
+    {
+      "name": "LampRoundFloor",
+      "mapImageColor": "0,130,0",
+      "texture": "default",
+      "position": "0.0,0.0,0.0",
+      "orientation": "0,0,0",
+      "scale": 2.0,
+      "model": "/PortfolioGame/Data/Models/lampRoundFloor",
+      "bounds": "0.0,0.0,0.0,0.0,0.0,0.0"
+    },
+    {
+      "name": "Bathtub",
+      "mapImageColor": "0,100,0",
+      "texture": "default",
+      "position": "1.15,0.75,0",
+      "orientation": "90,0,0",
+      "scale": 1.65,
+      "model": "/PortfolioGame/Data/Models/bathtub",
+      "bounds": "-0.3,0.0,0.0,0.0,1.0,0.4"
+    },
+    {
+      "name": "KitchenCabinet90",
+      "mapImageColor": "0,150,0",
+      "texture": "default",
+      "position": "1.1,0.275,0",
+      "orientation": "-90,0,0",
+      "scale": 2.4,
+      "model": "/PortfolioGame/Data/Models/kitchenCabinet",
+      "bounds": "-0.3,0.0,0.0,0.0,1.0,0.4"
+    },
+    {
+      "name": "KitchenCabinet180",
+      "mapImageColor": "0,170,0",
+      "texture": "default",
+      "position": "0.285,-0.25,0",
+      "orientation": "180,0,0",
+      "scale": 2.4,
+      "model": "/PortfolioGame/Data/Models/kitchenCabinet",
+      "bounds": "-0.3,0.0,0.0,0.0,1.0,0.4"
+    },
+    {
+      "name": "KitchenCabinetCorner",
+      "mapImageColor": "0,160,0",
+      "texture": "default",
+      "position": "1.1,0.25,0",
+      "orientation": "-90,0,0",
+      "scale": 2.4,
+      "model": "/PortfolioGame/Data/Models/kitchenCabinetCornerInner",
+      "bounds": "-0.3,0.0,0.0,0.0,1.0,0.4"
+    },
+    {
+      "name": "KitchenStoveElectric",
+      "mapImageColor": "0,170,0",
+      "texture": "default",
+      "position": "0.285,-0.25,0",
+      "orientation": "180,0,0",
+      "scale": 2.4,
+      "model": "/PortfolioGame/Data/Models/kitchenStoveElectric",
+      "bounds": "-0.3,0.0,0.0,0.0,1.0,0.4"
+    }
+  ]
+}

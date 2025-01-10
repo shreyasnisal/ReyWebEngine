@@ -1,8 +1,9 @@
 "use strict";
 
-import * as MathUtils from "/Engine/Math/MathUtils.js"
-import Vec3 from "/Engine/Math/Vec3.js"
-import Vec4 from "/Engine/Math/Vec4.js"
+import * as MathUtils from "/Engine/Math/MathUtils.js";
+import Vec2 from "/Engine/Math/Vec2.js";
+import Vec3 from "/Engine/Math/Vec3.js";
+import Vec4 from "/Engine/Math/Vec4.js";
 
 
 export default class Mat44
@@ -236,7 +237,7 @@ export default class Mat44
 
     GetAsFloatArray()
     {
-        return m_values;
+        return this.m_values;
     }
 
     GetIBasis2D()

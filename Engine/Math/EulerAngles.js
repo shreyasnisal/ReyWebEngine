@@ -1,5 +1,7 @@
 "use strict";
 
+import * as StringUtils from "/Engine/Core/StringUtils.js";
+
 import Mat44 from "/Engine/Math/Mat44.js";
 import Vec3 from "/Engine/Math/Vec3.js";
 
@@ -18,6 +20,27 @@ export default class EulerAngles
     toString()
     {
         return "(" + this.m_yawDegrees + "," + this.m_pitchDegrees + "," + this.m_rollDegrees + ")";
+    }
+
+    SetFromString(eulerAnglesStr)
+    {
+        if (eulerAnglesStr == null)
+        {
+            console.error("Attempting to set EulerAngles from invalid string!");
+            return;
+        }
+
+        let splitStrings = [];
+        StringUtils.SplitStringOnDelimiter(splitStrings, eulerAnglesStr, ',', false);
+        if (splitStrings.length !== 3)
+        {
+            console.error("Invalid number of literals in EulerAngles string!");
+            return;
+        }
+
+        this.m_yawDegrees = parseFloat(splitStrings[0]);
+        this.m_pitchDegrees = parseFloat(splitStrings[1]);
+        this.m_rollDegrees = parseFloat(splitStrings[2]);
     }
 
     GetAsMatrix_iFwd_jLeft_kUp()

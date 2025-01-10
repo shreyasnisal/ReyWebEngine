@@ -306,6 +306,16 @@ export default class InputSystem
         return null;
     }
 
+    IsTouchSupported()
+    {
+        return navigator.maxTouchPoints > 0;
+    }
+
+    GetMaxSupportedTouchPoints()
+    {
+        return navigator.maxTouchPoints;
+    }
+
     HandleTouchStart(touchEvent)
     {
         for (const touch of touchEvent.changedTouches)

@@ -21,7 +21,7 @@ export const g_windowManager = new WindowManager(windowManagerConfig);
 const renderConfig = new RenderConfig();
 export const g_renderer = new Renderer(renderConfig);
 
-const debugRenderConfig = new DebugRenderConfig(g_renderer, "/Sandbox/Data/Images/SquirrelFixedFont");
+const debugRenderConfig = new DebugRenderConfig(g_renderer, "/Engine/Data/Fonts/SquirrelFixedFont");
 export const g_debugRenderSystem = new DebugRenderSystem(debugRenderConfig);
 
 const inputSystemConfig = new InputSystemConfig(g_windowManager);
@@ -29,7 +29,7 @@ export const g_input = new InputSystem(inputSystemConfig);
 
 const devConsoleCamera = new Camera();
 devConsoleCamera.SetOrthoView(Vec2.ZERO, new Vec2(g_aspect, 1.0));
-const devConsoleConfig = new DevConsoleConfig(g_eventSystem, g_renderer, devConsoleCamera, "/Sandbox/Data/Images/SquirrelFixedFont");
+const devConsoleConfig = new DevConsoleConfig(g_eventSystem, g_renderer, devConsoleCamera, "/Engine/Data/Fonts/SquirrelFixedFont");
 export const g_console = new DevConsole(devConsoleConfig);
 
 const modelLoaderConfig = new ModelLoaderConfig();
