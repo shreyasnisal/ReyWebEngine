@@ -71,6 +71,7 @@ export default class Renderer
     constructor(config)
     {
         this.m_config = config;
+        this.m_isConstructed = false;
 
         const canvas = document.getElementById("id_canvas");
         canvas.width = g_viewportWidth;
@@ -79,6 +80,7 @@ export default class Renderer
         if (!this.m_context)
         {
             console.error("webgl2 is not supported");
+            return;
         }
         window.addEventListener("resize", this.HandleWindowResize);
 
@@ -98,6 +100,8 @@ export default class Renderer
         this.m_defaultShader = null;
 
         this.m_currentEye = "none";
+
+        this.m_isConstructed = true;
     }
 
     Startup()

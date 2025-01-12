@@ -35,6 +35,11 @@ export default class App
 
     Startup()
     {
+        if (!g_renderer.m_isConstructed)
+        {
+            return;
+        }
+
         g_eventSystem.Startup();
         g_windowManager.Startup();
         g_renderer.Startup();
