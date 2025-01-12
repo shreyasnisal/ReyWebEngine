@@ -1,12 +1,12 @@
 "use strict";
 
 import { g_app } from "/PortfolioGame/Framework/GameCommon.js";
-import { g_windowManager, g_input } from "/Engine/Core/EngineCommon.js";
+import {g_windowManager, g_input, g_renderer} from "/Engine/Core/EngineCommon.js";
 
 let g_hasViewedContent = sessionStorage.getItem("viewedContent");
 
 g_app.Startup();
-if (g_hasViewedContent || g_input.IsTouchSupported())
+if (g_hasViewedContent || g_input.IsTouchSupported() || !g_renderer.m_isConstructed)
 {
     DestroyCanvasAndShowContent();
 }

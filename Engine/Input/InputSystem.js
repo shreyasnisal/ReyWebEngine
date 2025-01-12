@@ -247,6 +247,11 @@ export default class InputSystem
 
     SetCursorMode(hiddenMode, relativeMode)
     {
+        if (this.m_cursorState == null)
+        {
+            return;
+        }
+
         this.m_cursorState.m_hiddenMode = hiddenMode;
         this.m_cursorState.m_relativeMode = relativeMode;
 
