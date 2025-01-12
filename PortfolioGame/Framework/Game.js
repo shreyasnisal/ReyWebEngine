@@ -153,6 +153,10 @@ export default class Game
         {
             return;
         }
+        if (this.m_butlerFixedFont == null)
+        {
+            return;
+        }
 
         this.m_timeInState += this.m_clock.GetDeltaSeconds();
     }
@@ -220,6 +224,10 @@ export default class Game
         {
             return;
         }
+        if (this.m_butlerFixedFont == null)
+        {
+            return;
+        }
 
         const SCREEN_CENTER = new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y).GetScaled(0.5);
 
@@ -249,7 +257,6 @@ export default class Game
             const textWidth2 = this.m_squirrelFixedFont.GetTextWidth(32.0, "Welcome to my JavaScript game engine!", 0.7);
             const textWidth3 = this.m_squirrelFixedFont.GetTextWidth(32.0, "Click anywhere to begin...", 0.7);
             const textWidth = Math.max(textWidth1, textWidth2, textWidth3);
-            // this.m_butlerFixedFont.AddVertsForText2D(screenTextVerts, new Vec2(SCREEN_CENTER.x - textWidth * 0.5, SCREEN_SIZE_Y * 0.1), 32.0, "Hi, I'm Shreyas, aka Rey!", Rgba8.BLACK, 0.7);
             this.m_butlerFixedFont.AddVertsForTextInBox2D(screenTextVerts, new AABB2(new Vec2(SCREEN_CENTER.x - textWidth * 0.5, SCREEN_SIZE_Y * 0.1), new Vec2(SCREEN_CENTER.x + textWidth * 0.5, SCREEN_SIZE_Y * 0.2)), 32.0, "Hi, I'm Shreyas, aka Rey.\nWelcome to my JavaScript game engine!\nClick anywhere to begin...", Rgba8.BLACK, 0.5, new Vec2(0.5, 0.5), TextBoxMode.SHRINK_TO_FIT, glyphsToDraw);
             g_renderer.SetBlendMode(BlendMode.ALPHA);
             g_renderer.SetCullMode(CullMode.NONE);
