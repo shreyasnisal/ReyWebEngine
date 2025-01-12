@@ -5,13 +5,13 @@ import {g_windowManager, g_input, g_renderer} from "/Engine/Core/EngineCommon.js
 
 let g_hasViewedContent = sessionStorage.getItem("viewedContent");
 
-g_app.Startup();
-if (g_hasViewedContent || g_input.IsTouchSupported() || !g_renderer.m_isConstructed)
+if (g_hasViewedContent || navigator.maxTouchPoints > 0 || !g_renderer.m_isConstructed)
 {
     DestroyCanvasAndShowContent();
 }
 else
 {
+    g_app.Startup();
     requestAnimationFrame(g_app.RunFrame.bind(g_app));
     g_app.Shutdown();
 }
