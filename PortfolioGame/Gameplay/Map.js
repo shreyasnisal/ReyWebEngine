@@ -264,12 +264,18 @@ export default class Map
         {
             const textWidth = this.m_game.m_butlerFixedFont.GetTextWidth(32.0, "Press E to view my portfolio", 0.5);
             const tvInfoBounds = new AABB2(new Vec2(SCREEN_SIZE_Y * g_aspect - textWidth - 32.0, 32.0), new Vec2(SCREEN_SIZE_Y * g_aspect - 32.0, 64.0));
-            const tvInfoTextVerts = [];
-            this.m_game.m_butlerFixedFont.AddVertsForTextInBox2D(tvInfoTextVerts, tvInfoBounds, 32.0, "Press E to view my portfolio", Rgba8.WHITE, 0.5, new Vec2(1.0, 0.0));
+
+            const tvInfoTextBackgroundVerts = [];
+            VertexUtils.AddPCUVertsForRoundedBox(tvInfoTextBackgroundVerts, tvInfoBounds, 10.0, new Rgba8(0, 0, 0, 195));
             g_renderer.SetBlendMode(BlendMode.ALPHA);
             g_renderer.SetDepthMode(DepthMode.DISABLED);
             g_renderer.SetCullMode(CullMode.BACK);
             g_renderer.SetModelConstants();
+            g_renderer.BindTexture(null);
+            g_renderer.DrawVertexArray(tvInfoTextBackgroundVerts);
+
+            const tvInfoTextVerts = [];
+            this.m_game.m_butlerFixedFont.AddVertsForTextInBox2D(tvInfoTextVerts, tvInfoBounds, 32.0, "Press E to view my portfolio", Rgba8.WHITE, 0.5, new Vec2(1.0, 0.0));
             g_renderer.BindTexture(this.m_game.m_butlerFixedFont.GetTexture());
             g_renderer.DrawVertexArray(tvInfoTextVerts);
         }
