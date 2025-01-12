@@ -1,6 +1,10 @@
 "use strict";
 
+import {g_debugRenderSystem} from "/Engine/Core/EngineCommon.js";
+
 import * as GameCommon from "/PortfolioGame/Framework/GameCommon.js";
+
+import Rgba8 from "/Engine/Core/Rgba8.js";
 
 import EulerAngles from "/Engine/Math/EulerAngles.js";
 import Mat44 from "/Engine/Math/Mat44.js";

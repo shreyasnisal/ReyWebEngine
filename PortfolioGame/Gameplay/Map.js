@@ -1,6 +1,10 @@
 "use strict";
 
 import {g_input, g_renderer} from "/Engine/Core/EngineCommon.js";
+
+import {GameState} from "/PortfolioGame/Framework/Game.js";
+import {SCREEN_SIZE_Y} from "/PortfolioGame/Framework/GameCommon.js";
+
 import PlayerPawn from "/PortfolioGame/Gameplay/PlayerPawn.js";
 import StaticEntityDefinition from "/PortfolioGame/Gameplay/StaticEntityDefinition.js";
 import StaticEntity from "/PortfolioGame/Gameplay/StaticEntity.js";
@@ -11,12 +15,13 @@ import Vertex_PCU from "/Engine/Core/Vertex_PCU.js";
 import Vertex_PCUTBN from "/Engine/Core/Vertex_PCUTBN.js";
 import * as VertexUtils from "/Engine/Core/VertexUtils.js";
 
+import AABB2 from "/Engine/Math/AABB2.js";
 import AABB3 from "/Engine/Math/AABB3.js";
 import * as MathUtils from "/Engine/Math/MathUtils.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 import Vec3 from "/Engine/Math/Vec3.js";
 
-import { BlendMode, CullMode, DepthMode, VertexType } from "/Engine/Renderer/Renderer.js";
+import {BlendMode, CullMode, DepthMode, g_aspect, VertexType} from "/Engine/Renderer/Renderer.js";
 import SpriteSheet from "/Engine/Renderer/SpriteSheet.js";
 
 
@@ -63,14 +68,17 @@ export default class Map
     {
         this.m_dimensions = new Vec2(this.m_mapImages[0].m_width, this.m_mapImages[0].m_height);
 
-        const floorTileUVs = this.m_tileSpriteSheet.GetSpriteUVs(17);
-        const wallTileUVs = this.m_tileSpriteSheet.GetSpriteUVs(2);
-        const ceilingTileUVs = this.m_tileSpriteSheet.GetSpriteUVs(7);
+        // const floorTileUVs = this.m_tileSpriteSheet.GetSpriteUVs(17);
+        // const wallTileUVs = this.m_tileSpriteSheet.GetSpriteUVs(2);
+        // const ceilingTileUVs = this.m_tileSpriteSheet.GetSpriteUVs(7);
+        const floorTileUVs = AABB2.ZERO_TO_ONE;
+        const wallTileUVs = AABB2.ZERO_TO_ONE;
+        const ceilingTileUVs = AABB2.ZERO_TO_ONE;
         // const floorTint = new Rgba8(155, 81, 224);
         const floorTint = new Rgba8(165, 42, 42);
         // const wallTint = new Rgba8(127, 127, 127);
-        const wallTint = new Rgba8(155, 81, 224);
-        const ceilingTint = new Rgba8(0, 0, 0);
+        const wallTint = new Rgba8(213, 184, 255);
+        const ceilingTint = new Rgba8(195, 195, 195);
 
         const tileVertexes = [];
         for (let mapImageIndex = 0; mapImageIndex < this.m_mapImages.length; mapImageIndex++)
@@ -121,6 +129,15 @@ export default class Map
                 }
             }
         }
+
+        this.m_television = null;
+        for (let staticEntityIndex = 0; staticEntityIndex < this.m_staticEntities.length; staticEntityIndex++)
+        {
+            if (this.m_staticEntities[staticEntityIndex].m_definition.m_name === "Television")
+            {
+                this.m_television = this.m_staticEntities[staticEntityIndex];
+            }
+        }
     }
 
     Update()
@@ -134,11 +151,6 @@ export default class Map
             return;
         }
 
-        if (g_input.WasKeyJustPressed("F2"))
-        {
-            this.m_debugDrawEntityCollisions = !this.m_debugDrawEntityCollisions;
-        }
-
         for (let staticEntityIndex = 0; staticEntityIndex < this.m_staticEntities.length; staticEntityIndex++)
         {
             this.m_staticEntities[staticEntityIndex].Update();
@@ -146,6 +158,7 @@ export default class Map
 
         this.PushPlayerPawnOutOfStaticEntities();
         this.PushPlayerPawnOutOfTiles();
+        this.CheckForTelevisionInteraction();
     }
 
     Render()
@@ -164,7 +177,8 @@ export default class Map
         g_renderer.SetDepthMode(DepthMode.ENABLED);
         g_renderer.SetCullMode(CullMode.BACK);
         g_renderer.SetModelConstants();
-        g_renderer.BindTexture(this.m_tileSpriteSheet.GetTexture());
+        // g_renderer.BindTexture(this.m_tileSpriteSheet.GetTexture());
+        g_renderer.BindTexture(null);
         g_renderer.DrawVertexBuffer(this.m_mapVBO, this.m_mapVBO.m_size / (Vertex_PCU.NUM_FLOAT32_ELEMENTS * 4));
 
         g_renderer.BindShader(this.m_diffuseShader);
@@ -215,6 +229,49 @@ export default class Map
                 }
             }
 
+        }
+    }
+
+    CheckForTelevisionInteraction()
+    {
+        if (this.m_game.m_currentInstructionsIndex < this.m_game.m_instructions.length)
+        {
+            return;
+        }
+
+        if (this.m_television == null)
+        {
+            return;
+        }
+
+        if (MathUtils.GetDistanceSquared3D(this.m_game.m_player.m_pawn.m_position, this.m_television.m_position) <= 2.25)
+        {
+            if (g_input.WasKeyJustPressed('E'))
+            {
+                this.m_game.m_nextState = GameState.DESTROY;
+            }
+        }
+    }
+
+    RenderTVInfo()
+    {
+        if (this.m_television == null)
+        {
+            return;
+        }
+
+        if (MathUtils.GetDistanceSquared3D(this.m_game.m_player.m_pawn.m_position, this.m_television.m_position) <= 2.25)
+        {
+            const textWidth = this.m_game.m_butlerFixedFont.GetTextWidth(32.0, "Press E to view my portfolio", 0.5);
+            const tvInfoBounds = new AABB2(new Vec2(SCREEN_SIZE_Y * g_aspect - textWidth - 32.0, 32.0), new Vec2(SCREEN_SIZE_Y * g_aspect - 32.0, 64.0));
+            const tvInfoTextVerts = [];
+            this.m_game.m_butlerFixedFont.AddVertsForTextInBox2D(tvInfoTextVerts, tvInfoBounds, 32.0, "Press E to view my portfolio", Rgba8.WHITE, 0.5, new Vec2(1.0, 0.0));
+            g_renderer.SetBlendMode(BlendMode.ALPHA);
+            g_renderer.SetDepthMode(DepthMode.DISABLED);
+            g_renderer.SetCullMode(CullMode.BACK);
+            g_renderer.SetModelConstants();
+            g_renderer.BindTexture(this.m_game.m_butlerFixedFont.GetTexture());
+            g_renderer.DrawVertexArray(tvInfoTextVerts);
         }
     }
 

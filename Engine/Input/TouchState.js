@@ -1,6 +1,9 @@
 "use strict";
 
-class TouchState
+import Vec2 from "/Engine/Math/Vec2.js";
+
+
+export default class TouchState
 {
     constructor()
     {

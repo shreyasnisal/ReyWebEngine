@@ -31,7 +31,7 @@ export default class Vec3
     {
         if (vec3Str == null)
         {
-            console.error("Attempting to set Vec3 from invalid string!");
+            console.warn("Attempting to set Vec3 from invalid string!");
             return;
         }
 
@@ -39,7 +39,7 @@ export default class Vec3
         StringUtils.SplitStringOnDelimiter(splitStrings, vec3Str, ',', false);
         if (splitStrings.length !== 3)
         {
-            console.error("Invalid number of literals in Vec3 string!");
+            console.warn("Invalid number of literals in Vec3 string!");
             return;
         }
 

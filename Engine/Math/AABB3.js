@@ -24,7 +24,7 @@ export default class AABB3
         StringUtils.SplitStringOnDelimiter(splitStrings, aabb3Str, ',', false);
         if (splitStrings.length !== 6)
         {
-            console.error("Invalid number of literals in AABB3 string!");
+            console.warn("Invalid number of literals in AABB3 string!");
             return;
         }
 

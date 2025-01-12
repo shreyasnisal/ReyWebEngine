@@ -42,7 +42,18 @@ export default class BitmapFont
 
     GetTextWidth(cellHeight, text, cellAspect)
     {
-        return cellHeight * cellAspect * text.length;
+        const lines = [];
+        const numLines = StringUtils.SplitStringOnDelimiter(lines, text, '\n');
+        let maxLineWidth = 0.0;
+        for (let lineIndex = 0; lineIndex < numLines; lineIndex++)
+        {
+            const lineWidth = cellHeight * cellAspect * lines[lineIndex].length;
+            if (lineWidth > maxLineWidth)
+            {
+                maxLineWidth = lineWidth;
+            }
+        }
+        return maxLineWidth;
     }
 
     AddVertsForTextInBox2D(verts, box, cellHeight, text, tint, cellAspect, alignment = Vec2.ZERO, mode = TextBoxMode.SHRINK_TO_FIT, maxGlyphsToDraw = 999999)

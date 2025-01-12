@@ -2,7 +2,7 @@
 
 import PlayerPawn from "/PortfolioGame/Gameplay/PlayerPawn.js";
 
-import {g_debugRenderSystem, g_input, g_webXR} from "/Engine/Core/EngineCommon.js";
+import {g_debugRenderSystem, g_input} from "/Engine/Core/EngineCommon.js";
 import Rgba8 from "/Engine/Core/Rgba8.js";
 
 import {XboxButtonID} from "/Engine/Input/XboxController.js";
@@ -18,11 +18,11 @@ export default class Player
     {
         this.m_game = game;
         this.m_position = new Vec3(position.x, position.y, position.z);
-        this.m_orientation = new EulerAngles(orientation.x, orientation.y, orientation.z);
-        this.m_isFreeFlyMode = true;
+        this.m_orientation = new EulerAngles(orientation.m_yawDegrees, orientation.m_pitchDegrees, orientation.m_rollDegrees);
+        this.m_isFreeFlyMode = false;
         this.m_controlsEnabled = false;
 
-        this.m_pawn = new PlayerPawn(this, new Vec3(position.x, position.y, position.z), new EulerAngles(orientation.x, 0.0, 0.0));
+        this.m_pawn = new PlayerPawn(this, new Vec3(position.x, position.y, position.z), new EulerAngles(orientation.m_yawDegrees, 0.0, 0.0));
     }
 
     Update()
@@ -41,11 +41,6 @@ export default class Player
             this.m_isFreeFlyMode = !this.m_isFreeFlyMode;
         }
 
-        if (g_input.WasKeyJustPressed("F3"))
-        {
-            this.m_controlsEnabled = !this.m_controlsEnabled;
-        }
-
         if (!this.m_controlsEnabled)
         {
             return;
@@ -55,7 +50,6 @@ export default class Player
         {
             this.HandleFreeFlyKeyboardInput();
             this.HandleFreeFlyControllerInput();
-            this.HandleFreeFlyVRInput();
 
             this.m_orientation.m_pitchDegrees = MathUtils.GetClamped(this.m_orientation.m_pitchDegrees, -89.0, 89.0);
         }
@@ -63,7 +57,6 @@ export default class Player
         {
             this.HandleFirstPersonKeyboardInput();
             this.HandleFirstPersonControllerInput();
-            this.HandleFirstPersonVRInput();
 
             this.m_pawn.m_orientation.m_pitchDegrees = MathUtils.GetClamped(this.m_pawn.m_orientation.m_pitchDegrees, -89.0, 89.0);
         }
@@ -186,40 +179,6 @@ export default class Player
     }
 
     HandleFirstPersonControllerInput()
-    {
-
-    }
-
-    HandleFreeFlyVRInput()
-    {
-        const deltaSeconds = this.m_game.m_clock.GetDeltaSeconds();
-
-        if (!g_webXR.m_initialized)
-        {
-            return;
-        }
-
-        const leftController = g_webXR.GetLeftController();
-        const rightController = g_webXR.GetRightController();
-
-        if (leftController == null || rightController == null)
-        {
-            return;
-        }
-
-        const MOVEMENT_SPEED = 4.0;
-        const TURN_RATE = 90.0;
-
-        const playerBasis = this.m_orientation.GetAsVectors_iFwd_jLeft_kUp();
-        const playerFwd = playerBasis[0];
-        const playerLeft = playerBasis[1];
-        const playerUp = playerBasis[2];
-
-        this.m_position.Add(playerFwd.GetScaled(leftController.GetJoystick().m_deadzoneCorrectedCartesianCoordinates.y * MOVEMENT_SPEED * deltaSeconds));
-        this.m_position.Add(playerLeft.GetScaled(-leftController.GetJoystick().m_deadzoneCorrectedCartesianCoordinates.x * MOVEMENT_SPEED * deltaSeconds));
-    }
-
-    HandleFirstPersonVRInput()
     {
 
     }

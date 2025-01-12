@@ -68,6 +68,45 @@ export function AddPCUVertsForAABB2(verts, bounds, color = Rgba8.WHITE, uvCoords
     verts.push(vertexTL);
 }
 
+export function AddPCUVertsForOrientedSector2D(verts, sectorTip, sectorForwardDegrees, sectorApertureDegrees, sectorRadius, color = Rgba8.WHITE)
+{
+    const NUM_TRIANGLES = 20;
+    const NUM_VERTEXES = NUM_TRIANGLES * 3;
+    const degreesIncrementPerVertex = sectorApertureDegrees / NUM_VERTEXES;
+
+    let previousVertexPosition = sectorTip.GetSum(Vec2.MakeFromPolarDegrees(sectorForwardDegrees - sectorApertureDegrees * 0.5, sectorRadius));
+
+    for (let vertexIndex = 0; vertexIndex < NUM_VERTEXES; vertexIndex += 3)
+    {
+        const sectorTipVertexPosition = sectorTip;
+        const newVertexPosition = sectorTip.GetSum(Vec2.MakeFromPolarDegrees(sectorForwardDegrees - sectorApertureDegrees * 0.5 + (vertexIndex + 3) * degreesIncrementPerVertex, sectorRadius));
+
+        const sectorTipVertex = new Vertex_PCU(sectorTip.GetAsVec3(), color, Vec2.ZERO);
+        const previousVertex = new Vertex_PCU(previousVertexPosition.GetAsVec3(), color, Vec2.ZERO);
+        const newVertex = new Vertex_PCU(newVertexPosition.GetAsVec3(), color, Vec2.ZERO);
+
+        verts.push(sectorTipVertex);
+        verts.push(previousVertex);
+        verts.push(newVertex);
+
+        previousVertexPosition = newVertexPosition;
+    }
+}
+
+export function AddPCUVertsForRoundedBox(verts, bounds, borderRadius, color = Rgba8.WHITE)
+{
+    const boxBounds = bounds.GetBoxAtUVs(new Vec2(0.01, 0.01), new Vec2(0.99, 0.99));
+    AddPCUVertsForAABB2(verts, boxBounds, color);
+    AddPCUVertsForAABB2(verts, new AABB2(boxBounds.m_mins.GetSum(Vec2.SOUTH.GetScaled(borderRadius)), boxBounds.m_mins.GetSum(Vec2.EAST.GetScaled(boxBounds.GetDimensions().x))), color);
+    AddPCUVertsForAABB2(verts, new AABB2(boxBounds.m_mins.GetSum(Vec2.WEST.GetScaled(borderRadius)), boxBounds.m_mins.GetSum(Vec2.NORTH.GetScaled(boxBounds.GetDimensions().y))), color);
+    AddPCUVertsForAABB2(verts, new AABB2(boxBounds.m_mins.GetSum(Vec2.NORTH.GetScaled(boxBounds.GetDimensions().y)), boxBounds.m_maxs.GetSum(Vec2.NORTH.GetScaled(borderRadius))), color);
+    AddPCUVertsForAABB2(verts, new AABB2(boxBounds.m_maxs.GetSum(Vec2.SOUTH.GetScaled(boxBounds.GetDimensions().y)), boxBounds.m_maxs.GetSum(Vec2.EAST.GetScaled(borderRadius))), color);
+    AddPCUVertsForOrientedSector2D(verts, boxBounds.m_mins, 225.0, 90.0, borderRadius, color);
+    AddPCUVertsForOrientedSector2D(verts, new Vec2(boxBounds.m_mins.x, boxBounds.m_maxs.y), 135.0, 90.0, borderRadius, color);
+    AddPCUVertsForOrientedSector2D(verts, boxBounds.m_maxs, 45.0, 90.0, borderRadius, color);
+    AddPCUVertsForOrientedSector2D(verts, new Vec2(boxBounds.m_maxs.x, boxBounds.m_mins.y), 315.0, 90.0, borderRadius, color);
+}
+
 export function AddPCUVertsForQuad3D(verts, bottomLeftPosition, bottomRightPosition, topRightPosition, topLeftPosition, color = Rgba8.WHITE, uvCoords = AABB2.ZERO_TO_ONE)
 {
     const bottomLeftVertex = new Vertex_PCU(bottomLeftPosition, color, uvCoords.m_mins);

@@ -26,7 +26,7 @@ export default class EulerAngles
     {
         if (eulerAnglesStr == null)
         {
-            console.error("Attempting to set EulerAngles from invalid string!");
+            console.warn("Attempting to set EulerAngles from invalid string!");
             return;
         }
 
@@ -34,7 +34,7 @@ export default class EulerAngles
         StringUtils.SplitStringOnDelimiter(splitStrings, eulerAnglesStr, ',', false);
         if (splitStrings.length !== 3)
         {
-            console.error("Invalid number of literals in EulerAngles string!");
+            console.warn("Invalid number of literals in EulerAngles string!");
             return;
         }
 

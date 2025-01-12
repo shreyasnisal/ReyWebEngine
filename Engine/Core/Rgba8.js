@@ -9,6 +9,7 @@ export default class Rgba8
 {
     static WHITE = Object.freeze(new Rgba8(255, 255, 255, 255));
     static BLACK = Object.freeze(new Rgba8(0, 0, 0, 255));
+    static TRANSPARENT_BLACK = Object.freeze(new Rgba8(0, 0, 0, 0));
     static GRAY = Object.freeze(new Rgba8(127, 127, 127, 255));
     static RED = Object.freeze(new Rgba8(255, 0, 0, 255));
     static LIME = Object.freeze(new Rgba8(0, 255, 0, 255));
@@ -41,7 +42,7 @@ export default class Rgba8
         StringUtils.SplitStringOnDelimiter(splitStrings, rgbaStr, ',', false);
         if (splitStrings.length !== 3 && splitStrings.length !== 4)
         {
-            console.error("Invalid number of literals in Rgba8 string!");
+            console.warn("Invalid number of literals in Rgba8 string!");
             return;
         }
 

@@ -186,6 +186,24 @@ export function GetDistanceSquared2D(vecA, vecB)
     );
 }
 
+export function GetDistance3D(vecA, vecB)
+{
+    return Math.sqrt(
+        ((vecB.x - vecA.x) * (vecB.x - vecA.x)) +
+        ((vecB.y - vecA.y) * (vecB.y - vecA.y)) +
+        ((vecB.z - vecA.z) * (vecB.z - vecA.z))
+    )
+}
+
+export function GetDistanceSquared3D(vecA, vecB)
+{
+    return (
+        ((vecB.x - vecA.x) * (vecB.x - vecA.x)) +
+        ((vecB.y - vecA.y) * (vecB.y - vecA.y)) +
+        ((vecB.z - vecA.z) * (vecB.z - vecA.z))
+    )
+}
+
 export function IsPointInsideDisc2D(referencePoint, discCenter, discRadius)
 {
     return GetDistanceSquared2D(referencePoint, discCenter) < (discRadius * discRadius);
@@ -250,4 +268,11 @@ export function PushZCylinderOutOfFixedAABB3(cylinderBaseCenter, cylinderTopCent
     cylinderTopCenter.Add(horizontalPushDir.GetScaled(topViewPushDistance));
 
     return true;
+}
+
+export function EaseOutQuadratic(t)
+{
+    const tFlipped = 1.0 - t;
+    const outFlipped = tFlipped * tFlipped;
+    return 1.0 - outFlipped;
 }

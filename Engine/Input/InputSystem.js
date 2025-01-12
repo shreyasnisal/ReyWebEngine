@@ -4,6 +4,7 @@ import KeyButtonState from "/Engine/Input/KeyButtonState.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 import XboxController from "/Engine/Input/XboxController.js";
 import InputMapping from "/Engine/Input/InputMapping.js";
+import TouchState from "/Engine/Input/TouchState.js";
 
 
 class CursorState

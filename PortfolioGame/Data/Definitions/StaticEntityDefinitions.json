@@ -67,7 +67,7 @@
       "scale": 2.0,
       "angularVelocity": "30,0,0",
       "model": "/PortfolioGame/Data/Models/ceilingFan",
-      "bounds": "-0.4,0.0,0.0,0.0,1.0,0.4"
+      "bounds": "0.0,0.0,0.0,0.0,0.0,0.0"
     },
     {
       "name": "SideTableDrawers",

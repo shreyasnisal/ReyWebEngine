@@ -24,6 +24,19 @@ export default class AABB2
         return this.m_mins.GetSum(this.GetDimensions().GetScaled(0.5));
     }
 
+    GetPointAtUVs(uvCoords)
+    {
+        const dimensions = this.GetDimensions();
+        return new Vec2(this.m_mins.x + uvCoords.x * dimensions.x, this.m_mins.y + uvCoords.y * dimensions.y);
+    }
+
+    GetBoxAtUVs(uvMins, uvMaxs)
+    {
+        const pointAtUVMins = this.GetPointAtUVs(uvMins);
+        const pointAtUVMaxs = this.GetPointAtUVs(uvMaxs);
+        return new AABB2(pointAtUVMins, pointAtUVMaxs);
+    }
+
     GetNearestPoint(referencePoint)
     {
         return new Vec2(MathUtils.GetClamped(referencePoint.x, this.m_mins.x, this.m_maxs.x), MathUtils.GetClamped(referencePoint.y, this.m_mins.y, this.m_maxs.y));
