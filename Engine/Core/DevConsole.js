@@ -1,5 +1,7 @@
 "use strict";
 
+import {g_eventSystem, g_renderer} from "/Engine/Core/EngineCommon.js";
+
 import Clock from "/Engine/Core/Clock.js";
 import Stopwatch from "/Engine/Core/Stopwatch.js";
 import Rgba8 from "/Engine/Core/Rgba8.js";
@@ -14,16 +16,14 @@ import * as StringUtils from "/Engine/Core/StringUtils.js";
 
 export class DevConsoleConfig
 {
-    constructor(eventSystem, renderer, camera, fontFilePath, overlayColor = new Rgba8(0, 0, 0, 200), linesToShow = 50.5, fontAspect = 0.7)
+    constructor(camera, fontFilePath, overlayColor = new Rgba8(0, 0, 0, 200), linesToShow = 50.5, fontAspect = 0.7)
     {
-        this.m_eventSystem = eventSystem;
-        this.m_renderer = renderer;
         this.m_camera = camera;
         this.m_fontFilePath = fontFilePath;
         this.m_overlayColor = overlayColor;
         this.m_linesToShow = linesToShow;
         this.m_fontAspect = fontAspect;
-    }
+    }g
 }
 
 export class DevConsoleMode
@@ -89,11 +89,11 @@ export default class DevConsole
         window.addEventListener("keydown", (keyEvent) => this.HandleCharacterPressed(keyEvent));
         window.addEventListener("keydown", (keyEvent) => this.HandleKeyPressed(keyEvent));
 
-        this.m_config.m_eventSystem.SubscribeEventCallbackFunction("help", this.Event_Help, "Displays a list of all available commands");
-        this.m_config.m_eventSystem.SubscribeEventCallbackFunction("echo", this.Event_Echo, "Displays messages on the console");
-        this.m_config.m_eventSystem.SubscribeEventCallbackFunction("clear", this.Event_Clear, "Clears the console");
-        this.m_config.m_eventSystem.SubscribeEventCallbackFunction("exit", this.Event_Exit, "Exits the console");
-        this.m_config.m_eventSystem.SubscribeEventCallbackFunction("@echo", this.Event_EchoSpecial, "Special command to set console command echo");
+        g_eventSystem.SubscribeEventCallbackFunction("help", this.Event_Help, "Displays a list of all available commands");
+        g_eventSystem.SubscribeEventCallbackFunction("echo", this.Event_Echo, "Displays messages on the console");
+        g_eventSystem.SubscribeEventCallbackFunction("clear", this.Event_Clear, "Clears the console");
+        g_eventSystem.SubscribeEventCallbackFunction("exit", this.Event_Exit, "Exits the console");
+        g_eventSystem.SubscribeEventCallbackFunction("@echo", this.Event_EchoSpecial, "Special command to set console command echo");
     }
 
     BeginFrame()
@@ -107,7 +107,7 @@ export default class DevConsole
 
     Render(bounds, rendererOverride = null)
     {
-        let renderer = this.m_config.m_renderer;
+        let renderer = g_renderer;
         if (rendererOverride != null)
         {
             renderer = rendererOverride;
@@ -228,7 +228,7 @@ export default class DevConsole
                     if (commandNameAndArgs[argIndex] === "/help")
                     {
                         eventArgs["help"] = true;
-                        this.m_config.m_eventSystem.FireEvent(commandName, eventArgs);
+                        g_eventSystem.FireEvent(commandName, eventArgs);
                         return;
                     }
 
@@ -236,7 +236,7 @@ export default class DevConsole
                 }
                 echoArg = echoArg.slice(0, echoArg.length - 1);
                 eventArgs["EchoArg"] = echoArg;
-                this.m_config.m_eventSystem.FireEvent(commandName, eventArgs);
+                g_eventSystem.FireEvent(commandName, eventArgs);
                 return;
             }
 
@@ -260,7 +260,7 @@ export default class DevConsole
                     }
                 }
 
-                this.m_config.m_eventSystem.FireEvent(commandName, eventArgs);
+                g_eventSystem.FireEvent(commandName, eventArgs);
                 return;
             }
 
@@ -276,7 +276,7 @@ export default class DevConsole
 
                 eventArgs[keyValuePair[0]] = keyValuePair[1];
             }
-            this.m_config.m_eventSystem.FireEvent(commandName, eventArgs);
+            g_eventSystem.FireEvent(commandName, eventArgs);
         }
     }
 
@@ -435,7 +435,7 @@ export default class DevConsole
             return true;
         }
 
-        this.m_config.m_eventSystem.ListAllCommands();
+        g_eventSystem.ListAllCommands();
     }
 
     Event_Clear = (eventArgs) =>

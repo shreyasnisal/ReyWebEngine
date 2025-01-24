@@ -4,212 +4,23 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta content="Rey's Game Engine" property="og:title">
+        <meta content="Throttle Ball" property="og:title">
         <meta
-                content="Hi, I'm Shreyas, aka Rey! Welcome to my JavaScript game engine..."
+                content="Welcome to ThrottleBall"
                 property="og:description">
         <meta property="og:type" content="website" />
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous"/>
-        <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-        <link rel="stylesheet" href="css/custom.css">
         <link rel="shortcut icon" type="image/png" href="./Logo.png" />
+        <style>
+            html, body
+            {
+                margin: 0px;
+                display: flex;
+            }
+        </style>
     </head>
 
     <body>
         <canvas id="id_canvas"></canvas>
-        <div id="website-content">
-            <div class = "mobile-top-bar">
-                <div class="nav-brand">
-                    <a href="#">SHREYAS NISAL</a>
-                </div>
-                <i class="menu-toggler material-icons">menu</i>
-            </div>
-            <nav class="top-nav not-open">
-                <i class="menu-toggler-close-button material-icons">close</i>
-                <div class="nav-brand large-screen-only">
-                    <a href="#">SHREYAS NISAL</a>
-                </div>
-                <ul class="nav-list">
-                    <li style="display:none">
-                        <a id="landing-navitem" href="#" class="nav-link">Home</a>
-                    </li>
-                    <li>
-                        <a id="about-navitem" href="#about" class="nav-link">About</a>
-                    </li>
-                    <li>
-                        <a id="projects-navitem" href="#personal" class="nav-link">Personal Projects</a>
-                    </li>
-                    <li>
-                        <a id="youtube-navitem" href="#team" class="nav-link">Team Projects</a>
-                    </li>
-                    <li>
-                        <a id="about-navitem" href="docs/CoverLetter_ShreyasNisal.pdf" target="_blank" class="nav-link">Cover Letter</a>
-                    </li>
-                    <li>
-                        <a href="docs/Resume_ShreyasNisal.pdf" target="_blank" class="nav-link">Resume</a>
-                    </li>
-                    <!-- <li>
-                        <a target="_blank" href="https://www.linkedin.com/in/shreyasnisal/">
-                            <i class="fab fa-linkedin"></i>
-                        </a>
-                    </li>
-                    <li>
-                        <a target="_blank" href="https://github.com/shreyasnisal">
-                            <i class="fab fa-github"></i>
-                        </a>
-                    </li> -->
-                </ul>
-            </nav>
-            <div class="container">
-                <div class="landing" id="landing">
-                    <img id="landing-logo" src="img/Logo.png" alt="Shreyas Nisal game developer logo" />
-                </div>
-
-                <div class="section" id="about">
-                    <h2>Hi, I'm Shreyas</h2>
-                    <div class="about">
-                        <img src="img/Shreyas.jpg" />
-                        <div class="about-text">
-                            <p>I’m currently pursuing a <b>Master of Interactive Technology in Digital Game Development</b> with a specialization in Software Development at <b>Southern Methodist University (Guildhall)</b>. My interest lies in exploring technology for creative applications, with a special focus on play experiences and interaction between humans and technology.
-                            </p>
-                            <br>
-                            <p>I’ve worked as a Research Intern at the <b>HAFP Lab</b> at the <b>Royal Melbourne Institute of Technology</b>, <b>Massachusetts Institute of Technology (MIT) Media Lab</b> with the <b>Fluid Interfaces</b> group, and at the <b>Exertion Games Lab</b> at <b>Monash University</b>.</p>
-                            <br>
-                            <p>I love working on personal projects, and my projects have culminated in games, mobile apps and web platforms, some of which are available on the Google Play Store or hosted online. I have co-authored publications at UIST and CHIPlay, and have written a first-authored research paper where we investigate a novel game designed using Electrical Muscle Stimulation (EMS). I also enjoy creating content on YouTube where I teach about programming and talk about my projects and experiences.</p>
-                            <br>
-                            <p>If you want to discuss anything or just want to say hello, I’d love to connect! I reply fastest on email: <a href="mailto:shreyasnisal@gmail.com">shreyasnisal@gmail.com</a></p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="section" id="personal">
-                    <h2>Personal Projects</h2>
-
-                    <div class="project">
-                        <img src="img/ReyTD.png" alt="ReyTD" />
-                        <div class="project-description">
-                            <h3>ReyTD</h3>
-                            <p>A Tower Defense game featuring six levels, nine enemy types and five tower types, with 3D model loading from OBJ files, data-driven content from XML, billboarded particle effects and a custom UI system.</p>
-                            <p class="technologies">Custom C++ Game Engine</p>
-                            <div class="links">
-                                <a class="link-icon" href="./projects/personal/ReyTD.html">
-                                            <span class="material-symbols-outlined">
-                                                read_more
-                                            </span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="project">
-                        <img src="img/SimpleMiner.png" alt="SimpleMiner" />
-                        <div class="project-description">
-                            <h3>SimpleMiner</h3>
-                            <p>A minecraft-style game containing an infinite deterministic world based on chunks, with the ability to place/dig blocks, save chunks to files, biome factors including rivers, oceans, deserts, ice and trees, all based on Perlin noise.</p>
-                            <p class="technologies">Custom C++ Game Engine</p>
-                            <div class="links">
-                                <a class="link-icon" href="./projects/personal/SimpleMiner.html">
-                                            <span class="material-symbols-outlined">
-                                                read_more
-                                            </span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="project">
-                        <img src="img/Doomenstein.png" alt="Doomenstein" />
-                        <div class="project-description">
-                            <h3>Doomenstein</h3>
-                            <p>A first person shooter with 3D models loaded from OBJ files, directional lighting and shadow maps.</p>
-                            <p class="technologies">Custom C++ Game Engine</p>
-                            <div class="links">
-                                <a class="link-icon" href="./projects/personal/Doomenstein.html">
-                                            <span class="material-symbols-outlined">
-                                                read_more
-                                            </span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="section" id="team">
-                    <h2>Team Projects</h2>
-
-                    <div class="project">
-                        <img src="img/Fastival.png" alt="Fastival" />
-                        <div class="project-description">
-                            <h3>Fastival!</h3>
-                            <p>Race through an enchanting carnival and be on the lookout for wacky obstacles and cool shortcuts as you compete against up to three other friends in this cute and cartoony arcade racing game!</p>
-                            <p class="technologies">Unreal Engine</p>
-                            <div class="links">
-                                <a class="link-icon"  href="./projects/team/Fastival.html">
-                                            <span class="material-symbols-outlined">
-                                                read_more
-                                            </span>
-                                </a>
-                                <a class="link-icon" target="_blank" href="https://store.steampowered.com/app/2830700/Fastival/">
-                                    <i class="fab fa-steam-square"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="project">
-                        <img src="img/DonuTilt.png" alt="DonuTilt" />
-                        <div class="project-description">
-                            <h3>DonuTilt</h3>
-                            <p>DonuTilt takes you to the magical world of donuts, ravaged by a jelly explosion. Help our Donut Hero navigate through the world by tilting the donut box or rotating it completely to change gravity in the donut world. Using a variety of sweet treats such as gumdrops, cookies, Pocky, and more, the Donut Hero must navigate the donut box to reach their Donut Friends!</p>
-                            <p class="technologies">Unity3D</p>
-                            <div class="links">
-                                <a class="link-icon" href="./projects/team/DonuTilt.html">
-                                            <span class="material-symbols-outlined">
-                                                read_more
-                                            </span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="" id="social">
-                <div class="social-links">
-
-                    <a target="_blank" href="mailto:shreyasnisal@gmail.com">
-                        <i class="fas fa-envelope"></i>
-                    </a>
-
-                    <a target="_blank" href="https://www.linkedin.com/in/shreyasnisal/">
-                        <i class="fab fa-linkedin"></i>
-                    </a>
-
-                    <a target="_blank" href="https://github.com/shreyasnisal">
-                        <i class="fab fa-github"></i>
-                    </a>
-
-                    <a target="_blank" href="https://shreyasnisal.medium.com/">
-                        <i class="fab fa-medium"></i>
-                    </a>
-
-                    <a target="_blank" href="https://www.youtube.com/c/ShreyasNisal">
-                        <i class="fab fa-youtube"></i>
-                    </a>
-
-                </div>
-            </div>
-
-            <div class="footer" id="footer">
-                <p><i class="fa fa-copyright"></i> Made with <i class="fa fa-heart"></i> by Shreyas Nisal</p>
-            </div>
-        </div>
-
-        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-        <script src="js/custom.js"></script>
         <script type="module" src="/PortfolioGame/Framework/Main.js"></script>
     </body>
 </html>

@@ -1,6 +1,6 @@
 "use strict";
 
-import { g_eventSystem } from "../Core/EngineCommon.js";
+import {g_eventSystem, g_renderer} from "../Core/EngineCommon.js";
 import Rgba8 from "/Engine/Core/Rgba8.js";
 import Stopwatch from "/Engine/Core/Stopwatch.js";
 
@@ -13,9 +13,8 @@ import { BlendMode, CullMode, DepthMode } from "/Engine/Renderer/Renderer.js";
 
 export class DebugRenderConfig
 {
-    constructor(renderer, bitmapFontFilePathWithNoExtension, messageHeightFractionOfScreen = 0.02)
+    constructor(bitmapFontFilePathWithNoExtension, messageHeightFractionOfScreen = 0.02)
     {
-        this.m_renderer = renderer;
         this.m_bitmapFontFilePathWithNoExtension = bitmapFontFilePathWithNoExtension;
         this.m_messageHeightFractionOfScreen = messageHeightFractionOfScreen;
     }
@@ -78,7 +77,7 @@ export default class DebugRenderSystem
 
     Startup()
     {
-        this.m_config.m_renderer.CreateOrGetBitmapFont(this.m_config.m_bitmapFontFilePathWithNoExtension).then(font => {
+        g_renderer.CreateOrGetBitmapFont(this.m_config.m_bitmapFontFilePathWithNoExtension).then(font => {
             this.m_debugRenderSystemFont = font;
         });
         g_eventSystem.SubscribeEventCallbackFunction("debugrenderclear", this.Clear, "Clear all debug elements");
@@ -121,10 +120,10 @@ export default class DebugRenderSystem
 
     RenderWorld(worldCamera)
     {
-        this.m_config.m_renderer.BeginCamera(worldCamera);
+        g_renderer.BeginCamera(worldCamera);
         {
         }
-        this.m_config.m_renderer.EndCamera(worldCamera);
+        g_renderer.EndCamera(worldCamera);
     }
 
     RenderScreen(screenCamera)
@@ -139,19 +138,19 @@ export default class DebugRenderSystem
             return;
         }
 
-        this.m_config.m_renderer.BeginCamera(screenCamera);
+        g_renderer.BeginCamera(screenCamera);
         {
             // Render screen text
             for (let screenGeometryIndex = 0; screenGeometryIndex < this.m_screenGeometry.length; screenGeometryIndex++)
             {
                 const screenGeometry = this.m_screenGeometry[screenGeometryIndex];
                 const geometryColor = screenGeometry.m_durationTimer ? Rgba8.Lerp(screenGeometry.m_startColor, screenGeometry.m_endColor, screenGeometry.m_durationTimer.GetElapsedFraction()) : screenGeometry.m_startColor;
-                this.m_config.m_renderer.SetBlendMode(BlendMode.ALPHA);
-                this.m_config.m_renderer.SetCullMode(CullMode.BACK);
-                this.m_config.m_renderer.SetDepthMode(DepthMode.DISABLED);
-                this.m_config.m_renderer.SetModelConstants();
-                this.m_config.m_renderer.BindTexture(screenGeometry.m_texture);
-                this.m_config.m_renderer.DrawVertexArray(screenGeometry.m_vertexes);
+                g_renderer.SetBlendMode(BlendMode.ALPHA);
+                g_renderer.SetCullMode(CullMode.BACK);
+                g_renderer.SetDepthMode(DepthMode.DISABLED);
+                g_renderer.SetModelConstants();
+                g_renderer.BindTexture(screenGeometry.m_texture);
+                g_renderer.DrawVertexArray(screenGeometry.m_vertexes);
             }
 
             const textVerts = [];
@@ -192,14 +191,14 @@ export default class DebugRenderSystem
                 this.m_debugRenderSystemFont.AddVertsForText2D(textVerts, messageTextMins, messageHeight, message.m_text, textColor, 0.7);
             }
 
-            this.m_config.m_renderer.SetBlendMode(BlendMode.ALPHA);
-            this.m_config.m_renderer.SetDepthMode(DepthMode.DISABLED);
-            this.m_config.m_renderer.SetCullMode(CullMode.BACK);
-            this.m_config.m_renderer.SetModelConstants();
-            this.m_config.m_renderer.BindTexture(this.m_debugRenderSystemFont.GetTexture());
-            this.m_config.m_renderer.DrawVertexArray(textVerts);
+            g_renderer.SetBlendMode(BlendMode.ALPHA);
+            g_renderer.SetDepthMode(DepthMode.DISABLED);
+            g_renderer.SetCullMode(CullMode.BACK);
+            g_renderer.SetModelConstants();
+            g_renderer.BindTexture(this.m_debugRenderSystemFont.GetTexture());
+            g_renderer.DrawVertexArray(textVerts);
         }
-        this.m_config.m_renderer.EndCamera(screenCamera);
+        g_renderer.EndCamera(screenCamera);
     }
 
     SetVisible(visible)

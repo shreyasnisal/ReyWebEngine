@@ -21,9 +21,8 @@ class CursorState
 
 export class InputSystemConfig
 {
-    constructor(windowManager)
+    constructor()
     {
-        this.m_windowManager = windowManager;
     }
 }
 
