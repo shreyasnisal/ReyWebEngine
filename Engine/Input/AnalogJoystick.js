@@ -38,5 +38,15 @@ export default class AnalogJoystick
         this.m_innerDeadzoneThreshold = innerDeadzoneThreshold;
         this.m_outerDeadzoneThreshold = outerDeadzoneThreshold;
     }
+
+    GetDeadzoneCorrectedMagnitude()
+    {
+        return this.m_deadzoneCorrectedPolarR;
+    }
+
+    GetOrientationDegrees()
+    {
+        return this.m_orientation;
+    }
 }
 

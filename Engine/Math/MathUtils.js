@@ -42,6 +42,55 @@ export function Atan2Degrees(y, x)
     return ConvertRadiansToDegrees(radians);
 }
 
+export function GetShortestAngularDispDegrees(startDegrees, endDegrees)
+{
+    while (startDegrees > 360.0)
+    {
+        startDegrees -= 360.0;
+    }
+    while (endDegrees > 360.0)
+    {
+        endDegrees -= 360.0;
+    }
+
+    let angularDisplacement = endDegrees - startDegrees;
+    if (angularDisplacement > 180.0)
+    {
+        angularDisplacement -= 360.0;
+    }
+    else if (angularDisplacement < -180.0)
+    {
+        angularDisplacement += 360.0;
+    }
+
+    return angularDisplacement;
+}
+
+export function GetTurnedTowardDegrees(currentDegrees, goalDegrees, maxDeltaDegrees)
+{
+    while (currentDegrees > 360.0)
+    {
+        currentDegrees -= 360.0;
+    }
+    while (goalDegrees > 360.0)
+    {
+        goalDegrees -= 360.0;
+    }
+
+    let turnedDegrees = currentDegrees;
+    const shortestAngularDisplacement = GetShortestAngularDispDegrees(currentDegrees, goalDegrees);
+    if (shortestAngularDisplacement > 0)
+    {
+        turnedDegrees += GetClamped(shortestAngularDisplacement, 0, maxDeltaDegrees);
+    }
+    else
+    {
+        turnedDegrees -= GetClamped(Math.abs(shortestAngularDisplacement), 0, maxDeltaDegrees);
+    }
+
+    return turnedDegrees;
+}
+
 export function NormalizeByte(byteToNormalize)
 {
     return byteToNormalize / 255;
@@ -130,6 +179,19 @@ export function CrossProduct3D(vecA, vecB)
         vecA.z * vecB.x - vecA.x * vecB.z,
         vecA.x * vecB.y - vecA.y * vecB.x
     );
+}
+
+export function GetProjectedLength2D(vectorToProject, vectorToProjectOnto)
+{
+    const normalToProjectOnto = vectorToProjectOnto.GetNormalized();
+    return DotProduct2D(vectorToProject, normalToProjectOnto);
+}
+
+export function GetProjectedOnto2D(vectorToProject, vectorToProjectOnto)
+{
+    const normalToProjectOnto = vectorToProjectOnto.GetNormalized();
+    const projectedLength = DotProduct2D(vectorToProject, normalToProjectOnto);
+    return normalToProjectOnto.GetScaled(projectedLength);
 }
 
 export function GetEulerAnglesFromQuaternion(quaternionX, quaternionY, quaternionZ, quaternionW)

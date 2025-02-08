@@ -92,6 +92,11 @@ export default class Camera
         return this.m_orthoView.m_maxs;
     }
 
+    GetOrthoBounds()
+    {
+        return new AABB2(this.m_orthoView.m_mins, this.m_orthoView.m_maxs);
+    }
+
     Translate2D(translationXY)
     {
         this.m_orthoView.SetCenter(this.m_orthoView.GetCenter().GetSum(translationXY));

@@ -286,6 +286,7 @@ export default class InputSystem
 
     HandleGamepadConnected(gamepadIndex)
     {
+        console.log("Gamepad connected!");
         this.m_gamepads.push(new XboxController(gamepadIndex));
     }
 

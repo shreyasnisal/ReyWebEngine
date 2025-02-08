@@ -68,6 +68,81 @@ export function AddPCUVertsForAABB2(verts, bounds, color = Rgba8.WHITE, uvCoords
     verts.push(vertexTL);
 }
 
+export function AddPCUVertsForRing2D(verts, center, radius, thickness, color = Rgba8.WHITE, numTrapezoids = 64)
+{
+    const thetaIncrementDegrees = 360.0 / numTrapezoids;
+    const innerRadius = radius - thickness * 0.5;
+    const outerRadius = radius + thickness * 0.5;
+
+    for (let trapIndex = 0; trapIndex < numTrapezoids; trapIndex++)
+    {
+        const startThetaDegrees = trapIndex * thetaIncrementDegrees;
+        const endThetaDegrees = (trapIndex + 1) * thetaIncrementDegrees;
+
+        const innerStartVertexPos = center.GetSum(Vec2.MakeFromPolarDegrees(startThetaDegrees, innerRadius));
+        const outerStartVertexPos = center.GetSum(Vec2.MakeFromPolarDegrees(startThetaDegrees, outerRadius));
+        const innerEndVertexPos = center.GetSum(Vec2.MakeFromPolarDegrees(endThetaDegrees, innerRadius));
+        const outerEndVertexPos = center.GetSum(Vec2.MakeFromPolarDegrees(endThetaDegrees, outerRadius));
+
+        verts.push(new Vertex_PCU(new Vec3(innerStartVertexPos.x, innerStartVertexPos.y, 0.0), color, new Vec2(0.0, 0.0)));
+        verts.push(new Vertex_PCU(new Vec3(outerStartVertexPos.x, outerStartVertexPos.y, 0.0), color, new Vec2(0.0, 0.0)));
+        verts.push(new Vertex_PCU(new Vec3(innerEndVertexPos.x, innerEndVertexPos.y, 0.0), color, new Vec2(0.0, 0.0)));
+        verts.push(new Vertex_PCU(new Vec3(outerStartVertexPos.x, outerStartVertexPos.y, 0.0), color, new Vec2(0.0, 0.0)));
+        verts.push(new Vertex_PCU(new Vec3(outerEndVertexPos.x, outerEndVertexPos.y, 0.0), color, new Vec2(0.0, 0.0)));
+        verts.push(new Vertex_PCU(new Vec3(innerEndVertexPos.x, innerEndVertexPos.y, 0.0), color, new Vec2(0.0, 0.0)));
+    }
+}
+
+export function AddPCUVertsForArc2D(verts, center, radius, thickness, startAngle, endAngle, color = Rgba8.WHITE, numTrapezoids = 64)
+{
+    const thetaIncrementDegrees = (endAngle - startAngle) / numTrapezoids;
+    const innerRadius = radius - thickness * 0.5;
+    const outerRadius = radius + thickness * 0.5;
+
+    for (let trapIndex = 0; trapIndex < numTrapezoids; trapIndex++)
+    {
+        const startThetaDegrees = startAngle + (trapIndex) * thetaIncrementDegrees;
+        const endThetaDegrees = startAngle + (trapIndex + 1) * thetaIncrementDegrees;
+
+        const innerStartVertexPos = center.GetSum(Vec2.MakeFromPolarDegrees(startThetaDegrees, innerRadius));
+        const outerStartVertexPos = center.GetSum(Vec2.MakeFromPolarDegrees(startThetaDegrees, outerRadius));
+        const innerEndVertexPos = center.GetSum(Vec2.MakeFromPolarDegrees(endThetaDegrees, innerRadius));
+        const outerEndVertexPos = center.GetSum(Vec2.MakeFromPolarDegrees(endThetaDegrees, outerRadius));
+
+        verts.push(new Vertex_PCU(new Vec3(innerStartVertexPos.x, innerStartVertexPos.y, 0.0), color, new Vec2(0.0, 0.0)));
+        verts.push(new Vertex_PCU(new Vec3(outerStartVertexPos.x, outerStartVertexPos.y, 0.0), color, new Vec2(0.0, 0.0)));
+        verts.push(new Vertex_PCU(new Vec3(innerEndVertexPos.x, innerEndVertexPos.y, 0.0), color, new Vec2(0.0, 0.0)));
+        verts.push(new Vertex_PCU(new Vec3(outerStartVertexPos.x, outerStartVertexPos.y, 0.0), color, new Vec2(0.0, 0.0)));
+        verts.push(new Vertex_PCU(new Vec3(outerEndVertexPos.x, outerEndVertexPos.y, 0.0), color, new Vec2(0.0, 0.0)));
+        verts.push(new Vertex_PCU(new Vec3(innerEndVertexPos.x, innerEndVertexPos.y, 0.0), color, new Vec2(0.0, 0.0)));
+    }
+}
+
+export function AddPCUVertsForDisc2D(verts, center, radius, color = Rgba8.WHITE, uvCoords = AABB2.ZERO_TO_ONE, numTris = 64)
+{
+    const numVerts = numTris * 3;
+    const degreesIncrementPerVertex = 360.0 / numVerts;
+
+    let previousVertexPosition = center.GetSum(Vec2.MakeFromPolarDegrees(0.0, radius));
+    let previousVertexUVs = uvCoords.m_mins.GetSum(new Vec2(0.5, 0.5)).GetSum(Vec2.MakeFromPolarDegrees(0.0, 0.5));
+
+    for (let vertexIndex = 0; vertexIndex < numVerts; vertexIndex += 3)
+    {
+        const newVertexPosition = center.GetSum(Vec2.MakeFromPolarDegrees((vertexIndex + 3) * degreesIncrementPerVertex, radius));
+        const newVertexUVs = uvCoords.m_mins.GetSum(new Vec2(0.5, 0.5)).GetSum(Vec2.MakeFromPolarDegrees((vertexIndex + 3) * degreesIncrementPerVertex, 0.5));
+        const centerVertex = new Vertex_PCU(center.GetAsVec3(), color, uvCoords.m_mins.GetSum(new Vec2(0.5, 0.5)));
+        const previousVertex = new Vertex_PCU(previousVertexPosition.GetAsVec3(), color, previousVertexUVs);
+        const newVertex = new Vertex_PCU(newVertexPosition.GetAsVec3(), color, newVertexUVs);
+
+        verts.push(centerVertex);
+        verts.push(previousVertex);
+        verts.push(newVertex);
+
+        previousVertexPosition = newVertexPosition;
+        previousVertexUVs = newVertexUVs;
+    }
+}
+
 export function AddPCUVertsForOrientedSector2D(verts, sectorTip, sectorForwardDegrees, sectorApertureDegrees, sectorRadius, color = Rgba8.WHITE)
 {
     const NUM_TRIANGLES = 20;
@@ -182,4 +257,31 @@ export function AddPCUTBNVertsForAABB3(verts, bounds, color = Rgba8.WHITE, uvCoo
     AddPCUTBNVertsForQuad3D(verts, BRF, BRB, TRB, TRF, color, uvCoords); // -Y
     AddPCUTBNVertsForQuad3D(verts, TLF, TRF, TRB, TLB, color, uvCoords); // +Z
     AddPCUTBNVertsForQuad3D(verts, BLB, BRB, BRF, BLF, color, uvCoords); // -Z
+}
+
+export function AddPCUVertsForOBB2(verts, box, color = Rgba8.WHITE)
+{
+    const vertexPositions = box.GetCornerPoints();
+
+    const vertex1 = new Vertex_PCU(vertexPositions[0].GetAsVec3(), color, Vec2.ZERO);
+    const vertex2 = new Vertex_PCU(vertexPositions[1].GetAsVec3(), color, Vec2.ZERO);
+    const vertex3 = new Vertex_PCU(vertexPositions[2].GetAsVec3(), color, Vec2.ZERO);
+    const vertex4 = new Vertex_PCU(vertexPositions[3].GetAsVec3(), color, Vec2.ZERO);
+
+    verts.push(vertex1);
+    verts.push(vertex2);
+    verts.push(vertex3);
+
+    verts.push(vertex1);
+    verts.push(vertex3);
+    verts.push(vertex4);
+}
+
+export function AddPCUVertsForArrow2D(verts, tailPos, tipPos, arrowSize, lineThickness, color)
+{
+    AddPCUVertsForLineSegment2D(verts, tailPos, tipPos, lineThickness, color);
+
+    const arrowDirection = tipPos.GetDifference(tailPos).GetNormalized();
+    AddPCUVertsForLineSegment2D(verts, tipPos, tipPos.GetSum(arrowDirection.GetRotatedDegrees(135.0).GetScaled(arrowSize)), lineThickness, color);
+    AddPCUVertsForLineSegment2D(verts, tipPos, tipPos.GetSum(arrowDirection.GetRotatedDegrees(-135.0).GetScaled(arrowSize)), lineThickness, color);
 }

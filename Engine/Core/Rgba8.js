@@ -22,6 +22,7 @@ export default class Rgba8
     static TEAL = Object.freeze(new Rgba8(0, 255, 255, 255));
     static DODGER_BLUE = Object.freeze(new Rgba8(30, 144, 255, 255));
     static DEEP_SKY_BLUE = Object.freeze(new Rgba8(0, 191, 255, 255));
+    static ORANGE = Object.freeze(new Rgba8(255, 165, 0, 255));
 
     constructor(r = 255, g = 255, b = 255, a = 255)
     {
