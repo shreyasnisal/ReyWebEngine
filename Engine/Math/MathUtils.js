@@ -7,7 +7,8 @@ import NumberRange from "/Engine/Math/NumberRange.js";
 import Vec3 from "/Engine/Math/Vec3.js";
 import Vec4 from "/Engine/Math/Vec4.js";
 
-
+// Trig and Angles
+//------------------------------------------------------------------------------------------------------------
 export function ConvertDegreesToRadians(degrees)
 {
     return degrees * Math.PI / 180;
@@ -90,6 +91,7 @@ export function GetTurnedTowardDegrees(currentDegrees, goalDegrees, maxDeltaDegr
 
     return turnedDegrees;
 }
+//------------------------------------------------------------------------------------------------------------
 
 export function NormalizeByte(byteToNormalize)
 {
@@ -152,6 +154,8 @@ export function RoundDownToInt(value)
     return Math.floor(value);
 }
 
+// Vector Operations
+//------------------------------------------------------------------------------------------------------------
 export function DotProduct2D(vecA, vecB)
 {
     return vecA.x * vecB.x + vecA.y * vecB.y;
@@ -193,6 +197,7 @@ export function GetProjectedOnto2D(vectorToProject, vectorToProjectOnto)
     const projectedLength = DotProduct2D(vectorToProject, normalToProjectOnto);
     return normalToProjectOnto.GetScaled(projectedLength);
 }
+//------------------------------------------------------------------------------------------------------------
 
 export function GetEulerAnglesFromQuaternion(quaternionX, quaternionY, quaternionZ, quaternionW)
 {
@@ -232,6 +237,8 @@ export function GetEulerAnglesFromQuaternion(quaternionX, quaternionY, quaternio
     return new EulerAngles(ConvertRadiansToDegrees(yaw), ConvertRadiansToDegrees(pitch), ConvertRadiansToDegrees(roll));
 }
 
+// Distances
+//------------------------------------------------------------------------------------------------------------
 export function GetDistance2D(vecA, vecB)
 {
     return Math.sqrt(
@@ -265,16 +272,49 @@ export function GetDistanceSquared3D(vecA, vecB)
         ((vecB.z - vecA.z) * (vecB.z - vecA.z))
     )
 }
+//------------------------------------------------------------------------------------------------------------
 
+// IsPointInside
+//------------------------------------------------------------------------------------------------------------
 export function IsPointInsideDisc2D(referencePoint, discCenter, discRadius)
 {
     return GetDistanceSquared2D(referencePoint, discCenter) < (discRadius * discRadius);
 }
+//------------------------------------------------------------------------------------------------------------
 
+// Nearest Points
+//------------------------------------------------------------------------------------------------------------
+export function GetNearestPointOnAABB2(referencePoint, box)
+{
+    return box.GetNearestPoint(referencePoint);
+}
+
+export function GetNearestPointOnOBB2(referencePoint, orientedBox)
+{
+    const iBasisNormal = orientedBox.m_iBasisNormal;
+    const jBasisNormal = iBasisNormal.GetRotated90Degrees();
+
+    const referencePointInOBBLocalSpace = orientedBox.GetLocalPosForWorldPos(referencePoint);
+    const OBB2InLocalSpace = new AABB2(orientedBox.m_halfDimensions.GetScaled(-1.0), orientedBox.m_halfDimensions);
+
+    const nearestPointInOBBLocalSpace = GetNearestPointOnAABB2(referencePointInOBBLocalSpace, OBB2InLocalSpace);
+    const nearestPointInWorldSpace = orientedBox.GetWorldPosForLocalPos(nearestPointInOBBLocalSpace);
+
+    return nearestPointInWorldSpace;
+}
+//------------------------------------------------------------------------------------------------------------
+
+// Overlaps
+//------------------------------------------------------------------------------------------------------------
 export function DoDiscAndAABB2Overlap(discCenter, discRadius, box)
 {
     const nearestPointOnBox = box.GetNearestPoint(discCenter);
     return IsPointInsideDisc2D(nearestPointOnBox, discCenter, discRadius);
+}
+
+export function DoDiscAndOBB2Overlap(discCenter, discRadius, box)
+{
+
 }
 
 export function DoAABB3AndCylinerOverlap(box, cylinderBaseCenter, cylinderTopCenter, cylinderRadius)
@@ -286,6 +326,30 @@ export function DoAABB3AndCylinerOverlap(box, cylinderBaseCenter, cylinderTopCen
     const cylinderZRange = new NumberRange(cylinderBaseCenter.z, cylinderTopCenter.z);
     const boxZRange = new NumberRange(box.m_mins.z, box.m_maxs.z);
     return cylinderZRange.IsOverlappingWith(boxZRange);
+}
+//------------------------------------------------------------------------------------------------------------
+
+// Push Out Operations
+//------------------------------------------------------------------------------------------------------------
+export function PushDiscOutOfFixedPoint2D(mobileDiscCenter, mobileDiscRadius, fixedPoint)
+{
+    if (!IsPointInsideDisc2D(fixedPoint, mobileDiscCenter, mobileDiscRadius))
+    {
+        return false;
+    }
+
+    const pushDistance = mobileDiscRadius - GetDistance2D(fixedPoint, mobileDiscCenter);
+    const pushDirection = mobileDiscCenter.GetDifference(fixedPoint).GetNormalized();
+
+    mobileDiscCenter.Add(pushDirection.GetScaled(pushDistance));
+
+    return true;
+}
+
+export function PushDiscOutOfFixedOBB2(mobileDiscCenter, mobileDiscRadius, fixedOrientedBox)
+{
+    const nearestPointOnOrientedBox = GetNearestPointOnOBB2(mobileDiscCenter, fixedOrientedBox);
+    return PushDiscOutOfFixedPoint2D(mobileDiscCenter, mobileDiscRadius, nearestPointOnOrientedBox);
 }
 
 export function PushZCylinderOutOfFixedAABB3(cylinderBaseCenter, cylinderTopCenter, cylinderRadius, box)
@@ -332,9 +396,12 @@ export function PushZCylinderOutOfFixedAABB3(cylinderBaseCenter, cylinderTopCent
     return true;
 }
 
+// Easing
+//------------------------------------------------------------------------------------------------------------
 export function EaseOutQuadratic(t)
 {
     const tFlipped = 1.0 - t;
     const outFlipped = tFlipped * tFlipped;
     return 1.0 - outFlipped;
 }
+//------------------------------------------------------------------------------------------------------------

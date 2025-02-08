@@ -1,5 +1,6 @@
 "use strict";
 
+import * as MathUtils from "/Engine/Math/MathUtils.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 
 
@@ -21,5 +22,24 @@ export default class OBB2
         cornerPoints[2] = this.m_center.GetSum(this.m_iBasisNormal.GetScaled(this.m_halfDimensions.x)).GetSum(jBasisNormal.GetScaled(this.m_halfDimensions.y));
         cornerPoints[3] = this.m_center.GetDifference(this.m_iBasisNormal.GetScaled(this.m_halfDimensions.x)).GetSum(jBasisNormal.GetScaled(this.m_halfDimensions.y));
         return cornerPoints;
+    }
+
+    GetLocalPosForWorldPos(worldPos)
+    {
+        const jBasisNormal = this.m_iBasisNormal.GetRotated90Degrees();
+
+        const displacementCenterToPoint = worldPos.GetDifference(this.m_center);
+        const localX = MathUtils.GetProjectedLength2D(displacementCenterToPoint, this.m_iBasisNormal);
+        const localY = MathUtils.GetProjectedLength2D(displacementCenterToPoint, jBasisNormal);
+
+        return new Vec2(localX, localY);
+    }
+
+    GetWorldPosForLocalPos(localPos)
+    {
+        const jBasisNormal = this.m_iBasisNormal.GetRotated90Degrees();
+        const worldPos = this.m_center.GetSum(this.m_iBasisNormal.GetScaled(localPos.x)).GetSum(jBasisNormal.GetScaled(localPos.y));
+
+        return worldPos;
     }
 }

@@ -19,7 +19,7 @@ export default class Car
     static MAX_ACCELERATION = 25.0;
     static MAX_DECELERATION = 25.0;
     static FRAME_LENGTH = 10.0;
-    static MASS = 1.0;
+    static MASS = 2.0;
     static FRONT_WHEEL_TURN_RATE = 45.0;
     static MAX_FRONT_WHEEL_ANGULAR_OFFSET = 60.0;
 
@@ -44,7 +44,7 @@ export default class Car
 
     Update()
     {
-        const deltaSeconds = this.m_map.m_clock.GetDeltaSeconds();
+        const deltaSeconds = this.m_map.m_game.m_clock.GetDeltaSeconds();
 
         // Front axle calculation
         this.m_frontAxleVelocity.Add(this.m_acceleration.GetScaled(deltaSeconds));
@@ -65,6 +65,13 @@ export default class Car
         this.m_backAxlePosition.Add(this.m_backAxleVelocity.GetScaled(deltaSeconds));
 
         // Correction from fixed frame length
+        this.PerformFrameCorrectionAndUpdatePosition();
+
+        this.m_acceleration = new Vec2(0.0, 0.0);
+    }
+
+    PerformFrameCorrectionAndUpdatePosition()
+    {
         const dispBackAxleToFrontAxle = this.m_frontAxlePosition.GetDifference(this.m_backAxlePosition);
         const currentFrameLength = dispBackAxleToFrontAxle.GetLength();
         const correctionPerAxle = (currentFrameLength - Car.FRAME_LENGTH) * 0.5;
@@ -72,14 +79,12 @@ export default class Car
         this.m_frontAxlePosition.Subtract(dirBackAxleToFrontAxle.GetScaled(correctionPerAxle));
         this.m_backAxlePosition.Add(dirBackAxleToFrontAxle.GetScaled(correctionPerAxle));
 
+        // Update Position
         this.m_position = this.m_backAxlePosition.GetSum(dirBackAxleToFrontAxle.GetScaled(Car.FRAME_LENGTH * 0.5));
-
-        this.m_acceleration = new Vec2(0.0, 0.0);
     }
 
     FixedUpdate(deltaSeconds)
     {
-
     }
 
     Render()
@@ -138,23 +143,19 @@ export default class Car
         return this.GetForwardNormal().GetRotatedDegrees(this.m_frontWheelRelativeAngularOffset);
     }
 
-    AddForce(force)
+    GetBounds()
     {
-        this.m_acceleration.Add(force.GetScaled(1.0 / Car.MASS));
-    }
-
-    AddImpulse(impulse)
-    {
+        return new OBB2(this.m_position, this.GetForwardNormal(), new Vec2(Car.FRAME_LENGTH * 0.5, Car.FRAME_LENGTH * 0.5 * 0.5));
     }
 
     AddGas(gas)
     {
-        this.m_acceleration.Add(this.GetForwardNormal().GetScaled(gas * Car.MAX_ACCELERATION));
+        this.m_acceleration.Add(this.GetForwardNormal().GetScaled(gas * Car.MAX_ACCELERATION * Car.MASS));
     }
 
     AddReverse(reverse)
     {
-        this.m_acceleration.Add(this.GetForwardNormal().GetScaled(-reverse * Car.MAX_DECELERATION));
+        this.m_acceleration.Add(this.GetForwardNormal().GetScaled(-reverse * Car.MAX_DECELERATION * Car.MASS));
     }
 
     TurnWheelsToOrientation(targetOrientation)
