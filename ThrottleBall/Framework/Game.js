@@ -110,9 +110,13 @@ export default class Game
         {
             this.m_clock.SingleStepFrame();
         }
-        if (g_input.WasKeyJustPressed("F1"))
+        if (g_input.WasKeyJustPressed('T'))
         {
-            this.m_drawDebug = !this.m_drawDebug;
+            this.m_clock.SetTimeScale(0.1);
+        }
+        if (g_input.WasKeyJustReleased('T'))
+        {
+            this.m_clock.SetTimeScale(1.0);
         }
     }
 
@@ -126,12 +130,12 @@ export default class Game
             case GameState.CREDITS:
             case GameState.SETTINGS:
             {
-                g_renderer.ClearScreen(Rgba8.GRAY);
+                g_renderer.ClearScreen(Rgba8.BLACK);
                 break;
             }
             case GameState.GAME:
             {
-                g_renderer.ClearScreen(Rgba8.DEEP_SKY_BLUE);
+                g_renderer.ClearScreen(Rgba8.BLACK);
             }
         }
     }

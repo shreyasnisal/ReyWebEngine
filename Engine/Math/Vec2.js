@@ -142,7 +142,13 @@ export default class Vec2
 
     GetNormalized()
     {
-        const scalingFactor = 1 / this.GetLength();
+        const length = this.GetLength();
+        if (length === 0.0)
+        {
+            return new Vec2(0.0, 0.0);
+        }
+
+        const scalingFactor = 1 / length;
         return new Vec2(this.x * scalingFactor, this.y * scalingFactor);
     }
 }

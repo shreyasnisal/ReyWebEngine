@@ -4,13 +4,20 @@ import {WORLD_SIZE_X, WORLD_SIZE_Y} from "/ThrottleBall/Framework/GameCommon.js"
 import Ball from "/ThrottleBall/Gameplay/Ball.js";
 import Car from "/ThrottleBall/Gameplay/Car.js";
 
-import { g_renderer } from "/Engine/Core/EngineCommon.js";
+import {g_input, g_renderer} from "/Engine/Core/EngineCommon.js";
 
 import Rgba8 from "/Engine/Core/Rgba8.js";
 import * as VertexUtils from "/Engine/Core/VertexUtils.js";
 
 import * as MathUtils from "/Engine/Math/MathUtils.js";
 import Vec2 from "/Engine/Math/Vec2.js";
+import {
+    AreVelocitiesDiverging2D,
+    DoDiscAndOBB2Overlap, GetDistance2D,
+    GetNearestPointOnOBB2, GetProjectedLength2D,
+    GetProjectedOnto2D, IsPointInsideDisc2D,
+    PushDiscAndOBB2OutOffEachOther
+} from "/Engine/Math/MathUtils.js";
 
 
 export default class Map
@@ -26,21 +33,37 @@ export default class Map
         this.m_game.m_players[0].SetCar(this.m_cars[0]);
         this.m_game.m_players[1].SetCar(this.m_cars[1]);
 
+        // DebugFlags
         this.m_drawDebug = true;
+        this.m_disableFieldRendering = false;
     }
 
     Update()
     {
+        this.HandleDevCheats();
+
         // Update Entities
         this.UpdateCars();
         this.m_ball.Update();
 
         // Push Entities out of each other
-        this.HandleCarVsBallCollisions();
+        this.HandleCarsVsBallCollisions();
 
         // Push Entities out of world
         this.PushCarsIntoField();
         this.PushBallIntoField();
+    }
+
+    HandleDevCheats()
+    {
+        if (g_input.WasKeyJustPressed("F1"))
+        {
+            this.m_drawDebug = !this.m_drawDebug;
+        }
+        if (g_input.WasKeyJustPressed("F2"))
+        {
+            this.m_disableFieldRendering = !this.m_disableFieldRendering;
+        }
     }
 
     UpdateCars()
@@ -51,23 +74,111 @@ export default class Map
         }
     }
 
-    HandleCarVsBallCollisions()
+    HandleCarsVsBallCollisions()
     {
         for (let carIndex = 0; carIndex < this.m_cars.length; carIndex++)
         {
-            const ballPositionBeforePush = new Vec2(this.m_ball.m_position.x, this.m_ball.m_position.y);
-            if (MathUtils.PushDiscOutOfFixedOBB2(this.m_ball.m_position, Ball.RADIUS, this.m_cars[carIndex].GetBounds()))
-            {
-                const impulseDirection = this.m_ball.m_position.GetDifference(ballPositionBeforePush).GetNormalized();
-                const impulseMagnitude = MathUtils.GetProjectedLength2D(this.m_cars[carIndex].m_frontAxleVelocity, impulseDirection) * Car.MASS;
-                this.m_ball.AddImpulse(impulseDirection.GetScaled(impulseMagnitude));
-            }
+            const car = this.m_cars[carIndex];
+            this.HandleCarVsBallCollision(car, this.m_ball);
+            // const carBounds = car.GetBounds();
+            // MathUtils.BounceDiscAndOBB2OffEachOther(this.m_ball.m_position, Ball.RADIUS, Ball.MASS, this.m_ball.m_velocity, Ball.ELASTICITY, carBounds, Car.MASS, car.m_frontAxleVelocity, Car.ELASTICITY);
+            //
+            // car.m_frontAxlePosition = carBounds.m_center.GetSum(car.GetForwardNormal().GetScaled(Car.FRAME_LENGTH * 0.5));
+            // car.PerformFrameCorrectionAndUpdatePosition();
+
+            // car.m_position = carBounds.m_center;
+            // car.m_frontAxlePosition = car.m_position.GetSum(car.GetForwardNormal().GetScaled(Car.FRAME_LENGTH * 0.5));
+            // car.m_backAxlePosition = car.m_position.GetDifference(car.GetForwardNormal().GetScaled(Car.FRAME_LENGTH * 0.5));
+            // car.m_backAxleVelocity = car.m_frontAxleVelocity;
+
+            // const ballPositionBeforePush = new Vec2(this.m_ball.m_position.x, this.m_ball.m_position.y);
+            // if (MathUtils.PushDiscOutOfFixedOBB2(this.m_ball.m_position, Ball.RADIUS, this.m_cars[carIndex].GetBounds()))
+            // {
+            //     const impulseDirection = this.m_ball.m_position.GetDifference(ballPositionBeforePush).GetNormalized();
+            //     const impulseMagnitude = MathUtils.GetProjectedLength2D(this.m_cars[carIndex].m_frontAxleVelocity, impulseDirection) * Car.MASS;
+            //     this.m_ball.AddImpulse(impulseDirection.GetScaled(impulseMagnitude + Ball.BOUNCINESS));
+            // }
         }
+    }
+
+    HandleCarVsBallCollision(car, ball)
+    {
+        const carBounds = car.GetBounds();
+        const impactPointOnCar = GetNearestPointOnOBB2(ball.m_position, carBounds);
+        if (!IsPointInsideDisc2D(impactPointOnCar, ball.m_position, Ball.RADIUS))
+        {
+            return;
+        }
+
+        const dispCarCenterToImpactPoint = impactPointOnCar.GetDifference(car.m_position);
+        const impactPointDistanceFromCenterAlongCarFrame = GetProjectedLength2D(dispCarCenterToImpactPoint, carBounds.m_iBasisNormal);
+        const impactPointFractionFromCenterAlongCarFrame = impactPointDistanceFromCenterAlongCarFrame / Car.FRAME_LENGTH;
+        const impactFrontWeight = impactPointFractionFromCenterAlongCarFrame + 0.5;
+        const impactBackWeight = 1.0 - impactFrontWeight;
+
+        const pushDistance = Ball.RADIUS - GetDistance2D(impactPointOnCar, ball.m_position) * 0.5;
+        const pushDirectionForBall = ball.m_position.GetDifference(impactPointOnCar).GetNormalized();
+
+        ball.m_position.Add(pushDirectionForBall.GetScaled(pushDistance));
+        car.m_frontAxlePosition.Add(pushDirectionForBall.GetScaled(-impactFrontWeight * pushDistance));
+        car.m_backAxlePosition.Add(pushDirectionForBall.GetScaled(-impactBackWeight * pushDistance));
+
+        const carImpactPointVelocity = car.m_frontAxleVelocity.GetScaled(impactFrontWeight).GetSum(car.m_backAxleVelocity.GetScaled(impactBackWeight));
+
+        const collisionElasticity = Car.ELASTICITY * Ball.ELASTICITY;
+
+        const ballMomentum = ball.m_velocity.GetScaled(Ball.MASS);
+        const carImpactPointMomentum = carImpactPointVelocity.GetScaled(Car.MASS);
+        const centerOfMassVelocity = ballMomentum.GetSum(carImpactPointMomentum).GetScaled(1.0 / (Ball.MASS + Car.MASS));
+
+        const ballVelocityInCoMFrame = ball.m_velocity.GetDifference(centerOfMassVelocity);
+        const carImpactPointVelocityInCoMFrame = carImpactPointVelocity.GetDifference(centerOfMassVelocity);
+        const ballMomentumInCoMFrame = ballVelocityInCoMFrame.GetScaled(Ball.MASS);
+        const carImpactPointMomentumInCoMFrame = carImpactPointVelocityInCoMFrame.GetScaled(Car.MASS);
+
+        const directionBallToCarImpactPoint = impactPointOnCar.GetDifference(ball.m_position).GetNormalized();
+
+        const ballNormalMomentumInCoMFrame = GetProjectedOnto2D(ballMomentumInCoMFrame, directionBallToCarImpactPoint);
+        const ballTangentMomentumInCoMFrame = ballMomentumInCoMFrame.GetDifference(ballNormalMomentumInCoMFrame);
+
+        const carImpactPointNormalMomentumInCoMFrame = GetProjectedOnto2D(carImpactPointMomentumInCoMFrame, directionBallToCarImpactPoint.GetScaled(-1.0));
+        const carImpactPointTangentMomentumInCoMFrame = carImpactPointMomentumInCoMFrame.GetDifference(carImpactPointNormalMomentumInCoMFrame);
+
+        if (AreVelocitiesDiverging2D(ball.m_velocity, carImpactPointVelocity, directionBallToCarImpactPoint))
+        {
+            return true;
+        }
+
+        const ballFinalNormalMomentumInCoMFrame = new Vec2(carImpactPointNormalMomentumInCoMFrame.x, carImpactPointNormalMomentumInCoMFrame.y).GetScaled(collisionElasticity);
+        const ballFinalMomentumInCoMFrame = ballTangentMomentumInCoMFrame.GetSum(ballFinalNormalMomentumInCoMFrame);
+        const ballFinalVelocityInCoMFrame = ballFinalMomentumInCoMFrame.GetScaled(1.0 / Ball.MASS);
+        const ballFinalVelocity = ballFinalVelocityInCoMFrame.GetSum(centerOfMassVelocity);
+        ball.m_velocity.x = ballFinalVelocity.x;
+        ball.m_velocity.y = ballFinalVelocity.y;
+
+        const carImpactPointFinalNormalMomentumInCoMFrame = new Vec2(ballNormalMomentumInCoMFrame.x, ballNormalMomentumInCoMFrame.y).GetScaled(collisionElasticity);
+        const carImpactPointFinalMomentumInCoMFrame = carImpactPointTangentMomentumInCoMFrame.GetSum(carImpactPointFinalNormalMomentumInCoMFrame);
+        const carImpactPointFinalVelocityInCoMFrame = carImpactPointFinalMomentumInCoMFrame.GetScaled(1.0 / Car.MASS);
+        const carImpactPointFinalVelocity = carImpactPointFinalVelocityInCoMFrame.GetSum(centerOfMassVelocity);
+        // mobileBoxVelocity.x = mobileBoxFinalVelocity.x;
+        // mobileBoxVelocity.y = mobileBoxFinalVelocity.y;
+        car.m_frontAxleVelocity = carImpactPointFinalVelocity.GetScaled(impactFrontWeight);
+        car.m_backAxleVelocity = carImpactPointFinalVelocity.GetScaled(impactBackWeight);
+
+        car.PerformFrameCorrectionAndUpdatePosition();
     }
 
     HandleCarVsCarCollisions()
     {
-
+        // for (let car1Index = 0; car1Index < this.m_cars.length - 1; car1Index++)
+        // {
+        //     for (let car2Index = car1Index + 1; car2Index < this.m_cars.length; car1Index++)
+        //     {
+        //         const car1 = this.m_cars[car1Index];
+        //         const car2 = this.m_cars[car2Index];
+        //
+        //     }
+        // }
     }
 
     PushCarsIntoField()
@@ -76,42 +187,30 @@ export default class Map
         {
             const car = this.m_cars[carIndex];
 
-            // Front axle position correction
-            if (car.m_frontAxlePosition.x > WORLD_SIZE_X)
+            const cornerPoints = car.GetBounds().GetCornerPoints();
+            for (let cornerIndex = 0; cornerIndex < cornerPoints.length; cornerIndex++)
             {
-                car.m_frontAxlePosition.x = WORLD_SIZE_X;
-            }
-            if (car.m_frontAxlePosition.x < 0.0)
-            {
-                car.m_frontAxlePosition.x = 0.0;
-            }
-            if (car.m_frontAxlePosition.y > WORLD_SIZE_Y)
-            {
-                car.m_frontAxlePosition.y = WORLD_SIZE_Y;
-            }
-            if (car.m_frontAxlePosition.y < 0.0)
-            {
-                car.m_frontAxlePosition.y = 0.0;
-            }
-
-            // Back axle position correction
-            if (car.m_backAxlePosition.x > WORLD_SIZE_X)
-            {
-                car.m_backAxlePosition.x = WORLD_SIZE_X;
-            }
-            if (car.m_backAxlePosition.x < 0.0)
-            {
-                car.m_backAxlePosition.x = 0.0;
-            }
-            if (car.m_backAxlePosition.y > WORLD_SIZE_Y)
-            {
-                car.m_backAxlePosition.y = WORLD_SIZE_Y;
-            }
-            if (car.m_backAxlePosition.y < 0.0)
-            {
-                car.m_backAxlePosition.y = 0.0;
+                const cornerPoint = cornerPoints[cornerIndex];
+                if (cornerPoint.x > WORLD_SIZE_X)
+                {
+                    cornerPoint.x = WORLD_SIZE_X;
+                }
+                if (cornerPoint.x < 0.0)
+                {
+                    cornerPoint.x = 0.0;
+                }
+                if (cornerPoint.y > WORLD_SIZE_Y)
+                {
+                    cornerPoint.y = WORLD_SIZE_Y;
+                }
+                if (cornerPoint.y < 0.0)
+                {
+                    cornerPoint.y = 0.0;
+                }
             }
 
+            car.m_frontAxlePosition = cornerPoints[1].GetSum(cornerPoints[2]).GetScaled(0.5);
+            car.m_backAxlePosition = cornerPoints[0].GetSum(cornerPoints[3]).GetScaled(0.5);
             car.PerformFrameCorrectionAndUpdatePosition();
         }
     }
@@ -149,6 +248,11 @@ export default class Map
 
     RenderField()
     {
+        if (this.m_disableFieldRendering)
+        {
+            return;
+        }
+
         const fieldColor = new Rgba8(126, 217, 87);
         const fieldVerts = [];
         const fieldCenter = new Vec2(WORLD_SIZE_X, WORLD_SIZE_Y).GetScaled(0.5);

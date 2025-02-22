@@ -4,6 +4,7 @@ import AABB2 from "/Engine/Math/AABB2.js"
 import AABB3 from "/Engine/Math/AABB3.js";
 import EulerAngles from "/Engine/Math/EulerAngles.js";
 import NumberRange from "/Engine/Math/NumberRange.js";
+import Vec2 from "/Engine/Math/Vec2.js";
 import Vec3 from "/Engine/Math/Vec3.js";
 import Vec4 from "/Engine/Math/Vec4.js";
 
@@ -314,7 +315,8 @@ export function DoDiscAndAABB2Overlap(discCenter, discRadius, box)
 
 export function DoDiscAndOBB2Overlap(discCenter, discRadius, box)
 {
-
+    const nearestPointOnBox = GetNearestPointOnOBB2(discCenter, box);
+    return IsPointInsideDisc2D(nearestPointOnBox, discCenter, discRadius);
 }
 
 export function DoAABB3AndCylinerOverlap(box, cylinderBaseCenter, cylinderTopCenter, cylinderRadius)
@@ -350,6 +352,23 @@ export function PushDiscOutOfFixedOBB2(mobileDiscCenter, mobileDiscRadius, fixed
 {
     const nearestPointOnOrientedBox = GetNearestPointOnOBB2(mobileDiscCenter, fixedOrientedBox);
     return PushDiscOutOfFixedPoint2D(mobileDiscCenter, mobileDiscRadius, nearestPointOnOrientedBox);
+}
+
+export function PushDiscAndOBB2OutOffEachOther(mobileDiscCenter, mobileDiscRadius, mobileOrientedBox)
+{
+    const nearestPointOnOrientedBox = GetNearestPointOnOBB2(mobileDiscCenter, mobileOrientedBox);
+    if (!IsPointInsideDisc2D(nearestPointOnOrientedBox, mobileDiscCenter, mobileDiscRadius))
+    {
+        return false;
+    }
+
+    const pushDistance = mobileDiscRadius - GetDistance2D(nearestPointOnOrientedBox, mobileDiscCenter) * 0.5;
+    const pushDirection = mobileDiscCenter.GetDifference(nearestPointOnOrientedBox).GetNormalized();
+
+    mobileDiscCenter.Add(pushDirection.GetScaled(pushDistance));
+    mobileOrientedBox.m_center.Add(pushDirection.GetScaled(-pushDistance));
+
+    return true;
 }
 
 export function PushZCylinderOutOfFixedAABB3(cylinderBaseCenter, cylinderTopCenter, cylinderRadius, box)
@@ -395,6 +414,78 @@ export function PushZCylinderOutOfFixedAABB3(cylinderBaseCenter, cylinderTopCent
 
     return true;
 }
+//------------------------------------------------------------------------------------------------------------
+
+// Velocity Convergence/Divergence
+//------------------------------------------------------------------------------------------------------------
+export function AreVelocitiesConverging2D(velocityA, velocityB, normalAToB)
+{
+    const normalVelocityA = GetProjectedLength2D(velocityA, normalAToB);
+    const normalVelocityB = GetProjectedLength2D(velocityB, normalAToB);
+
+    const relativeVelocityAlongNormalBWrtA = normalVelocityB - normalVelocityA;
+    return (relativeVelocityAlongNormalBWrtA < 0.0);
+}
+
+export function AreVelocitiesDiverging2D(velocityA, velocityB, normalAToB)
+{
+    return !AreVelocitiesConverging2D(velocityA, velocityB, normalAToB);
+}
+//------------------------------------------------------------------------------------------------------------
+
+// Bounce Operations
+//------------------------------------------------------------------------------------------------------------
+export function BounceDiscAndOBB2OffEachOther(mobileDiscCenter, mobileDiscRadius, mobileDiscMass, mobileDiscVelocity, mobileDiscElasticity, mobileOrientedBox, mobileBoxMass, mobileBoxVelocity, mobileBoxElasticity)
+{
+    if (!DoDiscAndOBB2Overlap(mobileDiscCenter, mobileDiscRadius, mobileOrientedBox))
+    {
+        return false;
+    }
+
+    const collisionElasticity = mobileDiscElasticity * mobileBoxElasticity;
+
+    const mobileDiscMomentum = mobileDiscVelocity.GetScaled(mobileDiscMass);
+    const mobileBoxMomentum = mobileBoxVelocity.GetScaled(mobileBoxMass);
+    const centerOfMassVelocity = mobileDiscMomentum.GetSum(mobileBoxMomentum).GetScaled(1.0 / (mobileDiscMass + mobileBoxMass));
+
+    const mobileDiscVelocityInCoMFrame = mobileDiscVelocity.GetDifference(centerOfMassVelocity);
+    const mobileBoxVelocityInCoMFrame = mobileBoxVelocity.GetDifference(centerOfMassVelocity);
+    const mobileDiscMomentumInCoMFrame = mobileDiscVelocityInCoMFrame.GetScaled(mobileDiscMass);
+    const mobileBoxMomentumInCoMFrame = mobileBoxVelocityInCoMFrame.GetScaled(mobileBoxMass);
+
+    const nearestPointOnBox = GetNearestPointOnOBB2(mobileDiscCenter, mobileOrientedBox);
+    const directionDiscToPoint = nearestPointOnBox.GetDifference(mobileDiscCenter).GetNormalized();
+
+    const mobileDiscNormalMomentumInCoMFrame = GetProjectedOnto2D(mobileDiscMomentumInCoMFrame, directionDiscToPoint);
+    const mobileDiscTangentMomentumInCoMFrame = mobileDiscMomentumInCoMFrame.GetDifference(mobileDiscNormalMomentumInCoMFrame);
+
+    const mobileBoxNormalMomentumInCoMFrame = GetProjectedOnto2D(mobileBoxMomentumInCoMFrame, directionDiscToPoint.GetScaled(-1.0));
+    const mobileBoxTangentMomentumInCoMFrame = mobileBoxMomentumInCoMFrame.GetDifference(mobileBoxNormalMomentumInCoMFrame);
+
+    PushDiscAndOBB2OutOffEachOther(mobileDiscCenter, mobileDiscRadius, mobileOrientedBox);
+
+    if (AreVelocitiesDiverging2D(mobileDiscVelocity, mobileBoxVelocity, directionDiscToPoint))
+    {
+        return true;
+    }
+
+    const mobileDiscFinalNormalMomentumInCoMFrame = new Vec2(mobileBoxNormalMomentumInCoMFrame.x, mobileBoxNormalMomentumInCoMFrame.y).GetScaled(collisionElasticity);
+    const mobileDiscFinalMomentumInCoMFrame = mobileDiscTangentMomentumInCoMFrame.GetSum(mobileDiscFinalNormalMomentumInCoMFrame);
+    const mobileDiscFinalVelocityInCoMFrame = mobileDiscFinalMomentumInCoMFrame.GetScaled(1.0 / mobileDiscMass);
+    const mobileDiscFinalVelocity = mobileDiscFinalVelocityInCoMFrame.GetSum(centerOfMassVelocity);
+    mobileDiscVelocity.x = mobileDiscFinalVelocity.x;
+    mobileDiscVelocity.y = mobileDiscFinalVelocity.y;
+
+    const mobileBoxFinalNormalMomentumInCoMFrame = new Vec2(mobileDiscNormalMomentumInCoMFrame.x, mobileDiscNormalMomentumInCoMFrame.y).GetScaled(collisionElasticity);
+    const mobileBoxFinalMomentumInCoMFrame = mobileBoxTangentMomentumInCoMFrame.GetSum(mobileBoxFinalNormalMomentumInCoMFrame);
+    const mobileBoxFinalVelocityInCoMFrame = mobileBoxFinalMomentumInCoMFrame.GetScaled(1.0 / mobileBoxMass);
+    const mobileBoxFinalVelocity = mobileBoxFinalVelocityInCoMFrame.GetSum(centerOfMassVelocity);
+    mobileBoxVelocity.x = mobileBoxFinalVelocity.x;
+    mobileBoxVelocity.y = mobileBoxFinalVelocity.y;
+
+    return true;
+}
+//------------------------------------------------------------------------------------------------------------
 
 // Easing
 //------------------------------------------------------------------------------------------------------------

@@ -13,9 +13,14 @@ import {BlendMode, CullMode, DepthMode} from "/Engine/Renderer/Renderer.js";
 
 export default class Ball
 {
+    // To change the friction, change ONLY the COEFFICIENTS!
+    static ROLLING_FRICTION_COEFFICIENT = 0.01;
     static RADIUS = 2.0;
-    static ROLLING_FRICTION = 0.01;
     static MASS = 1.0;
+    static ELASTICITY = 1.0;
+
+    // Don't change these values
+    static ROLLING_FRICTION = Ball.ROLLING_FRICTION_COEFFICIENT * 100.0;
 
     constructor(map, position)
     {
@@ -31,9 +36,20 @@ export default class Ball
         const deltaSeconds = this.m_map.m_game.m_clock.GetDeltaSeconds();
 
         this.m_velocity.Add(this.m_acceleration.GetScaled(deltaSeconds));
-        this.m_velocity.Subtract(this.m_velocity.GetScaled(Ball.ROLLING_FRICTION));
+
+        const momentum = this.m_velocity.GetScaled(Ball.MASS);
+        const rollingFrictionThisFrame = Ball.ROLLING_FRICTION * deltaSeconds;
+        const momentumAfterFriction = momentum.GetDifference(momentum.GetScaled(rollingFrictionThisFrame)); // This should not be the same as AddForce
+        this.m_velocity = momentumAfterFriction.GetScaled(1.0 / Ball.MASS);
+
+        // Stop moving if the velocity is super low
+        if (this.m_velocity.GetLengthSquared() < 0.01)
+        {
+            this.m_velocity = new Vec2(0.0, 0.0);
+        }
         this.m_position.Add(this.m_velocity.GetScaled(deltaSeconds));
 
+        // Reset acceleration: Acceleration is accumulated each frame
         this.m_acceleration = new Vec2(0.0, 0.0);
     }
 
@@ -77,6 +93,11 @@ export default class Ball
 
     AddImpulse(impulse)
     {
+        if (impulse.GetLengthSquared() === 0.0)
+        {
+            return;
+        }
+
         this.m_velocity.Add(impulse.GetScaled(1.0 / Ball.MASS));
     }
 }
