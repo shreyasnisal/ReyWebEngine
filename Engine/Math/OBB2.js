@@ -2,6 +2,7 @@
 
 import * as MathUtils from "/Engine/Math/MathUtils.js";
 import Vec2 from "/Engine/Math/Vec2.js";
+import NumberRange from "/Engine/Math/NumberRange.js"
 
 
 export default class OBB2
@@ -41,5 +42,28 @@ export default class OBB2
         const worldPos = this.m_center.GetSum(this.m_iBasisNormal.GetScaled(localPos.x)).GetSum(jBasisNormal.GetScaled(localPos.y));
 
         return worldPos;
+    }
+
+    GetNumberRangeForCornerPointsProjectedOntoAxis(projectionAxis)
+    {
+        let resultNumberRange = new NumberRange();
+        resultNumberRange.m_min = Infinity;
+        resultNumberRange.m_max = -Infinity;
+
+        const cornerPoints = this.GetCornerPoints();
+        for (let cornerIndex = 0; cornerIndex < cornerPoints.length; cornerIndex++)
+        {
+            const cornerProjectionLength = MathUtils.GetProjectedLength2D(cornerPoints[cornerIndex], projectionAxis);
+            if (cornerProjectionLength < resultNumberRange.m_min)
+            {
+                resultNumberRange.m_min = cornerProjectionLength;
+            }
+            if (cornerProjectionLength > resultNumberRange.m_max)
+            {
+                resultNumberRange.m_max = cornerProjectionLength;
+            }
+        }
+
+        return resultNumberRange;
     }
 }

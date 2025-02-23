@@ -1,5 +1,5 @@
 
-export default class FloatRange
+export default class NumberRange
 {
     constructor(min = 0, max = 0)
     {

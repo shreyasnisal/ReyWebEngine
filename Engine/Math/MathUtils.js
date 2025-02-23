@@ -371,6 +371,62 @@ export function PushDiscAndOBB2OutOffEachOther(mobileDiscCenter, mobileDiscRadiu
     return true;
 }
 
+export function DoOBB2Overlap(obb1, obb2)
+{
+    const separatingAxes = [obb1.m_iBasisNormal, obb1.m_iBasisNormal.GetRotated90Degrees(), obb2.m_iBasisNormal, obb2.m_iBasisNormal.GetRotated90Degrees()];
+
+    for (let axisIndex = 0; axisIndex < separatingAxes.length; axisIndex++)
+    {
+        const obb1ProjectionRangeOnAxis = obb1.GetNumberRangeForCornerPointsProjectedOntoAxis(separatingAxes[axisIndex]);
+        const obb2ProjectionRangeOnAxis = obb2.GetNumberRangeForCornerPointsProjectedOntoAxis(separatingAxes[axisIndex]);
+        const overlap = Math.min(obb1ProjectionRangeOnAxis.m_max, obb2ProjectionRangeOnAxis.m_max) - Math.max(obb1ProjectionRangeOnAxis.m_min, obb2ProjectionRangeOnAxis.m_min);
+        if (overlap <= 0.0)
+        {
+            // Found a separating axis, no overlap
+            return false;
+        }
+    }
+
+    return true;
+}
+
+export function PushOBB2OutOfEachOther(obb1, obb2)
+{
+    const separatingAxes = [obb1.m_iBasisNormal, obb1.m_iBasisNormal.GetRotated90Degrees(), obb2.m_iBasisNormal, obb2.m_iBasisNormal.GetRotated90Degrees()];
+
+    let minOverlapDistance = Infinity;
+    let pushAxis = null;
+
+    for (let axisIndex = 0; axisIndex < separatingAxes.length; axisIndex++)
+    {
+        const obb1ProjectionRangeOnAxis = obb1.GetNumberRangeForCornerPointsProjectedOntoAxis(separatingAxes[axisIndex]);
+        const obb2ProjectionRangeOnAxis = obb2.GetNumberRangeForCornerPointsProjectedOntoAxis(separatingAxes[axisIndex]);
+        const overlap = Math.min(obb1ProjectionRangeOnAxis.m_max, obb2ProjectionRangeOnAxis.m_max) - Math.max(obb1ProjectionRangeOnAxis.m_min, obb2ProjectionRangeOnAxis.m_min);
+        if (overlap <= 0.0)
+        {
+            // Found a separating axis, no overlap
+            return false;
+        }
+        if (overlap < minOverlapDistance)
+        {
+            minOverlapDistance = overlap;
+            pushAxis = separatingAxes[axisIndex];
+        }
+    }
+
+    const directionForObb2 = new Vec2(obb2.m_center.x - obb1.m_center.x, obb2.m_center.y - obb1.m_center.y);
+    const directionProjectedOntoPushAxis = DotProduct2D(directionForObb2, pushAxis);
+    const pushDistance = directionProjectedOntoPushAxis < 0.0 ? -minOverlapDistance : minOverlapDistance;
+
+    obb2.m_center.x += pushAxis.x * pushDistance * 0.5;
+    obb2.m_center.y += pushAxis.y * pushDistance * 0.5;
+
+    obb1.m_center.x -= pushAxis.x * pushDistance * 0.5;
+    obb1.m_center.y -= pushAxis.y * pushDistance * 0.5;
+    
+    return true;
+}
+
 export function PushZCylinderOutOfFixedAABB3(cylinderBaseCenter, cylinderTopCenter, cylinderRadius, box)
 {
     const topViewBox2D = new AABB2(box.m_mins.GetXY(), box.m_maxs.GetXY());
