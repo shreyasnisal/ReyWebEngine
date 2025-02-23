@@ -18,7 +18,7 @@ import { DevConsoleMode } from "/Engine/Core/DevConsole.js";
 import AABB2 from "/Engine/Math/AABB2.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 
-import { g_aspect } from "/Engine/Renderer/Renderer.js";
+import { g_aspect, BlendMode, CullMode, DepthMode } from "/Engine/Renderer/Renderer.js";
 
 1
 export default class App
@@ -91,8 +91,18 @@ export default class App
         this.m_game.ClearScreen();
         g_renderer.BeginCamera(this.m_game.m_worldCamera);
         this.m_game.Render();
-        g_console.Render(new AABB2(Vec2.ZERO, new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y)));
         g_renderer.EndCamera(this.m_game.m_worldCamera);
+
+        g_renderer.BindShader(null);
+        g_renderer.BindTexture(null);
+        g_renderer.SetBlendMode(BlendMode.ALPHA);
+        g_renderer.SetCullMode(CullMode.BACK);
+        g_renderer.SetDepthMode(DepthMode.DISABLED);
+        g_renderer.SetModelConstants();
+
+        g_debugRenderSystem.RenderWorld(this.m_game.m_worldCamera);
+        g_debugRenderSystem.RenderScreen(this.m_game.m_screenCamera);
+        g_console.Render(new AABB2(Vec2.ZERO, new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y)));
     }
 
     EndFrame()

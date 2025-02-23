@@ -20,7 +20,7 @@ export default class Vec2
 
     toString()
     {
-        return "(" + this.x + "," + this.y + ")";
+        return "(" + this.x.toFixed(2) + "," + this.y.toFixed(2) + ")";
     }
 
     GetAsVec3(z = 0.0)
@@ -150,5 +150,20 @@ export default class Vec2
 
         const scalingFactor = 1 / length;
         return new Vec2(this.x * scalingFactor, this.y * scalingFactor);
+    }
+
+    SetLength(newLength)
+    {
+        this.Normalize();
+        this.x *= newLength;
+        this.y *= newLength;
+    }
+
+    ClampLength(maxLength)
+    {
+        if (this.GetLength() > maxLength)
+        {
+            this.SetLength(maxLength);
+        }
     }
 }

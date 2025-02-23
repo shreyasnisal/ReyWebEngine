@@ -1,8 +1,9 @@
 "use strict";
 
-import {WORLD_SIZE_X, WORLD_SIZE_Y} from "/ThrottleBall/Framework/GameCommon.js";
+import { WORLD_SIZE_X, WORLD_SIZE_Y, Team } from "/ThrottleBall/Framework/GameCommon.js";
 import Ball from "/ThrottleBall/Gameplay/Ball.js";
 import Car from "/ThrottleBall/Gameplay/Car.js";
+import Goal from "/ThrottleBall/Gameplay/Goal.js";
 
 import {g_input, g_renderer} from "/Engine/Core/EngineCommon.js";
 
@@ -13,7 +14,7 @@ import * as MathUtils from "/Engine/Math/MathUtils.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 import {
     AreVelocitiesDiverging2D,
-    DoDiscAndOBB2Overlap, GetDistance2D,
+    DoDiscAndOBB2Overlap, DotProduct2D, GetDistance2D, GetNearestPointOnAABB2,
     GetNearestPointOnOBB2, GetProjectedLength2D,
     GetProjectedOnto2D, IsPointInsideDisc2D,
     PushDiscAndOBB2OutOffEachOther, PushOBB2OutOfEachOther
@@ -28,10 +29,13 @@ export default class Map
         this.m_cars = [];
         this.m_ball = new Ball(this, new Vec2(WORLD_SIZE_X, WORLD_SIZE_Y).GetScaled(0.5));
 
-        this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.3, WORLD_SIZE_Y * 0.5), 0.0, this.m_game.m_players[0]));
-        this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.7, WORLD_SIZE_Y * 0.5), 180.0, this.m_game.m_players[1]));
+        this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.3, WORLD_SIZE_Y * 0.5), 0.0, this.m_game.m_players[0], Team.PINK));
+        this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.7, WORLD_SIZE_Y * 0.5), 180.0, this.m_game.m_players[1], Team.PURPLE));
         this.m_game.m_players[0].SetCar(this.m_cars[0]);
         this.m_game.m_players[1].SetCar(this.m_cars[1]);
+
+        this.m_pinkTeamGoal = new Goal(this, new Vec2(WORLD_SIZE_X * 0.02, WORLD_SIZE_Y * 0.5), 0.0, Team.PINK);
+        this.m_purpleTeamGoal = new Goal(this, new Vec2(WORLD_SIZE_X * 0.98, WORLD_SIZE_Y * 0.5), 180.0, Team.PURPLE);
 
         // DebugFlags
         this.m_drawDebug = true;
@@ -49,6 +53,7 @@ export default class Map
         // Push Entities out of each other
         this.HandleCarsVsBallCollisions();
         this.HandleCarVsCarCollisions();
+        this.HandleBallVsGoalsCollision();
 
         // Push Entities out of world
         this.PushCarsIntoField();
@@ -159,6 +164,9 @@ export default class Map
             {
                 const car1 = this.m_cars[car1Index];
                 const car2 = this.m_cars[car2Index];
+
+                // this.HandleCarVsCarCollision(car1, car2);
+
                 const car1Bounds = car1.GetBounds();
                 const car2Bounds = car2.GetBounds();
                 PushOBB2OutOfEachOther(car1Bounds, car2Bounds);
@@ -169,6 +177,42 @@ export default class Map
                 car1.PerformFrameCorrectionAndUpdatePosition();
                 car2.PerformFrameCorrectionAndUpdatePosition();
             }
+        }
+    }
+
+    HandleCarVsCarCollision(car1, car2)
+    {
+    }
+
+    HandleBallVsGoalsCollision()
+    {
+        this.HandleBallVsGoalCollision(this.m_ball, this.m_pinkTeamGoal);
+        this.HandleBallVsGoalCollision(this.m_ball, this.m_purpleTeamGoal);
+    }
+
+    HandleBallVsGoalCollision(ball, goal)
+    {
+        const goalPostBounds = goal.GetGoalPostBounds();
+
+        const nearestPointOnGoalPostBounds0 = GetNearestPointOnAABB2(ball.m_position, goalPostBounds[0]);
+        const nearestPointOnGoalPostBounds1 = GetNearestPointOnAABB2(ball.m_position, goalPostBounds[1]);
+
+        if (MathUtils.PushDiscOutOfFixedPoint2D(ball.m_position, Ball.RADIUS, nearestPointOnGoalPostBounds0))
+        {
+            const dispBallToNearestPoint = nearestPointOnGoalPostBounds0.GetDifference(ball.m_position);
+            const ballNormalVelocity = MathUtils.GetProjectedOnto2D(ball.m_velocity, dispBallToNearestPoint);
+            const ballTangentVelocity = ball.m_velocity.GetDifference(ballNormalVelocity);
+            ballNormalVelocity.Scale(-Ball.ELASTICITY * Goal.POLE_ELASTICITY);
+            ball.m_velocity = ballNormalVelocity.GetSum(ballTangentVelocity);
+        }
+
+        if (MathUtils.PushDiscOutOfFixedPoint2D(ball.m_position, Ball.RADIUS, nearestPointOnGoalPostBounds1))
+        {
+            const dispBallToNearestPoint = nearestPointOnGoalPostBounds1.GetDifference(ball.m_position);
+            const ballNormalVelocity = MathUtils.GetProjectedOnto2D(ball.m_velocity, dispBallToNearestPoint);
+            const ballTangentVelocity = ball.m_velocity.GetDifference(ballNormalVelocity);
+            ballNormalVelocity.Scale(-Ball.ELASTICITY * Goal.POLE_ELASTICITY);
+            ball.m_velocity = ballNormalVelocity.GetSum(ballTangentVelocity);
         }
     }
 
@@ -235,6 +279,7 @@ export default class Map
         this.RenderField();
         this.RenderCars();
         this.m_ball.Render();
+        this.RenderGoals();
     }
 
     RenderField()
@@ -278,5 +323,11 @@ export default class Map
         {
             this.m_cars[carIndex].Render();
         }
+    }
+
+    RenderGoals()
+    {
+        this.m_pinkTeamGoal.Render();
+        this.m_purpleTeamGoal.Render();
     }
 }

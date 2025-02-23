@@ -1,6 +1,6 @@
 "use strict";
 
-import { g_renderer } from "/Engine/Core/EngineCommon.js";
+import {g_debugRenderSystem, g_renderer} from "/Engine/Core/EngineCommon.js";
 
 import Rgba8 from "/Engine/Core/Rgba8.js";
 import * as VertexUtils from "/Engine/Core/VertexUtils.js";
@@ -41,6 +41,8 @@ export default class Ball
         const rollingFrictionThisFrame = Ball.ROLLING_FRICTION * deltaSeconds;
         const momentumAfterFriction = momentum.GetDifference(momentum.GetScaled(rollingFrictionThisFrame)); // This should not be the same as AddForce
         this.m_velocity = momentumAfterFriction.GetScaled(1.0 / Ball.MASS);
+
+        this.m_velocity.ClampLength(100.0);
 
         // Stop moving if the velocity is super low
         if (this.m_velocity.GetLengthSquared() < 0.01)
@@ -84,6 +86,9 @@ export default class Ball
         g_renderer.SetModelConstants();
         g_renderer.BindTexture(null);
         g_renderer.DrawVertexArray(ballDebugVerts);
+
+        // Debug Messages
+        g_debugRenderSystem.AddMessage("[Ball]:\tPosition = " + this.m_position.toString() + "\tVelocity = " + this.m_velocity.toString(), 0.0);
     }
 
     AddForce(force)

@@ -1,6 +1,6 @@
 "use strict";
 
-import {g_eventSystem, g_renderer} from "../Core/EngineCommon.js";
+import {g_eventSystem, g_renderer} from "/Engine/Core/EngineCommon.js";
 import Rgba8 from "/Engine/Core/Rgba8.js";
 import Stopwatch from "/Engine/Core/Stopwatch.js";
 

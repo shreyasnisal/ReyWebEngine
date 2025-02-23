@@ -43,6 +43,7 @@ export default class Game
         this.m_worldCamera.SetOrthoView(Vec2.ZERO, new Vec2(WORLD_SIZE_X, WORLD_SIZE_Y));
         // Initialize screen camera
         this.m_screenCamera = new Camera();
+        this.m_screenCamera.SetOrthoView(Vec2.ZERO, new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y));
 
         this.m_clock = new Clock();
 
@@ -85,7 +86,12 @@ export default class Game
     {
     }
 
-    Update(deltaSeconds)
+    FixedUpdate(deltaSeconds)
+    {
+
+    }
+
+    Update()
     {
         this.HandleDevCheats();
 

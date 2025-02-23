@@ -1,6 +1,8 @@
 "use strict";
 
-import { g_renderer } from "/Engine/Core/EngineCommon.js";
+import { GetTeamColor } from "/ThrottleBall/Framework/GameCommon.js";
+
+import {g_debugRenderSystem, g_renderer} from "/Engine/Core/EngineCommon.js";
 
 import * as VertexUtils from "/Engine/Core/VertexUtils.js";
 import Rgba8 from "/Engine/Core/Rgba8.js";
@@ -31,7 +33,7 @@ export default class Car
     static FRONT_WHEEL_SLIDING_FRICTION = Car.FRONT_WHEEL_SLIDING_FRICTION_COEFFICIENT * 60.0;
     static BACK_WHEEL_SLIDING_FRICTION = Car.BACK_WHEEL_SLIDING_FRICTION_COEFFICIENT * 60.0;
 
-    constructor(map, position, orientation, controller)
+    constructor(map, position, orientation, controller, team)
     {
         this.m_map = map;
 
@@ -44,6 +46,8 @@ export default class Car
         this.m_backAxleVelocity = new Vec2(0.0, 0.0);
 
         this.m_controller = controller;
+        this.m_team = team;
+
         this.m_acceleration = new Vec2(0.0, 0.0);
         this.m_texture = null;
 
@@ -128,7 +132,7 @@ export default class Car
     Render()
     {
         const carVerts = [];
-        VertexUtils.AddPCUVertsForOBB2(carVerts, new OBB2(this.m_position, this.GetForwardNormal(), new Vec2(Car.FRAME_LENGTH * 0.5, Car.FRAME_LENGTH * 0.5 * 0.5)));
+        VertexUtils.AddPCUVertsForOBB2(carVerts, new OBB2(this.m_position, this.GetForwardNormal(), new Vec2(Car.FRAME_LENGTH * 0.5, Car.FRAME_LENGTH * 0.5 * 0.5)), GetTeamColor(this.m_team));
         g_renderer.BindShader(null);
         g_renderer.SetBlendMode(BlendMode.ALPHA);
         g_renderer.SetCullMode(CullMode.BACK);
@@ -161,6 +165,8 @@ export default class Car
         g_renderer.SetModelConstants();
         g_renderer.BindTexture(null);
         g_renderer.DrawVertexArray(debugCarVerts);
+
+        g_debugRenderSystem.AddMessage("[Car]:\tPosition = " + this.m_position + "\tFront Axle Velocity = " + this.m_frontAxleVelocity + "\tBack Axle Velocity = " + this.m_backAxleVelocity, 0.0, GetTeamColor(this.m_team));
     }
 
     GetForwardNormal()
