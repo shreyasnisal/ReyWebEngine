@@ -15,7 +15,7 @@ export default class PlayerController
         this.m_car = car;
     }
 
-    HandleInput()
+    HandleMovementInput()
     {
         const gamepad = g_input.GetController(this.m_playerID);
 

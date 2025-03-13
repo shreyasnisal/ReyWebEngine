@@ -1,5 +1,6 @@
 "use strict";
 
+import AudioSystem, {AudioConfig} from "/Engine/Audio/AudioSystem.js";
 import DevConsole, { DevConsoleConfig } from "/Engine/Core/DevConsole.js";
 import EventSystem, { EventSystemConfig } from "/Engine/Core/EventSystem.js";
 import ModelLoader, {ModelLoaderConfig} from "/Engine/Core/Models/ModelLoader.js";
@@ -37,5 +38,8 @@ export const g_modelLoader = new ModelLoader(modelLoaderConfig);
 
 const webXRConfig = new WebXRConfig();
 export const g_webXR = new WebXR(webXRConfig);
+
+const audioConfig = new AudioConfig();
+export const g_audio = new AudioSystem(audioConfig);
 
 

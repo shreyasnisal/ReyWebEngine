@@ -1,13 +1,20 @@
 "use strict";
 
-import { WORLD_SIZE_X, WORLD_SIZE_Y, Team } from "/ThrottleBall/Framework/GameCommon.js";
+import {
+    WORLD_SIZE_X,
+    WORLD_SIZE_Y,
+    SCREEN_SIZE_Y,
+    Team,
+    GetTimeStringFromSeconds
+} from "/ThrottleBall/Framework/GameCommon.js";
 import Ball from "/ThrottleBall/Gameplay/Ball.js";
 import Car from "/ThrottleBall/Gameplay/Car.js";
 import Goal from "/ThrottleBall/Gameplay/Goal.js";
 
-import {g_input, g_renderer} from "/Engine/Core/EngineCommon.js";
+import {g_debugRenderSystem, g_input, g_renderer} from "/Engine/Core/EngineCommon.js";
 
 import Rgba8 from "/Engine/Core/Rgba8.js";
+import Stopwatch from "/Engine/Core/Stopwatch.js";
 import * as VertexUtils from "/Engine/Core/VertexUtils.js";
 
 import * as MathUtils from "/Engine/Math/MathUtils.js";
@@ -19,6 +26,8 @@ import {
     GetProjectedOnto2D, IsPointInsideDisc2D,
     PushDiscAndOBB2OutOffEachOther, PushOBB2OutOfEachOther
 } from "/Engine/Math/MathUtils.js";
+
+import {g_aspect} from "/Engine/Renderer/Renderer.js";
 
 
 export default class Map
@@ -37,9 +46,16 @@ export default class Map
         this.m_pinkTeamGoal = new Goal(this, new Vec2(WORLD_SIZE_X * 0.02, WORLD_SIZE_Y * 0.5), 0.0, Team.PINK);
         this.m_purpleTeamGoal = new Goal(this, new Vec2(WORLD_SIZE_X * 0.98, WORLD_SIZE_Y * 0.5), 180.0, Team.PURPLE);
 
+        this.m_pinkTeamScore = 0;
+        this.m_purpleTeamScore = 0;
+
+        this.m_matchTimer = new Stopwatch(300.0, this.m_game.m_clock);
+        this.m_matchTimer.Start();
+
         // DebugFlags
         this.m_drawDebug = true;
         this.m_disableFieldRendering = false;
+        this.m_disableBallCollisions = false;
     }
 
     Update()
@@ -70,6 +86,46 @@ export default class Map
         {
             this.m_disableFieldRendering = !this.m_disableFieldRendering;
         }
+        if (g_input.WasKeyJustPressed("F3"))
+        {
+            this.m_disableBallCollisions = !this.m_disableBallCollisions;
+        }
+        if (g_input.WasKeyJustPressed("1"))
+        {
+            this.ResetCarsAndBall();
+        }
+        if (g_input.WasKeyJustPressed("2"))
+        {
+            this.m_ball.m_position = new Vec2(WORLD_SIZE_X * 0.5, WORLD_SIZE_Y * 0.5);
+            this.m_ball.m_velocity = new Vec2(0.0, 0.0);
+
+            this.m_cars.pop();
+            this.m_cars.pop();
+
+            this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.3, WORLD_SIZE_Y * 0.5), 0.0, this.m_game.m_players[0], Team.PINK));
+            this.m_game.m_players[0].SetCar(this.m_cars[0]);
+
+            this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.7, WORLD_SIZE_Y * 0.45), 90.0, this.m_game.m_players[1], Team.PURPLE));
+            this.m_game.m_players[1].SetCar(this.m_cars[1]);
+        }
+        if (g_input.WasKeyJustPressed("3"))
+        {
+            this.m_ball.m_position = new Vec2(WORLD_SIZE_X * 0.5, WORLD_SIZE_Y * 0.5);
+            this.m_ball.m_velocity = new Vec2(0.0, 0.0);
+
+            this.m_cars.pop();
+            this.m_cars.pop();
+
+            this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.3, WORLD_SIZE_Y * 0.5), 0.0, this.m_game.m_players[0], Team.PINK));
+            this.m_game.m_players[0].SetCar(this.m_cars[0]);
+
+            this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.7, WORLD_SIZE_Y * 0.55), 90.0, this.m_game.m_players[1], Team.PURPLE));
+            this.m_game.m_players[1].SetCar(this.m_cars[1]);
+        }
+
+        g_debugRenderSystem.AddMessage("Debug Draw: " + (this.m_drawDebug ? "ON" : "OFF"), 0.0);
+        g_debugRenderSystem.AddMessage("Field Rendering: " + (this.m_disableFieldRendering ? "OFF" : "ON"), 0.0);
+        g_debugRenderSystem.AddMessage("Ball Collisions: " + (this.m_disableBallCollisions ? "OFF" : "ON"), 0.0);
     }
 
     UpdateCars()
@@ -82,6 +138,11 @@ export default class Map
 
     HandleCarsVsBallCollisions()
     {
+        if (this.m_disableBallCollisions)
+        {
+            return;
+        }
+
         for (let carIndex = 0; carIndex < this.m_cars.length; carIndex++)
         {
             const car = this.m_cars[carIndex];
@@ -91,6 +152,11 @@ export default class Map
 
     HandleCarVsBallCollision(car, ball)
     {
+        if (this.m_disableBallCollisions)
+        {
+            return;
+        }
+
         const carBounds = car.GetBounds();
         const impactPointOnCar = GetNearestPointOnOBB2(ball.m_position, carBounds);
         if (!IsPointInsideDisc2D(impactPointOnCar, ball.m_position, Ball.RADIUS))
@@ -148,8 +214,6 @@ export default class Map
         const carImpactPointFinalMomentumInCoMFrame = carImpactPointTangentMomentumInCoMFrame.GetSum(carImpactPointFinalNormalMomentumInCoMFrame);
         const carImpactPointFinalVelocityInCoMFrame = carImpactPointFinalMomentumInCoMFrame.GetScaled(1.0 / Car.MASS);
         const carImpactPointFinalVelocity = carImpactPointFinalVelocityInCoMFrame.GetSum(centerOfMassVelocity);
-        // mobileBoxVelocity.x = mobileBoxFinalVelocity.x;
-        // mobileBoxVelocity.y = mobileBoxFinalVelocity.y;
         car.m_frontAxleVelocity = carImpactPointFinalVelocity.GetScaled(impactFrontWeight);
         car.m_backAxleVelocity = carImpactPointFinalVelocity.GetScaled(impactBackWeight);
 
@@ -182,16 +246,28 @@ export default class Map
 
     HandleCarVsCarCollision(car1, car2)
     {
+        const car1Bounds = car1.GetBounds();
+        const car2Bounds = car2.GetBounds();
     }
 
     HandleBallVsGoalsCollision()
     {
+        if (this.m_disableBallCollisions)
+        {
+            return;
+        }
+
         this.HandleBallVsGoalCollision(this.m_ball, this.m_pinkTeamGoal);
         this.HandleBallVsGoalCollision(this.m_ball, this.m_purpleTeamGoal);
     }
 
     HandleBallVsGoalCollision(ball, goal)
     {
+        if (this.m_disableBallCollisions)
+        {
+            return;
+        }
+
         const goalPostBounds = goal.GetGoalPostBounds();
 
         const nearestPointOnGoalPostBounds0 = GetNearestPointOnAABB2(ball.m_position, goalPostBounds[0]);
@@ -213,6 +289,13 @@ export default class Map
             const ballTangentVelocity = ball.m_velocity.GetDifference(ballNormalVelocity);
             ballNormalVelocity.Scale(-Ball.ELASTICITY * Goal.POLE_ELASTICITY);
             ball.m_velocity = ballNormalVelocity.GetSum(ballTangentVelocity);
+        }
+
+        const goalBounds = goal.GetBounds();
+        if (MathUtils.IsPointInsideAABB2(ball.m_position, goalBounds))
+        {
+            this.IncrementScoreForTeam(goal.m_team === Team.PINK ? Team.PURPLE : Team.PINK);
+            this.ResetCarsAndBall();
         }
     }
 
@@ -280,6 +363,7 @@ export default class Map
         this.RenderCars();
         this.m_ball.Render();
         this.RenderGoals();
+        this.RenderHUD();
     }
 
     RenderField()
@@ -329,5 +413,38 @@ export default class Map
     {
         this.m_pinkTeamGoal.Render();
         this.m_purpleTeamGoal.Render();
+    }
+
+    RenderHUD()
+    {
+        g_debugRenderSystem.AddScreenText(this.m_pinkTeamScore + " - " + this.m_purpleTeamScore, new Vec2(SCREEN_SIZE_Y * g_aspect  * 0.5, SCREEN_SIZE_Y), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
+        g_debugRenderSystem.AddScreenText(GetTimeStringFromSeconds(this.m_matchTimer.GetRemainingSeconds()), new Vec2(SCREEN_SIZE_Y * g_aspect  * 0.5, SCREEN_SIZE_Y - 20.0), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
+    }
+
+    ResetCarsAndBall()
+    {
+        this.m_ball.m_position = new Vec2(WORLD_SIZE_X * 0.5, WORLD_SIZE_Y * 0.5);
+        this.m_ball.m_velocity = new Vec2(0.0, 0.0);
+
+        this.m_cars.pop();
+        this.m_cars.pop();
+
+        this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.3, WORLD_SIZE_Y * 0.5), 0.0, this.m_game.m_players[0], Team.PINK));
+        this.m_game.m_players[0].SetCar(this.m_cars[0]);
+
+        this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.7, WORLD_SIZE_Y * 0.5), 180.0, this.m_game.m_players[1], Team.PURPLE));
+        this.m_game.m_players[1].SetCar(this.m_cars[1]);
+    }
+
+    IncrementScoreForTeam(team)
+    {
+        if (team === Team.PINK)
+        {
+            this.m_pinkTeamScore++;
+        }
+        else if (team === Team.PURPLE)
+        {
+            this.m_purpleTeamScore++;
+        }
     }
 }

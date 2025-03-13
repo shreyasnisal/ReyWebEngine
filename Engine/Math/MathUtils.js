@@ -281,6 +281,11 @@ export function IsPointInsideDisc2D(referencePoint, discCenter, discRadius)
 {
     return GetDistanceSquared2D(referencePoint, discCenter) < (discRadius * discRadius);
 }
+
+export function IsPointInsideAABB2(referencePoint, box)
+{
+    return (referencePoint.x > box.m_mins.x && referencePoint.x < box.m_maxs.x && referencePoint.y > box.m_mins.y && referencePoint.y < box.m_maxs.y);
+}
 //------------------------------------------------------------------------------------------------------------
 
 // Nearest Points

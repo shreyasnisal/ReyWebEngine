@@ -67,4 +67,9 @@ export default class Stopwatch
         }
         return false;
     }
+
+    GetRemainingSeconds()
+    {
+        return (this.m_duration - this.GetElapsedTime()).toFixed(0);
+    }
 }

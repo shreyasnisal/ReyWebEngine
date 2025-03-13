@@ -17,7 +17,7 @@ export default class Ball
     static ROLLING_FRICTION_COEFFICIENT = 0.01;
     static RADIUS = 2.0;
     static MASS = 1.0;
-    static ELASTICITY = 1.0;
+    static ELASTICITY = 0.8;
 
     // Don't change these values
     static ROLLING_FRICTION = Ball.ROLLING_FRICTION_COEFFICIENT * 100.0;
@@ -29,6 +29,12 @@ export default class Ball
 
         this.m_velocity = new Vec2(0.0, 0.0);
         this.m_acceleration = new Vec2(0.0, 0.0);
+
+        this.m_texture = null;
+        g_renderer.CreateOrGetTextureFromFile("/ThrottleBall/Data/Images/ball_soccer2.png").then(loadedTexture =>
+        {
+            this.m_texture = loadedTexture;
+        })
     }
 
     Update()
@@ -64,7 +70,7 @@ export default class Ball
         g_renderer.SetCullMode(CullMode.BACK);
         g_renderer.SetDepthMode(DepthMode.DISABLED);
         g_renderer.SetModelConstants();
-        g_renderer.BindTexture(null);
+        g_renderer.BindTexture(this.m_texture);
         g_renderer.DrawVertexArray(ballVerts);
 
         if (this.m_map.m_drawDebug)
@@ -88,7 +94,7 @@ export default class Ball
         g_renderer.DrawVertexArray(ballDebugVerts);
 
         // Debug Messages
-        g_debugRenderSystem.AddMessage("[Ball]:\tPosition = " + this.m_position.toString() + "\tVelocity = " + this.m_velocity.toString(), 0.0);
+        // g_debugRenderSystem.AddMessage("[Ball]:\tPosition = " + this.m_position.toString() + "\tVelocity = " + this.m_velocity.toString(), 0.0);
     }
 
     AddForce(force)

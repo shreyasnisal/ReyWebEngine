@@ -32,3 +32,10 @@ export function GetTeamColor(team)
     return Rgba8.WHITE;
 }
 
+export function GetTimeStringFromSeconds(timeInSeconds)
+{
+    const timeMinutes = Math.floor(timeInSeconds / 60);
+    const timeSeconds = timeInSeconds % 60;
+    return timeMinutes + ":" + (timeSeconds < 10 ? "0" + timeSeconds : timeSeconds);
+}
+

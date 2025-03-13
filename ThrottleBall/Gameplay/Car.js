@@ -26,7 +26,7 @@ export default class Car
     static MASS = 100.0;
     static FRONT_WHEEL_TURN_RATE = 45.0;
     static MAX_FRONT_WHEEL_ANGULAR_OFFSET = 60.0;
-    static ELASTICITY = 1.0;
+    static ELASTICITY = 0.8;
 
     // Don't change these values
     static ROLLING_FRICTION = Car.ROLLING_FRICTION_COEFFICIENT * 60.0;
@@ -166,7 +166,7 @@ export default class Car
         g_renderer.BindTexture(null);
         g_renderer.DrawVertexArray(debugCarVerts);
 
-        g_debugRenderSystem.AddMessage("[Car]:\tPosition = " + this.m_position + "\tFront Axle Velocity = " + this.m_frontAxleVelocity + "\tBack Axle Velocity = " + this.m_backAxleVelocity, 0.0, GetTeamColor(this.m_team));
+        // g_debugRenderSystem.AddMessage("[Car]:\tPosition = " + this.m_position + "\tFront Axle Velocity = " + this.m_frontAxleVelocity + "\tBack Axle Velocity = " + this.m_backAxleVelocity, 0.0, GetTeamColor(this.m_team));
     }
 
     GetForwardNormal()
