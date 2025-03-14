@@ -279,6 +279,11 @@ export default class InputSystem
         return this.m_cursorState.m_hiddenMode;
     }
 
+    GetCursorNormalizedPosition()
+    {
+        return new Vec2(this.m_cursorState.m_cursorClientPosition.x, this.m_cursorState.m_cursorClientPosition.y);
+    }
+
     GetCursorClientDelta()
     {
         return this.m_cursorState.m_cursorClientDelta;

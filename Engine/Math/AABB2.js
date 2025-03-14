@@ -6,9 +6,9 @@ import Vec2 from "/Engine/Math/Vec2.js"
 
 export default class AABB2
 {
-    static ZERO_TO_ONE = new AABB2(new Vec2(0.0, 0.0), new Vec2(1.0, 1.0));
+    static ZERO_TO_ONE = Object.freeze(new AABB2(new Vec2(0.0, 0.0), new Vec2(1.0, 1.0)));
 
-    constructor(mins = Vec2.ZERO, maxs = Vec2.ZERO)
+    constructor(mins = new Vec2(), maxs = new Vec2())
     {
         this.m_mins = mins;
         this.m_maxs = maxs;
@@ -55,5 +55,11 @@ export default class AABB2
         const translation = newCenter.Subtract(currentCenter);
         this.m_mins.Add(translation);
         this.m_maxs.Add(translation);
+    }
+
+    Translate(translationXY)
+    {
+        this.m_mins.Add(translationXY);
+        this.m_maxs.Add(translationXY);
     }
 }

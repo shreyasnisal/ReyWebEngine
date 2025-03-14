@@ -10,6 +10,7 @@ import Camera from "/Engine/Renderer/Camera.js";
 import Renderer, {g_aspect, RenderConfig} from "/Engine/Renderer/Renderer.js";
 import WindowManager, { WindowManagerConfig } from "/Engine/Window/WindowManager.js";
 import DebugRenderSystem, { DebugRenderConfig } from "/Engine/Renderer/DebugRenderSystem.js";
+import UISystem, {UISystemConfig} from "/Engine/UI/UISystem.js";
 import WebXR, { WebXRConfig } from "/Engine/VirtualReality/WebXR.js";
 
 
@@ -41,5 +42,10 @@ export const g_webXR = new WebXR(webXRConfig);
 
 const audioConfig = new AudioConfig();
 export const g_audio = new AudioSystem(audioConfig);
+
+const uiSystemCamera = new Camera();
+uiSystemCamera.SetOrthoView(Vec2.ZERO, new Vec2(g_aspect, 1.0));
+const uiConfig = new UISystemConfig(uiSystemCamera, false, "/Engine/Data/Fonts/SquirrelFixedFont");
+export const g_ui = new UISystem(uiConfig);
 
 

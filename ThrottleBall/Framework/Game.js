@@ -248,8 +248,6 @@ export default class Game
 
     Render_Lobby()
     {
-        const lobbyTextVerts = [];
-        this.m_squirrelFixedFont.AddVertsForTextInBox2D(lobbyTextVerts, new AABB2())
     }
 
     Render_Game()
