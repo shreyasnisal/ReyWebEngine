@@ -73,8 +73,8 @@ export default class Game
         });
 
         this.m_transitionTimer = new Stopwatch(0.5, this.m_clock);
-        this.m_state = GameState.NONE;
-        this.m_nextState = GameState.LOBBY;
+        this.m_state = GameState.ATTRACT;
+        this.m_nextState = GameState.NONE;
 
         this.m_players = [];
         this.m_map = null;
@@ -129,7 +129,12 @@ export default class Game
 
     Update_Attract()
     {
-
+        if (g_input.WasKeyJustPressed("Space"))
+        {
+            this.m_nextState = GameState.LOBBY;
+        }
+        const screenCenter = new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y).GetScaled(0.5);
+        g_debugRenderSystem.AddScreenText("Attract Screen\nClick on the screen then press Space to Start", screenCenter, 40.0, new Vec2(0.5, 0.5), 0.0, Rgba8.WHITE, Rgba8.WHITE);
     }
 
     Update_Menu()
@@ -158,6 +163,8 @@ export default class Game
         {
             this.m_nextState = GameState.GAME;
         }
+        const screenCenter = new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y).GetScaled(0.5);
+        g_debugRenderSystem.AddScreenText("Lobby\nPress Space to Start", screenCenter, 40.0, new Vec2(0.5, 0.5), 0.0, Rgba8.WHITE, Rgba8.WHITE);
     }
 
     Update_Game()
