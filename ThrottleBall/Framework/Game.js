@@ -1,6 +1,13 @@
 "use strict";
 
-import {g_app, SCREEN_SIZE_Y, WORLD_SIZE_X, WORLD_SIZE_Y} from "/ThrottleBall/Framework/GameCommon.js";
+import {
+    g_app,
+    GetTeamColor,
+    SCREEN_SIZE_Y,
+    Team,
+    WORLD_SIZE_X,
+    WORLD_SIZE_Y
+} from "/ThrottleBall/Framework/GameCommon.js";
 import Car from "/ThrottleBall/Gameplay/Car.js";
 import PlayerController from "/ThrottleBall/Gameplay/PlayerController.js";
 import Map from "/ThrottleBall/Gameplay/Map.js";
@@ -30,6 +37,7 @@ import Camera from "/Engine/Renderer/Camera.js";
 import { BlendMode, CullMode, DepthMode, g_aspect, VertexType } from "/Engine/Renderer/Renderer.js";
 
 import * as DOM from "/Engine/Window/DomManager.js";
+
 
 export class GameState
 {
@@ -163,7 +171,17 @@ export default class Game
 
     Update_MatchEnd()
     {
+        let messageColor = GetTeamColor(Team.PURPLE);
+        let messageText = "Purple Team Won!";
 
+        if (this.m_map.m_pinkTeamScore > this.m_map.m_purpleTeamScore)
+        {
+            messageColor = GetTeamColor(Team.PINK);
+            messageText = "Pink Team Won!";
+        }
+        messageText += "\n" + this.m_map.m_pinkTeamScore + "-" + this.m_map.m_purpleTeamScore;
+        const screenCenter = new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y).GetScaled(0.5);
+        g_debugRenderSystem.AddScreenText(messageText, screenCenter, 40.0, new Vec2(0.5, 0.5), 0.0, messageColor, messageColor);
     }
 
     HandleDevCheats()

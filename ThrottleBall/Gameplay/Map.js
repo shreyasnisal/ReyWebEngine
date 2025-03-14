@@ -9,6 +9,7 @@ import {
 } from "/ThrottleBall/Framework/GameCommon.js";
 import Ball from "/ThrottleBall/Gameplay/Ball.js";
 import Car from "/ThrottleBall/Gameplay/Car.js";
+import {GameState} from "/ThrottleBall/Framework/Game.js";
 import Goal from "/ThrottleBall/Gameplay/Goal.js";
 
 import {g_debugRenderSystem, g_input, g_renderer} from "/Engine/Core/EngineCommon.js";
@@ -48,6 +49,7 @@ export default class Map
 
         this.m_pinkTeamScore = 0;
         this.m_purpleTeamScore = 0;
+        this.m_isSuddenDeath = false;
 
         this.m_matchTimer = new Stopwatch(300.0, this.m_game.m_clock);
         this.m_matchTimer.Start();
@@ -74,6 +76,9 @@ export default class Map
         // Push Entities out of world
         this.PushCarsIntoField();
         this.PushBallIntoField();
+
+        // Check for math end
+        this.CheckMatchEnd();
     }
 
     HandleDevCheats()
@@ -418,7 +423,14 @@ export default class Map
     RenderHUD()
     {
         g_debugRenderSystem.AddScreenText(this.m_pinkTeamScore + " - " + this.m_purpleTeamScore, new Vec2(SCREEN_SIZE_Y * g_aspect  * 0.5, SCREEN_SIZE_Y), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
-        g_debugRenderSystem.AddScreenText(GetTimeStringFromSeconds(this.m_matchTimer.GetRemainingSeconds()), new Vec2(SCREEN_SIZE_Y * g_aspect  * 0.5, SCREEN_SIZE_Y - 20.0), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
+        if (!this.m_isSuddenDeath)
+        {
+            g_debugRenderSystem.AddScreenText(GetTimeStringFromSeconds(this.m_matchTimer.GetRemainingSeconds()), new Vec2(SCREEN_SIZE_Y * g_aspect  * 0.5, SCREEN_SIZE_Y - 20.0), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
+        }
+        else
+        {
+            g_debugRenderSystem.AddScreenText("Sudden Death!", new Vec2(SCREEN_SIZE_Y * g_aspect  * 0.5, SCREEN_SIZE_Y - 20.0), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
+        }
     }
 
     ResetCarsAndBall()
@@ -445,6 +457,29 @@ export default class Map
         else if (team === Team.PURPLE)
         {
             this.m_purpleTeamScore++;
+        }
+
+        if (this.m_isSuddenDeath)
+        {
+            this.m_game.m_nextState = GameState.MATCH_END;
+        }
+    }
+
+    CheckMatchEnd()
+    {
+        // Check for end of match
+        if (this.m_matchTimer.HasDurationElapsed())
+        {
+            if (this.m_pinkTeamScore === this.m_purpleTeamScore)
+            {
+                this.m_matchTimer.Stop();
+                this.m_isSuddenDeath = true;
+            }
+            else
+            {
+                this.m_matchTimer.Stop();
+                this.m_game.m_nextState = GameState.MATCH_END;
+            }
         }
     }
 }

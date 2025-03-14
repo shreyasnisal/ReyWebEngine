@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "sandbox": "npx http-server -p 3000 -o Sandbox/index.html",
-    "throttleball": "npx http-server -p 3000 -o ThrottleBall/index.html"
+    "sandbox": "npx http-server -p 3000 -c-1 -o Sandbox/index.html",
+    "throttleball": "npx http-server -p 3000 -c-1 -o ThrottleBall/index.html"
   },
   "author": "Shreyas 'Rey' Nisal",
   "license": "ISC"
