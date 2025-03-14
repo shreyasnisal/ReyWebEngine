@@ -12,7 +12,7 @@ import Car from "/ThrottleBall/Gameplay/Car.js";
 import {GameState} from "/ThrottleBall/Framework/Game.js";
 import Goal from "/ThrottleBall/Gameplay/Goal.js";
 
-import {g_debugRenderSystem, g_input, g_renderer} from "/Engine/Core/EngineCommon.js";
+import {g_debugRenderSystem, g_input, g_renderer, g_audio} from "/Engine/Core/EngineCommon.js";
 
 import Rgba8 from "/Engine/Core/Rgba8.js";
 import Stopwatch from "/Engine/Core/Stopwatch.js";
@@ -58,6 +58,12 @@ export default class Map
         this.m_drawDebug = true;
         this.m_disableFieldRendering = false;
         this.m_disableBallCollisions = false;
+
+        // SFX
+        this.m_carVsBallSFX = g_audio.CreateSound("/ThrottleBall/Data/Audio/CarVsBall.ogg");
+        this.m_ballBoundsSFX = g_audio.CreateSound("/ThrottleBall/Data/Audio/BallBounds.ogg");
+        this.m_ballVsGoalPost = g_audio.CreateSound("/ThrottleBall/Data/Audio/BallVsGoalPost.ogg");
+        this.m_goalScored = g_audio.CreateSound("/ThrottleBall/Data/Audio/GoalScored.ogg");
     }
 
     Update()
@@ -168,6 +174,8 @@ export default class Map
         {
             return;
         }
+
+        g_audio.PlaySound(this.m_carVsBallSFX);
 
         const dispCarCenterToImpactPoint = impactPointOnCar.GetDifference(car.m_position);
         const impactPointDistanceFromCenterAlongCarFrame = GetProjectedLength2D(dispCarCenterToImpactPoint, carBounds.m_iBasisNormal);
@@ -280,6 +288,8 @@ export default class Map
 
         if (MathUtils.PushDiscOutOfFixedPoint2D(ball.m_position, Ball.RADIUS, nearestPointOnGoalPostBounds0))
         {
+            g_audio.PlaySound(this.m_ballVsGoalPost);
+
             const dispBallToNearestPoint = nearestPointOnGoalPostBounds0.GetDifference(ball.m_position);
             const ballNormalVelocity = MathUtils.GetProjectedOnto2D(ball.m_velocity, dispBallToNearestPoint);
             const ballTangentVelocity = ball.m_velocity.GetDifference(ballNormalVelocity);
@@ -289,6 +299,8 @@ export default class Map
 
         if (MathUtils.PushDiscOutOfFixedPoint2D(ball.m_position, Ball.RADIUS, nearestPointOnGoalPostBounds1))
         {
+            g_audio.PlaySound(this.m_ballVsGoalPost);
+
             const dispBallToNearestPoint = nearestPointOnGoalPostBounds1.GetDifference(ball.m_position);
             const ballNormalVelocity = MathUtils.GetProjectedOnto2D(ball.m_velocity, dispBallToNearestPoint);
             const ballTangentVelocity = ball.m_velocity.GetDifference(ballNormalVelocity);
@@ -299,6 +311,7 @@ export default class Map
         const goalBounds = goal.GetBounds();
         if (MathUtils.IsPointInsideAABB2(ball.m_position, goalBounds))
         {
+            g_audio.PlaySound(this.m_goalScored);
             this.IncrementScoreForTeam(goal.m_team === Team.PINK ? Team.PURPLE : Team.PINK);
             this.ResetCarsAndBall();
         }
@@ -342,21 +355,25 @@ export default class Map
     {
         if (this.m_ball.m_position.x + Ball.RADIUS > WORLD_SIZE_X)
         {
+            g_audio.PlaySound(this.m_ballBoundsSFX);
             this.m_ball.m_position.x = WORLD_SIZE_X - Ball.RADIUS;
             this.m_ball.m_velocity.x = -this.m_ball.m_velocity.x;
         }
         if (this.m_ball.m_position.x - Ball.RADIUS < 0.0)
         {
+            g_audio.PlaySound(this.m_ballBoundsSFX);
             this.m_ball.m_position.x = Ball.RADIUS;
             this.m_ball.m_velocity.x = -this.m_ball.m_velocity.x;
         }
         if (this.m_ball.m_position.y + Ball.RADIUS > WORLD_SIZE_Y)
         {
+            g_audio.PlaySound(this.m_ballBoundsSFX);
             this.m_ball.m_position.y = WORLD_SIZE_Y - Ball.RADIUS;
             this.m_ball.m_velocity.y = -this.m_ball.m_velocity.y;
         }
         if (this.m_ball.m_position.y - Ball.RADIUS < 0.0)
         {
+            g_audio.PlaySound(this.m_ballBoundsSFX);
             this.m_ball.m_position.y = Ball.RADIUS;
             this.m_ball.m_velocity.y = -this.m_ball.m_velocity.y;
         }
