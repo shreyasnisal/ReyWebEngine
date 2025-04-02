@@ -42,11 +42,20 @@ export default class AABB2
         return new Vec2(MathUtils.GetClamped(referencePoint.x, this.m_mins.x, this.m_maxs.x), MathUtils.GetClamped(referencePoint.y, this.m_mins.y, this.m_maxs.y));
     }
 
+    IsPointInside(referencePoint)
+    {
+        return (referencePoint.x > this.m_mins.x && referencePoint.x < this.m_maxs.x && referencePoint.y > this.m_mins.y && referencePoint.y < this.m_maxs.y);
+    }
+
     SetDimensions(newDimensions)
     {
         const currentDimensions = this.GetDimensions();
-        this.m_mins.Subtract(newDimensions.GetDifference(currentDimensions));
-        this.m_maxs.Add(newDimensions.GetDifference(currentDimensions));
+        const deltaWidth = newDimensions.x - currentDimensions.x;
+        const deltaHeight = newDimensions.y - currentDimensions.y;
+        this.m_mins.x -= deltaWidth * 0.5;
+        this.m_maxs.x += deltaWidth * 0.5;
+        this.m_mins.y -= deltaHeight * 0.5;
+        this.m_maxs.y += deltaHeight * 0.5;
     }
 
     SetCenter(newCenter)

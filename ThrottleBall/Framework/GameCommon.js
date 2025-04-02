@@ -11,6 +11,18 @@ export const SCREEN_SIZE_Y = 800.0;
 export const WORLD_SIZE_Y = 100.0;
 export const WORLD_SIZE_X = 200.0;
 
+export const PRIMARY_COLOR = new Rgba8(0, 120, 255);
+export const PRIMARY_COLOR_VARIANT_DARK = new Rgba8(0, 90, 200);
+export const PRIMARY_COLOR_VARIANT_LIGHT = new Rgba8(80, 160, 255);
+
+export const SECONDARY_COLOR = new Rgba8(220, 50, 50);
+export const SECONDARY_COLOR_VARIANT_DARK = new Rgba8(170, 30, 30);
+export const SECONDARY_COLOR_VARIANT_LIGHT = new Rgba8(255, 100, 100);
+
+export const TERTIARY_COLOR = new Rgba8(33, 32, 30);
+export const TERTIARY_COLOR_VARIANT_DARK = new Rgba8(10, 10, 10);
+export const TERTIARY_COLOR_VARIANT_LIGHT = new Rgba8(60, 60, 60);
+
 export class Team
 {
     static PINK = "PINK";

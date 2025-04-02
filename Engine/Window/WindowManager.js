@@ -27,6 +27,7 @@ export default class WindowManager
         window.addEventListener("mouseup", (mouseEvent) => this.HandleMouseButtonUp(mouseEvent));
 
         document.onpointerlockchange = (pointerLockEvent) => { this.SetFocus(document.pointerLockElement ? true : false); }
+        this.m_canvas.addEventListener("click", () => { this.SetFocus(true); })
     }
 
     BeginFrame()
@@ -58,6 +59,10 @@ export default class WindowManager
         if (this.m_hasFocus)
         {
             keyEvent.preventDefault();
+            if (keyEvent.code === "Escape")
+            {
+                this.SetFocus(false);
+            }
         }
         else
         {
@@ -69,7 +74,7 @@ export default class WindowManager
     {
         if (this.m_hasFocus)
         {
-            mouseEvent.preventDefault();
+            // mouseEvent.preventDefault();
         }
         else
         {

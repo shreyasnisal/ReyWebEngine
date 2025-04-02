@@ -5,6 +5,7 @@ import Vec2 from "/Engine/Math/Vec2.js";
 import XboxController from "/Engine/Input/XboxController.js";
 import InputMapping from "/Engine/Input/InputMapping.js";
 import TouchState from "/Engine/Input/TouchState.js";
+import {g_viewportWidth, g_viewportHeight} from "/Engine/Renderer/Renderer.js";
 
 
 class CursorState
@@ -86,6 +87,8 @@ export default class InputSystem
         {
             this.m_keys[keyIdentifier].m_wasPressedLastFrame = this.m_keys[keyIdentifier].m_isPressed;
         }
+        this.m_lmb.m_wasPressedLastFrame = this.m_lmb.m_isPressed;
+        this.m_rmb.m_wasPressedLastFrame = this.m_rmb.m_isPressed;
 
         this.m_cursorState.m_cursorClientDelta = Vec2.ZERO;
 
@@ -281,7 +284,10 @@ export default class InputSystem
 
     GetCursorNormalizedPosition()
     {
-        return new Vec2(this.m_cursorState.m_cursorClientPosition.x, this.m_cursorState.m_cursorClientPosition.y);
+        const cursorNormalizedX = this.m_cursorState.m_cursorClientPosition.x / g_viewportWidth;
+        const cursorNormalizedY = 1.0 - this.m_cursorState.m_cursorClientPosition.y / g_viewportHeight;
+
+        return new Vec2(cursorNormalizedX, cursorNormalizedY);
     }
 
     GetCursorClientDelta()

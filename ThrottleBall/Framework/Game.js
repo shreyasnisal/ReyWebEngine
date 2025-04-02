@@ -6,8 +6,19 @@ import {
     SCREEN_SIZE_Y,
     Team,
     WORLD_SIZE_X,
-    WORLD_SIZE_Y
+    WORLD_SIZE_Y,
+    PRIMARY_COLOR,
+    PRIMARY_COLOR_VARIANT_LIGHT,
+    PRIMARY_COLOR_VARIANT_DARK,
+    SECONDARY_COLOR,
+    SECONDARY_COLOR_VARIANT_LIGHT,
+    SECONDARY_COLOR_VARIANT_DARK,
+    TERTIARY_COLOR,
+    TERTIARY_COLOR_VARIANT_LIGHT,
+    TERTIARY_COLOR_VARIANT_DARK
 } from "/ThrottleBall/Framework/GameCommon.js";
+
+import {SubscribeButtonEvents} from "/ThrottleBall/Framework/ButtonEvents.js";
 import Car from "/ThrottleBall/Gameplay/Car.js";
 import PlayerController from "/ThrottleBall/Gameplay/PlayerController.js";
 import Map from "/ThrottleBall/Gameplay/Map.js";
@@ -21,7 +32,7 @@ import {
     g_modelLoader,
     g_webXR,
     g_windowManager,
-    g_audio
+    g_audio, g_ui
 } from "/Engine/Core/EngineCommon.js";
 
 import Clock from "/Engine/Core/Clock.js";
@@ -81,13 +92,10 @@ export default class Game
 
         this.SetGlobalRendererSettings();
         this.LoadAssets();
+        this.InitializeUI();
+        SubscribeButtonEvents();
 
-        DOM.GetElementByID("id_canvas").addEventListener("click", () => { this.HandleCanvasClicked() });
-    }
-
-    HandleCanvasClicked()
-    {
-        g_input.SetCursorMode(true, true);
+        // DOM.GetElementByID("id_canvas").addEventListener("click", () => { this.HandleCanvasClicked() });
     }
 
     SetGlobalRendererSettings()
@@ -101,6 +109,86 @@ export default class Game
     LoadAssets()
     {
         this.m_testSound = g_audio.CreateSound("/ThrottleBall/Data/Audio/TestSound.mp3");
+    }
+
+    InitializeUI()
+    {
+        this.m_attractWidget = null;
+        this.m_menuWidget = null;
+        this.m_lobbyWidget = null;
+        this.m_gameWidget = null;
+        this.m_matchEndWidget = null;
+
+        this.InitializeAttractUI();
+        this.InitializeMenuUI();
+        this.InitializeLobbyUI();
+        this.InitializeGameUI();
+        this.InitializeMatchEndUI();
+    }
+
+    InitializeAttractUI()
+    {
+        this.m_attractWidget = g_ui.CreateWidget();
+        this.m_attractWidget.SetPosition(new Vec2(0.0, 0.0))
+            .SetDimensions(new Vec2(1.0, 1.0))
+            .SetBackgroundColor(new Rgba8(0, 0, 0, 0))
+            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 0));
+
+        const attractLogoWidget = g_ui.CreateWidget(this.m_attractWidget);
+        attractLogoWidget.SetImage("/ThrottleBall/Data/Images/ThrottleBall_Logo.png")
+            .SetPosition(new Vec2(0.5, 0.5))
+            .SetDimensions(new Vec2(0.5, 0.5))
+            .SetPivot(new Vec2(0.5, 0.5))
+            .SetAlignment(new Vec2(0.5, 0.5))
+            .SetColor(new Rgba8(255, 255, 255, 255));
+
+        const attractTextWidget = g_ui.CreateWidget(this.m_attractWidget);
+        attractTextWidget.SetText("Click anywhere on the screen, then Spacebar to Start...")
+            .SetPosition(new Vec2(0.5, 0.1))
+            .SetDimensions(new Vec2(0.5, 0.5))
+            .SetPivot(new Vec2(0.5, 0.5))
+            .SetAlignment(new Vec2(0.5, 0.5))
+            .SetColor(new Rgba8(255, 255, 255, 255))
+            .SetFontSize(4.0);
+    }
+
+    InitializeMenuUI()
+    {
+        this.m_menuWidget = g_ui.CreateWidget();
+        this.m_menuWidget.SetPosition(new Vec2(0.0, 0.0))
+            .SetDimensions(new Vec2(1.0, 1.0))
+            .SetBackgroundColor(new Rgba8(0, 0, 0, 0))
+            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 0))
+            .SetVisible(false);
+
+        const menuStartButton = g_ui.CreateWidget(this.m_menuWidget);
+        menuStartButton.SetText("Start")
+            .SetPosition(new Vec2(0.1, 0.6))
+            .SetDimensions(new Vec2(0.3, 0.1))
+            .SetPivot(new Vec2(0.0, 0.5))
+            .SetAlignment(new Vec2(0.01, 0.5))
+            .SetFontSize(4.0)
+            .SetBackgroundColor(PRIMARY_COLOR)
+            .SetHoverBackgroundColor(PRIMARY_COLOR_VARIANT_LIGHT)
+            .SetColor(TERTIARY_COLOR)
+            .SetHoverColor(TERTIARY_COLOR_VARIANT_LIGHT)
+            .SetBorderRadius(0.5)
+            .SetClickEventName("Navigate target=" + GameState.MENU);
+    }
+
+    InitializeLobbyUI()
+    {
+
+    }
+
+    InitializeGameUI()
+    {
+
+    }
+
+    InitializeMatchEndUI()
+    {
+
     }
 
     FixedUpdate(deltaSeconds)
@@ -131,15 +219,12 @@ export default class Game
     {
         if (g_input.WasKeyJustPressed("Space"))
         {
-            this.m_nextState = GameState.LOBBY;
+            this.m_nextState = GameState.MENU;
         }
-        const screenCenter = new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y).GetScaled(0.5);
-        g_debugRenderSystem.AddScreenText("Attract Screen\nClick on the screen then press Space to Start", screenCenter, 40.0, new Vec2(0.5, 0.5), 0.0, Rgba8.WHITE, Rgba8.WHITE);
     }
 
     Update_Menu()
     {
-
     }
 
     Update_Credits()
@@ -222,7 +307,7 @@ export default class Game
 
     ClearScreen()
     {
-        g_renderer.ClearScreen(Rgba8.DEEP_SKY_BLUE);
+        g_renderer.ClearScreen(TERTIARY_COLOR);
     }
 
     Render()
@@ -238,6 +323,8 @@ export default class Game
             case GameState.GAME:            this.Render_Game();         break;
             case GameState.MATCH_END:       this.Render_MatchEnd();     break;
         }
+
+        g_ui.Render();
 
         this.RenderIntroTransition();
         this.RenderOutroTransition();
@@ -291,22 +378,22 @@ export default class Game
 
     Enter_Attract()
     {
-
+        this.m_attractWidget.SetVisible(true);
     }
 
     Exit_Attract()
     {
-
+        this.m_attractWidget.SetVisible(false);
     }
 
     Enter_Menu()
     {
-
+        this.m_menuWidget.SetVisible(true);
     }
 
     Exit_Menu()
     {
-
+        this.m_menuWidget.SetVisible(false);
     }
 
     Enter_Credits()

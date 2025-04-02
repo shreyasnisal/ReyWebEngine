@@ -1,6 +1,6 @@
 "use strict";
 
-import {g_input, g_eventSystem, g_renderer} from "/Engine/Core/EngineCommon.js";
+import {g_input, g_console, g_eventSystem, g_renderer} from "/Engine/Core/EngineCommon.js";
 
 import Clock from "/Engine/Core/Clock.js";
 import Rgba8 from "/Engine/Core/Rgba8.js";
@@ -63,7 +63,7 @@ export default class UIWidget
         this.m_isCaretVisible = false;
         this.m_isTextInputField = false;
         this.m_textInputFieldInfoText = "";
-        this.m_blinkingCaretTimer = Stopwatch(0.5, Clock.SystemClock);
+        this.m_blinkingCaretTimer = new Stopwatch(0.5, Clock.SystemClock);
 
     }
 
@@ -117,20 +117,20 @@ export default class UIWidget
             else if (this.m_clickEventName !== "" && g_input.WasLMBJustPressed())
             {
                 this.m_consumedClickStart = true;
-                this.m_renderBounds = bounds.GetBoxAtUVs(Vec2(0.01, 0.01), Vec2(0.99, 0.99));
-                this.m_renderBounds.m_mins.Add(Vec2(this.m_borderRadius, this.m_borderRadius));
-                this.m_renderBounds.m_maxs.Subtract(Vec2(this.m_borderRadius, this.m_borderRadius));
+                this.m_renderBounds = bounds.GetBoxAtUVs(new Vec2(0.01, 0.01), new Vec2(0.99, 0.99));
+                this.m_renderBounds.m_mins.Add(new Vec2(this.m_borderRadius, this.m_borderRadius));
+                this.m_renderBounds.m_maxs.Subtract(new Vec2(this.m_borderRadius, this.m_borderRadius));
                 this.m_fontSizeMultiplier = 0.98;
                 this.m_isClicked = true;
             }
-            else if (!this.m_clickEventName.empty() && this.m_fontSizeMultiplier != 1.0 && g_input.WasKeyJustReleased("LMB"))
+            else if (this.m_clickEventName !== "" && this.m_fontSizeMultiplier !== 1.0 && g_input.WasLMBJustReleased())
             {
                 this.m_isClicked = false;
                 this.m_renderBounds = bounds;
                 this.m_renderBounds.m_mins.Add(new Vec2(this.m_borderRadius, this.m_borderRadius));
                 this.m_renderBounds.m_maxs.Subtract(new Vec2(this.m_borderRadius, this.m_borderRadius));
                 this.m_fontSizeMultiplier = 1.0;
-                FireEvent(this.m_clickEventName);
+                g_console.Execute(this.m_clickEventName);
             }
         }
         else
@@ -146,10 +146,10 @@ export default class UIWidget
         {
             this.m_renderBounds = bounds;
             this.m_renderBounds.m_mins.Add(new Vec2(this.m_borderRadius, this.m_borderRadius));
-            this.m_renderBounds.m_maxs.Subtract(Vec2(this.m_borderRadius, this.m_borderRadius));
+            this.m_renderBounds.m_maxs.Subtract(new Vec2(this.m_borderRadius, this.m_borderRadius));
         }
 
-        for (let childIndex = 0; childIndex < this.m_children.size(); childIndex++)
+        for (let childIndex = 0; childIndex < this.m_children.length; childIndex++)
         {
             this.m_children[childIndex].Update();
         }
@@ -179,7 +179,7 @@ export default class UIWidget
         const cursorNormalizedPosition = g_input.GetCursorNormalizedPosition();
         const cursorViewPositionX = MathUtils.RangeMap(cursorNormalizedPosition.x, 0.0, 1.0, camera.GetOrthoBottomLeft().x, camera.GetOrthoTopRight().x);
         const cursorViewPositionY = MathUtils.RangeMap(cursorNormalizedPosition.y, 0.0, 1.0, camera.GetOrthoBottomLeft().y, camera.GetOrthoTopRight().y);
-        const cursorViewPosition = Vec2(cursorViewPositionX, cursorViewPositionY);
+        const cursorViewPosition = new Vec2(cursorViewPositionX, cursorViewPositionY);
 
         if (this.m_hasFocus && bounds.IsPointInside(cursorViewPosition))
         {
@@ -207,7 +207,7 @@ export default class UIWidget
         const vertexes = [];
         VertexUtils.AddPCUVertsForAABB2(vertexes, this.m_renderBounds, backgroundColor);
         VertexUtils.AddPCUVertsForAABB2(vertexes, new AABB2(this.m_renderBounds.m_mins.GetSum(Vec2.SOUTH.GetScaled(this.m_borderRadius)), this.m_renderBounds.m_mins.GetSum(Vec2.EAST.GetScaled(this.m_renderBounds.GetDimensions().x))), backgroundColor);
-        VertexUtils.AddPCUVertsForAABB2(vertexes, new AABB2(this.m_renderBounds.m_mins.GetSum(Vec2.WEST.GetScaled(this.m_borderRadius)), this.m_renderBounds.m_mins + this.m_renderBounds.GetDimensions().y * Vec2.NORTH), backgroundColor);
+        VertexUtils.AddPCUVertsForAABB2(vertexes, new AABB2(this.m_renderBounds.m_mins.GetSum(Vec2.WEST.GetScaled(this.m_borderRadius)), this.m_renderBounds.m_mins.GetSum(Vec2.NORTH.GetScaled(this.m_renderBounds.GetDimensions().y))), backgroundColor);
         VertexUtils.AddPCUVertsForAABB2(vertexes, new AABB2(this.m_renderBounds.m_mins.GetSum(Vec2.NORTH.GetScaled(this.m_renderBounds.GetDimensions().y)), this.m_renderBounds.m_maxs.GetSum(Vec2.NORTH.GetScaled(this.m_borderRadius))), backgroundColor);
         VertexUtils.AddPCUVertsForAABB2(vertexes, new AABB2(this.m_renderBounds.m_maxs.GetSum(Vec2.SOUTH.GetScaled(this.m_renderBounds.GetDimensions().y)), this.m_renderBounds.m_maxs.GetSum(Vec2.EAST.GetScaled(this.m_borderRadius))), backgroundColor);
         VertexUtils.AddPCUVertsForOrientedSector2D(vertexes, this.m_renderBounds.m_mins, 225.0, 90.0, this.m_borderRadius, backgroundColor);
@@ -232,7 +232,7 @@ export default class UIWidget
             if (this.m_text === "")
             {
                 const textInfoVertexes = [];
-                m_uiSystem.m_font.AddVertsForTextInBox2D(textInfoVertexes, this.m_renderBounds, this.m_fontSize * this.m_fontSizeMultiplier, this.m_textInputFieldInfoText, color, 0.5, this.m_alignment);
+                this.m_uiSystem.m_font.AddVertsForTextInBox2D(textInfoVertexes, this.m_renderBounds, this.m_fontSize * this.m_fontSizeMultiplier, this.m_textInputFieldInfoText, color, 0.5, this.m_alignment);
                 g_renderer.BindTexture(this.m_uiSystem.m_font.GetTexture());
                 g_renderer.DrawVertexArray(textInfoVertexes);
             }
@@ -271,10 +271,10 @@ export default class UIWidget
             g_renderer.BindTexture(this.m_uiSystem.m_font.GetTexture());
             g_renderer.DrawVertexArray(textVertexes);
         }
-        else if (this.m_image !== null)
+        else if (this.m_image != null)
         {
             const imageVertexes = [];
-            const imageAspect = this.m_image.GetDimensions().x / this.m_image.GetDimensions().y;
+            const imageAspect = this.m_image.m_dimensions.x / this.m_image.m_dimensions.y;
             const renderBoundsAspect = this.m_renderBounds.GetDimensions().x / this.m_renderBounds.GetDimensions().y;
             if (imageAspect > renderBoundsAspect)
             {
@@ -493,7 +493,7 @@ export default class UIWidget
 
     GetModelMatrix()
     {
-        const modelMatrix = Mat44.IDENTITY;
+        const modelMatrix = new Mat44();
         if (this.m_parent != null)
         {
             modelMatrix.Append(this.m_parent.GetModelMatrix());
@@ -520,6 +520,8 @@ export default class UIWidget
 
         viewSpaceBounds.m_mins.y += this.GetScroll();
         viewSpaceBounds.m_maxs.y += this.GetScroll();
+
+        return viewSpaceBounds;
     }
 
     GetScroll()

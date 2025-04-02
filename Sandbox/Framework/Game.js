@@ -58,6 +58,17 @@ export default class Game
         this.m_cubePosition = new Vec3(3.0, 0.0, 0.0);
         this.m_cubeOrientation = new EulerAngles(0.0, 0.0, 0.0);
 
+        // Create a test sphere
+        this.m_testSphereVertexes = [];
+        VertexUtils.AddPCUVertsForSphere3D(this.m_testSphereVertexes, new Vec3(), 1.0);
+        this.m_spherePosition = new Vec3(5.0, -2.0, 0.0);
+        this.m_sphereOrientation = new EulerAngles(0.0, 0.0, 0.0);
+        this.m_sphereTexture = null;
+        g_renderer.CreateOrGetTextureFromFile("/Sandbox/Data/Images/TestUV.png").then(loadedTexture =>
+        {
+            this.m_sphereTexture = loadedTexture;
+        })
+
         this.m_playerPosition = new Vec3(0.0, 0.0, 1.0);
         this.m_playerOrientation = new EulerAngles();
 
@@ -137,6 +148,9 @@ export default class Game
     {
         this.m_cubeOrientation.m_yawDegrees += 45.0 * deltaSeconds;
         this.m_cubeOrientation.m_pitchDegrees += 30.0 * deltaSeconds;
+
+        this.m_sphereOrientation.m_yawDegrees += 15.0 * deltaSeconds;
+
         this.HandleInput(deltaSeconds);
         this.UpdateCameras();
     }
@@ -271,13 +285,31 @@ export default class Game
         g_renderer.BindTexture(null);
         g_renderer.DrawVertexArray(this.m_testCubeVertexes);
 
-        if (this.m_treeModel != null && this.m_arcadeMachineModel != null && this.m_arcadeMachineTexture != null && this.m_diffuseShader != null)
+        if (this.m_sphereTexture != null)
+        {
+            const sphereTransform = Mat44.CreateTranslation3D(this.m_spherePosition);
+            sphereTransform.Append(this.m_sphereOrientation.GetAsMatrix_iFwd_jLeft_kUp());
+
+            g_renderer.BindShader(null);
+            g_renderer.SetBlendMode(BlendMode.OPAQUE);
+            g_renderer.SetCullMode(CullMode.BACK);
+            g_renderer.SetDepthMode(DepthMode.ENABLED);
+            g_renderer.SetModelConstants(sphereTransform);
+            g_renderer.BindTexture(this.m_sphereTexture);
+            g_renderer.DrawVertexArray(this.m_testSphereVertexes);
+        }
+
+        if (this.m_treeModel != null && this.m_diffuseShader != null)
         {
             g_renderer.BindShader(this.m_diffuseShader);
+            g_renderer.BindTexture(null);
             g_renderer.SetLightConstants(new Vec3(2.0, -1.0, -1.0).GetNormalized(), 0.9, 0.1);
             g_renderer.SetModelConstants(Mat44.CreateTranslation3D(this.m_treePosition));
             g_renderer.DrawVertexBuffer(this.m_treeModel.m_modelGroups[0].m_gpuMesh.m_vertexBuffer, this.m_treeModel.m_modelGroups[0].m_cpuMesh.m_vertexes.length);
+        }
 
+        if (this.m_arcadeMachineModel != null && this.m_arcadeMachineTexture != null && this.m_diffuseShader != null)
+        {
             g_renderer.BindTexture(this.m_arcadeMachineTexture);
             g_renderer.SetModelConstants(Mat44.CreateTranslation3D(this.m_arcadeMachinePosition));
             g_renderer.DrawVertexBuffer(this.m_arcadeMachineModel.m_modelGroups[0].m_gpuMesh.m_vertexBuffer, this.m_arcadeMachineModel.m_modelGroups[0].m_cpuMesh.m_vertexes.length);

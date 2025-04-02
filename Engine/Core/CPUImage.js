@@ -2,6 +2,9 @@
 
 import Rgba8 from "/Engine/Core/Rgba8.js";
 
+import Vec2 from "/Engine/Math/Vec2.js";
+
+
 export default class CPUImage
 {
     constructor(imageSrc, loadCallback = null)
@@ -46,5 +49,10 @@ export default class CPUImage
     {
         const texelIndex = x + y * this.m_width;
         return this.m_texelData[texelIndex];
+    }
+
+    GetDimensions()
+    {
+        return new Vec2(this.m_width, this.m_height);
     }
 }

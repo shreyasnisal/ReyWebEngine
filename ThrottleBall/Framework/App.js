@@ -9,7 +9,7 @@ import {
     g_console,
     g_eventSystem,
     g_windowManager,
-    g_debugRenderSystem, g_audio,
+    g_debugRenderSystem, g_audio, g_ui,
 } from "/Engine/Core/EngineCommon.js";
 import Rgba8 from "/Engine/Core/Rgba8.js";
 import Clock from "/Engine/Core/Clock.js";
@@ -38,6 +38,7 @@ export default class App
         g_console.Startup();
         g_input.Startup();
         g_audio.Startup();
+        g_ui.Startup();
 
         this.m_game = new Game();
     }
@@ -63,6 +64,7 @@ export default class App
         g_console.BeginFrame();
         g_input.BeginFrame();
         g_audio.BeginFrame();
+        g_ui.BeginFrame();
     }
 
     Update()
@@ -96,12 +98,12 @@ export default class App
         g_renderer.EndCamera(this.m_game.m_worldCamera);
 
         g_renderer.BindShader(null);
-        g_renderer.BindTexture(null);
         g_renderer.SetBlendMode(BlendMode.ALPHA);
         g_renderer.SetCullMode(CullMode.BACK);
         g_renderer.SetDepthMode(DepthMode.DISABLED);
         g_renderer.SetModelConstants();
 
+        g_renderer.BindTexture(null);
         g_debugRenderSystem.RenderWorld(this.m_game.m_worldCamera);
         g_debugRenderSystem.RenderScreen(this.m_game.m_screenCamera);
         g_console.Render(new AABB2(Vec2.ZERO, new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y)));
@@ -109,6 +111,7 @@ export default class App
 
     EndFrame()
     {
+        g_ui.EndFrame();
         g_audio.EndFrame();
         g_input.EndFrame();
         g_console.EndFrame();
@@ -120,6 +123,7 @@ export default class App
 
     Shutdown()
     {
+        g_ui.Shutdown();
         g_audio.Shutdown();
         g_input.Shutdown();
         g_console.Shutdown();

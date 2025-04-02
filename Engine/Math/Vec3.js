@@ -2,6 +2,7 @@
 
 import * as StringUtils from "/Engine/Core/StringUtils.js";
 
+import * as MathUtils from "/Engine/Math/MathUtils.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 
 
@@ -20,6 +21,12 @@ export default class Vec3
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+
+    static MakeFromPolarDegrees(yawDegrees, pitchDegrees, length = 1.0)
+    {
+        return new Vec3(length * MathUtils.CosDegrees(yawDegrees) * MathUtils.CosDegrees(pitchDegrees), length * MathUtils.SinDegrees(yawDegrees) * MathUtils.CosDegrees(pitchDegrees), -length * MathUtils.SinDegrees(pitchDegrees));
+
     }
 
     toString()

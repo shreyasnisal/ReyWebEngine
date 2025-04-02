@@ -34,7 +34,7 @@ export default class UISystem
 
         this.m_rootWidget = new UIWidget(this);
         this.m_rootWidget.SetPosition(this.m_config.m_camera.GetOrthoBottomLeft())
-            .SetDimensions(this.m_config.m_camera.GetOrthoTopRight() - this.m_config.m_camera.GetOrthoBottomLeft())
+            .SetDimensions(this.m_config.m_camera.GetOrthoTopRight().GetDifference(this.m_config.m_camera.GetOrthoBottomLeft()))
             .SetRaycastTarget(false);
 
         g_eventSystem.SubscribeEventCallbackFunction("WM_CHAR", this.Event_HandleCharacterPressed);
@@ -62,6 +62,11 @@ export default class UISystem
 
     Render()
     {
+        if (this.m_font == null)
+        {
+            return;
+        }
+
         g_renderer.BeginCamera(this.m_config.m_camera);
         this.m_rootWidget.Render();
         g_renderer.EndCamera(this.m_config.m_camera);

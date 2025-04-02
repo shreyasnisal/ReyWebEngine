@@ -259,6 +259,32 @@ export function AddPCUTBNVertsForAABB3(verts, bounds, color = Rgba8.WHITE, uvCoo
     AddPCUTBNVertsForQuad3D(verts, BLB, BRB, BRF, BLF, color, uvCoords); // -Z
 }
 
+export function AddPCUVertsForSphere3D(verts, center, radius, color = Rgba8.WHITE, uvCoords = AABB2.ZERO_TO_ONE, numStacks = 8, numSlices = 16)
+{
+    const topVertexPos = center.GetSum(Vec3.SKYWARD.GetScaled(radius));
+    const bottomVertexPos = center.GetSum(Vec3.GROUNDWARD.GetScaled(radius));
+
+    const degreeIncrementPerSlice = 360.0 / numSlices;
+
+    for (let stack = 0; stack < numStacks; stack++)
+    {
+        for (let slice = 0; slice < numSlices; slice++)
+        {
+            const BL = center.GetSum(Vec3.MakeFromPolarDegrees((slice) * degreeIncrementPerSlice, MathUtils.RangeMap(stack, 0.0, numStacks, 90.0, -90.0), radius));
+            const BR = center.GetSum(Vec3.MakeFromPolarDegrees((slice + 1) * degreeIncrementPerSlice, MathUtils.RangeMap(stack, 0.0, numStacks, 90.0, -90.0), radius));
+            const TR = center.GetSum(Vec3.MakeFromPolarDegrees((slice + 1) * degreeIncrementPerSlice, MathUtils.RangeMap(stack + 1.0, 0.0, numStacks, 90.0, -90.0), radius));
+            const TL = center.GetSum(Vec3.MakeFromPolarDegrees((slice) * degreeIncrementPerSlice, MathUtils.RangeMap(stack + 1.0, 0.0, numStacks, 90.0, -90.0), radius));
+
+            const uMin = MathUtils.RangeMap(slice, 0.0, numSlices, uvCoords.m_mins.x, uvCoords.m_maxs.x);
+            const vMin = MathUtils.RangeMap(stack, 0.0, numStacks, uvCoords.m_mins.y, uvCoords.m_maxs.y);
+            const uMax = MathUtils.RangeMap((slice + 1), 0.0, numSlices, uvCoords.m_mins.x, uvCoords.m_maxs.x);
+            const vMax = MathUtils.RangeMap((stack + 1), 0.0, numStacks, uvCoords.m_mins.y, uvCoords.m_maxs.y);
+
+            AddPCUVertsForQuad3D(verts, BL, BR, TR, TL, color, new AABB2(new Vec2(uMin, vMin), new Vec2(uMax, vMax)));
+        }
+    }
+}
+
 export function AddPCUVertsForOBB2(verts, box, color = Rgba8.WHITE)
 {
     const vertexPositions = box.GetCornerPoints();

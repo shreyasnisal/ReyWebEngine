@@ -216,7 +216,12 @@ export default class Mat44
 
     TransformPosition2D(positionXY)
     {
+        const result = new Vec2();
 
+        result.x = MathUtils.DotProduct4D(new Vec4(this.m_values[Mat44.Elements.Ix], this.m_values[Mat44.Elements.Jx], this.m_values[Mat44.Elements.Kx], this.m_values[Mat44.Elements.Tx]), new Vec4(positionXY.x, positionXY.y, positionXY.z, 1.0));
+        result.y = MathUtils.DotProduct4D(new Vec4(this.m_values[Mat44.Elements.Iy], this.m_values[Mat44.Elements.Jy], this.m_values[Mat44.Elements.Ky], this.m_values[Mat44.Elements.Ty]), new Vec4(positionXY.x, positionXY.y, positionXY.z, 1.0));
+
+        return result;
     }
 
     TransformPosition3D(positionXYZ)

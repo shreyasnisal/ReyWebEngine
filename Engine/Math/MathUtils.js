@@ -324,6 +324,28 @@ export function DoDiscAndOBB2Overlap(discCenter, discRadius, box)
     return IsPointInsideDisc2D(nearestPointOnBox, discCenter, discRadius);
 }
 
+export function DoAABB2Overlap(boxA, boxB)
+{
+    if (boxA.m_mins.x >= boxB.m_maxs.x)
+    {
+        return false;
+    }
+    if (boxA.m_maxs.x <= boxB.m_mins.x)
+    {
+        return false;
+    }
+    if (boxA.m_mins.y >= boxB.m_maxs.y)
+    {
+        return false;
+    }
+    if (boxA.m_maxs.y <= boxB.m_mins.y)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 export function DoAABB3AndCylinerOverlap(box, cylinderBaseCenter, cylinderTopCenter, cylinderRadius)
 {
     if (!DoDiscAndAABB2Overlap(cylinderBaseCenter.GetXY(), cylinderRadius, new AABB2(box.m_mins.GetXY(), box.m_maxs.GetXY())))
