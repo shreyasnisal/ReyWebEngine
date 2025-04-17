@@ -20,6 +20,7 @@ export default class Ball
     static RADIUS = 2.0;
     static MASS = 1.0;
     static ELASTICITY = 0.9;
+    static MAX_VELOCITY = 100.0;
 
     // Don't change these values
     static ROLLING_FRICTION = Ball.ROLLING_FRICTION_COEFFICIENT * 100.0;
@@ -52,7 +53,7 @@ export default class Ball
         const momentumAfterFriction = momentum.GetDifference(momentum.GetScaled(rollingFrictionThisFrame)); // This should not be the same as AddForce
         this.m_velocity = momentumAfterFriction.GetScaled(1.0 / Ball.MASS);
 
-        this.m_velocity.ClampLength(100.0);
+        this.m_velocity.ClampLength(Ball.MAX_VELOCITY);
 
         // Stop moving if the velocity is super low
         if (this.m_velocity.GetLengthSquared() < 0.01)
@@ -75,8 +76,6 @@ export default class Ball
         const uvMaxs = uvMins.GetSum(new Vec2(2.0, 2.0));
         const uvs = new AABB2(uvMins, uvMaxs);
 
-        const shadowPosition = this.m_position.GetSum(Vec2.EAST.GetScaled(SHADOW_OFFSET_X)).GetSum(Vec2.SOUTH.GetScaled(SHADOW_OFFSET_Y));
-        VertexUtils.AddPCUVertsForDisc2D(ballVerts, shadowPosition, Ball.RADIUS, SHADOW_COLOR, AABB2.ZERO_TO_ONE, 32);
         VertexUtils.AddPCUVertsForDisc2D(ballVerts, this.m_position, Ball.RADIUS, Rgba8.WHITE, uvs, 32);
         g_renderer.BindShader(null);
         g_renderer.SetBlendMode(BlendMode.ALPHA);
@@ -91,6 +90,21 @@ export default class Ball
         {
             this.RenderDebug();
         }
+    }
+
+    RenderShadow()
+    {
+        const shadowVerts = [];
+        const shadowPosition = this.m_position.GetSum(Vec2.EAST.GetScaled(SHADOW_OFFSET_X)).GetSum(Vec2.SOUTH.GetScaled(SHADOW_OFFSET_Y));
+        VertexUtils.AddPCUVertsForDisc2D(shadowVerts, shadowPosition, Ball.RADIUS, SHADOW_COLOR, AABB2.ZERO_TO_ONE, 32);
+        g_renderer.BindShader(null);
+        g_renderer.SetBlendMode(BlendMode.ALPHA);
+        g_renderer.SetCullMode(CullMode.BACK);
+        g_renderer.SetDepthMode(DepthMode.DISABLED);
+        g_renderer.SetSamplerMode(SamplerMode.BILINEAR_WRAP);
+        g_renderer.SetModelConstants();
+        g_renderer.BindTexture(this.m_texture);
+        g_renderer.DrawVertexArray(shadowVerts);
     }
 
     RenderDebug()

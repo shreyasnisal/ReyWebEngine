@@ -16,6 +16,6 @@ function Event_Navigate(args)
     const target = args["target"];
     if (target !== GameState.NONE)
     {
-        g_app.m_game.m_nextState = target;
+        g_app.m_game.m_nextState = parseInt(target);
     }
 }

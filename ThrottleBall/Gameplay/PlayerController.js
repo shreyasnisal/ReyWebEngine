@@ -6,10 +6,10 @@ import { Team } from "/ThrottleBall/Framework/GameCommon.js";
 
 export default class PlayerController
 {
-    constructor(playerID)
+    constructor(playerID, team)
     {
         this.m_playerID = playerID;
-        this.m_team = Team.BLUE;
+        this.m_team = team;
     }
 
     SetCar(car)

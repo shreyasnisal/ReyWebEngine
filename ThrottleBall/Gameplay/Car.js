@@ -140,9 +140,6 @@ export default class Car
     {
         const carVerts = [];
 
-        const shadowPosition = this.m_position.GetSum(Vec2.EAST.GetScaled(SHADOW_OFFSET_X)).GetSum(Vec2.SOUTH.GetScaled(SHADOW_OFFSET_Y));
-        VertexUtils.AddPCUVertsForOBB2(carVerts, new OBB2(shadowPosition, this.GetForwardNormal(), new Vec2(Car.FRAME_LENGTH * 0.5, Car.FRAME_LENGTH * 0.5 * 0.5)), SHADOW_COLOR);
-
         VertexUtils.AddPCUVertsForOBB2(carVerts, new OBB2(this.m_position, this.GetForwardNormal(), new Vec2(Car.FRAME_LENGTH * 0.5, Car.FRAME_LENGTH * 0.5 * 0.5)));
         g_renderer.BindShader(null);
         g_renderer.SetBlendMode(BlendMode.ALPHA);
@@ -156,6 +153,20 @@ export default class Car
         {
             this.RenderDebug();
         }
+    }
+
+    RenderShadow()
+    {
+        const shadowVerts = [];
+        const shadowPosition = this.m_position.GetSum(Vec2.EAST.GetScaled(SHADOW_OFFSET_X)).GetSum(Vec2.SOUTH.GetScaled(SHADOW_OFFSET_Y));
+        VertexUtils.AddPCUVertsForOBB2(shadowVerts, new OBB2(shadowPosition, this.GetForwardNormal(), new Vec2(Car.FRAME_LENGTH * 0.5, Car.FRAME_LENGTH * 0.5 * 0.5)), SHADOW_COLOR);
+        g_renderer.BindShader(null);
+        g_renderer.SetBlendMode(BlendMode.ALPHA);
+        g_renderer.SetCullMode(CullMode.BACK);
+        g_renderer.SetDepthMode(DepthMode.DISABLED);
+        g_renderer.SetModelConstants();
+        g_renderer.BindTexture(this.m_texture);
+        g_renderer.DrawVertexArray(shadowVerts);
     }
 
     RenderDebug()

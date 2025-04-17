@@ -45,7 +45,7 @@ export const g_audio = new AudioSystem(audioConfig);
 
 const uiSystemCamera = new Camera();
 uiSystemCamera.SetOrthoView(Vec2.ZERO, new Vec2(g_aspect, 1.0));
-const uiConfig = new UISystemConfig(uiSystemCamera, false, "/Engine/Data/Fonts/SquirrelFixedFont");
+const uiConfig = new UISystemConfig(uiSystemCamera, false, "/Engine/Data/Fonts/RobotoMonoSemiBold128");
 export const g_ui = new UISystem(uiConfig);
 
 

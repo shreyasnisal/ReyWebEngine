@@ -88,10 +88,6 @@ export default class UISystem
         }
         else
         {
-            if (this.m_rootWidget.m_children.length === 0)
-            {
-                this.m_lastHoveredWidget = newWidget;
-            }
             this.m_rootWidget.AddChild(newWidget);
         }
         return newWidget;

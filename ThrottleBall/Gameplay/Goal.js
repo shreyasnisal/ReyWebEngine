@@ -50,7 +50,6 @@ export default class Goal
 
         const bounds = this.GetBounds();
 
-        VertexUtils.AddPCUVertsForAABB2(goalVerts, new AABB2(bounds.m_mins.GetDifference(new Vec2(-SHADOW_OFFSET_X, SHADOW_OFFSET_Y)), bounds.m_maxs.GetDifference(new Vec2(SHADOW_OFFSET_X, SHADOW_OFFSET_Y))), SHADOW_COLOR, new AABB2(new Vec2(), new Vec2(2.0, 2.0)));
         VertexUtils.AddPCUVertsForAABB2(goalVerts, bounds, GetTeamColor(this.m_team), new AABB2(new Vec2(), new Vec2(2.0, 2.0)));
         g_renderer.BindShader(null);
         g_renderer.BindTexture(this.m_netTexture);
@@ -61,9 +60,7 @@ export default class Goal
         g_renderer.SetModelConstants();
         g_renderer.DrawVertexArray(goalVerts);
 
-        VertexUtils.AddPCUVertsForAABB2(goalPostVerts, new AABB2(new Vec2(bounds.m_mins.x, bounds.m_maxs.y - SHADOW_OFFSET_Y), bounds.m_maxs.GetSum(new Vec2(SHADOW_OFFSET_X, 1.0 - SHADOW_OFFSET_Y))), SHADOW_COLOR);
         VertexUtils.AddPCUVertsForAABB2(goalPostVerts, new AABB2(new Vec2(bounds.m_mins.x, bounds.m_maxs.y), bounds.m_maxs.GetSum(new Vec2(0.0, 1.0))), Rgba8.WHITE);
-        VertexUtils.AddPCUVertsForAABB2(goalPostVerts, new AABB2(bounds.m_mins.GetDifference(new Vec2(0.0, 1.0 + SHADOW_OFFSET_Y)), new Vec2(bounds.m_maxs.x + SHADOW_OFFSET_X, bounds.m_mins.y - SHADOW_OFFSET_Y)), SHADOW_COLOR);
         VertexUtils.AddPCUVertsForAABB2(goalPostVerts, new AABB2(bounds.m_mins.GetDifference(new Vec2(0.0, 1.0)), new Vec2(bounds.m_maxs.x, bounds.m_mins.y)), Rgba8.WHITE);
         g_renderer.BindTexture(null);
         g_renderer.DrawVertexArray(goalPostVerts);
@@ -72,6 +69,28 @@ export default class Goal
         {
             this.RenderDebug();
         }
+    }
+
+    RenderShadow()
+    {
+        const netShadowVerts = [];
+        const postShadowVerts = [];
+
+        const bounds = this.GetBounds();
+
+        VertexUtils.AddPCUVertsForAABB2(netShadowVerts, new AABB2(bounds.m_mins.GetDifference(new Vec2(-SHADOW_OFFSET_X, SHADOW_OFFSET_Y)), bounds.m_maxs.GetDifference(new Vec2(SHADOW_OFFSET_X, SHADOW_OFFSET_Y))), SHADOW_COLOR, new AABB2(new Vec2(), new Vec2(2.0, 2.0)));
+        VertexUtils.AddPCUVertsForAABB2(postShadowVerts, new AABB2(new Vec2(bounds.m_mins.x, bounds.m_maxs.y - SHADOW_OFFSET_Y), bounds.m_maxs.GetSum(new Vec2(SHADOW_OFFSET_X, 1.0 - SHADOW_OFFSET_Y))), SHADOW_COLOR);
+        VertexUtils.AddPCUVertsForAABB2(postShadowVerts, new AABB2(bounds.m_mins.GetDifference(new Vec2(0.0, 1.0 + SHADOW_OFFSET_Y)), new Vec2(bounds.m_maxs.x + SHADOW_OFFSET_X, bounds.m_mins.y - SHADOW_OFFSET_Y)), SHADOW_COLOR);
+        g_renderer.BindShader(null);
+        g_renderer.BindTexture(this.m_netTexture);
+        g_renderer.SetBlendMode(BlendMode.ALPHA);
+        g_renderer.SetCullMode(CullMode.BACK);
+        g_renderer.SetDepthMode(DepthMode.DISABLED);
+        g_renderer.SetSamplerMode(SamplerMode.BILINEAR_WRAP);
+        g_renderer.SetModelConstants();
+        g_renderer.DrawVertexArray(netShadowVerts);
+        g_renderer.BindTexture(null);
+        g_renderer.DrawVertexArray(postShadowVerts);
     }
 
     RenderDebug()

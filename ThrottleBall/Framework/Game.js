@@ -15,7 +15,13 @@ import {
     SECONDARY_COLOR_VARIANT_DARK,
     TERTIARY_COLOR,
     TERTIARY_COLOR_VARIANT_LIGHT,
-    TERTIARY_COLOR_VARIANT_DARK, ASPECT, NUM_CAR_CHOICES, CAR_IMAGE_PATHS, GetTeamFromCarImageIndex, GetTeamString
+    TERTIARY_COLOR_VARIANT_DARK,
+    ASPECT,
+    NUM_CAR_CHOICES,
+    CAR_IMAGE_PATHS,
+    GetTeamFromCarImageIndex,
+    GetTeamString,
+    GetTimeStringFromSeconds
 } from "/ThrottleBall/Framework/GameCommon.js";
 
 import {SubscribeButtonEvents} from "/ThrottleBall/Framework/ButtonEvents.js";
@@ -74,6 +80,8 @@ export class GameState
 
 export default class Game
 {
+    static MATCH_DURATION_SECONDS = 300;
+
     constructor()
     {
         // Initialize world camera
@@ -169,21 +177,22 @@ export default class Game
             .SetDimensions(new Vec2(1.0, 1.0))
             .SetBackgroundColor(new Rgba8(0, 0, 0, 0))
             .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 0))
-            .SetVisible(false);
-
-        const menuStartButton = g_ui.CreateWidget(this.m_menuWidget);
-        menuStartButton.SetText("Start")
-            .SetPosition(new Vec2(0.1, 0.6))
-            .SetDimensions(new Vec2(0.3, 0.1))
-            .SetPivot(new Vec2(0.0, 0.5))
-            .SetAlignment(new Vec2(0.01, 0.5))
-            .SetFontSize(4.0)
-            .SetBackgroundColor(PRIMARY_COLOR)
-            .SetHoverBackgroundColor(PRIMARY_COLOR_VARIANT_LIGHT)
-            .SetColor(TERTIARY_COLOR)
-            .SetHoverColor(TERTIARY_COLOR_VARIANT_LIGHT)
-            .SetBorderRadius(0.5)
-            .SetClickEventName("navigate target=" + GameState.MENU);
+            .SetVisible(false)
+            .SetFocus(false);
+        //
+        // const menuStartButton = g_ui.CreateWidget(this.m_menuWidget);
+        // menuStartButton.SetText("Start")
+        //     .SetPosition(new Vec2(0.1, 0.6))
+        //     .SetDimensions(new Vec2(0.3, 0.1))
+        //     .SetPivot(new Vec2(0.0, 0.5))
+        //     .SetAlignment(new Vec2(0.01, 0.5))
+        //     .SetFontSize(4.0)
+        //     .SetBackgroundColor(PRIMARY_COLOR)
+        //     .SetHoverBackgroundColor(PRIMARY_COLOR_VARIANT_LIGHT)
+        //     .SetColor(TERTIARY_COLOR)
+        //     .SetHoverColor(TERTIARY_COLOR_VARIANT_LIGHT)
+        //     .SetBorderRadius(0.5)
+        //     .SetClickEventName("navigate target=" + GameState.LOBBY);
     }
 
     InitializeLobbyUI()
@@ -197,7 +206,9 @@ export default class Game
 
         this.m_playerLobbyWidgets = [];
         this.m_playerJoinInfoTextWidgets = [];
+        this.m_playerPrevCarButtonWidgets = [];
         this.m_playerCarWidgets = [];
+        this.m_playerNextCarButtonWidgets = [];
         this.m_playerTeamTextWidgets = [];
         this.m_playerTeamWidgets = [];
 
@@ -209,7 +220,9 @@ export default class Game
         this.m_playerLobbyWidgets[0].SetPosition(new Vec2(0.0, 0.75))
             .SetDimensions(new Vec2(1.0, 0.25))
             .SetBackgroundColor(new Rgba8(0, 0, 0, 255))
-            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 255));
+            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 255))
+            .SetBorderWidth(0.002)
+            .SetBorderColor(Rgba8.WHITE);
 
         this.CreateLobbyWidgetsForPlayerIndexParentedToWidget(0, this.m_playerLobbyWidgets[0]);
 
@@ -221,7 +234,9 @@ export default class Game
         this.m_playerLobbyWidgets[1].SetPosition(new Vec2(0.0, 0.5))
             .SetDimensions(new Vec2(1.0, 0.25))
             .SetBackgroundColor(new Rgba8(0, 0, 0, 255))
-            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 255));
+            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 255))
+            .SetBorderWidth(0.002)
+            .SetBorderColor(Rgba8.WHITE);
 
         this.CreateLobbyWidgetsForPlayerIndexParentedToWidget(1, this.m_playerLobbyWidgets[1]);
 
@@ -234,7 +249,9 @@ export default class Game
         this.m_playerLobbyWidgets[2].SetPosition(new Vec2(0.0, 0.25))
             .SetDimensions(new Vec2(1.0, 0.25))
             .SetBackgroundColor(new Rgba8(0, 0, 0, 255))
-            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 255));
+            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 255))
+            .SetBorderWidth(0.002)
+            .SetBorderColor(Rgba8.WHITE);
 
         this.CreateLobbyWidgetsForPlayerIndexParentedToWidget(2, this.m_playerLobbyWidgets[2]);
 
@@ -246,7 +263,9 @@ export default class Game
         this.m_playerLobbyWidgets[3].SetPosition(new Vec2(0.0, 0.0))
             .SetDimensions(new Vec2(1.0, 0.25))
             .SetBackgroundColor(new Rgba8(0, 0, 0, 255))
-            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 255));
+            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 255))
+            .SetBorderWidth(0.002)
+            .SetBorderColor(Rgba8.WHITE);
 
         this.CreateLobbyWidgetsForPlayerIndexParentedToWidget(3, this.m_playerLobbyWidgets[3]);
     }
@@ -260,7 +279,7 @@ export default class Game
             .SetPivot(new Vec2(0.0, 0.5))
             .SetAlignment(new Vec2(0.05, 0.0))
             .SetColor(Rgba8.WHITE)
-            .SetFontSize(4.0);
+            .SetFontSize(6.0);
 
         this.m_playerJoinInfoTextWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
         this.m_playerJoinInfoTextWidgets[playerIndex].SetText("Connect a controller to join!")
@@ -269,10 +288,21 @@ export default class Game
             .SetPivot(new Vec2(0.0, 0.5))
             .SetAlignment(new Vec2(0.05, 0.0))
             .SetColor(Rgba8.WHITE)
-            .SetFontSize(2.0);
+            .SetFontSize(4.0);
+
+        this.m_playerPrevCarButtonWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
+        this.m_playerPrevCarButtonWidgets[playerIndex].SetImage("/ThrottleBall/Data/Images/xbox_lb.png")
+            .SetPosition(new Vec2(0.3, 0.5))
+            .SetDimensions(new Vec2(0.25 / g_aspect, 0.25))
+            .SetPivot(new Vec2(0.0, 0.5))
+            .SetAlignment(new Vec2(0.0, 0.0))
+            .SetColor(Rgba8.WHITE)
+            .SetVisible(false);
+
+        const defaultCarIndex = playerIndex % 2 === 0 ? 0 : NUM_CAR_CHOICES / 2;
 
         this.m_playerCarWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
-        this.m_playerCarWidgets[playerIndex].SetImage(CAR_IMAGE_PATHS[0])
+        this.m_playerCarWidgets[playerIndex].SetImage(CAR_IMAGE_PATHS[defaultCarIndex])
             .SetPosition(new Vec2(0.3, 0.5))
             .SetDimensions(new Vec2(0.3, 0.5))
             .SetPivot(new Vec2(0.0, 0.5))
@@ -280,9 +310,18 @@ export default class Game
             .SetColor(Rgba8.WHITE)
             .SetVisible(false);
 
+        this.m_playerNextCarButtonWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
+        this.m_playerNextCarButtonWidgets[playerIndex].SetImage("/ThrottleBall/Data/Images/xbox_rb.png")
+            .SetPosition(new Vec2(0.5, 0.5))
+            .SetDimensions(new Vec2(0.25 / g_aspect, 0.25))
+            .SetPivot(new Vec2(0.0, 0.5))
+            .SetAlignment(new Vec2(0.0, 0.0))
+            .SetColor(Rgba8.WHITE)
+            .SetVisible(false);
+
         this.m_playerTeamTextWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
         this.m_playerTeamTextWidgets[playerIndex] .SetText("Team")
-            .SetPosition(new Vec2(0.6, 1.0))
+            .SetPosition(new Vec2(0.75, 1.0))
             .SetDimensions(new Vec2(0.3, 1.0))
             .SetPivot(new Vec2(0.0, 0.5))
             .SetAlignment(new Vec2(0.05, 0.0))
@@ -291,23 +330,66 @@ export default class Game
             .SetVisible(false);
 
         this.m_playerTeamWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
-        this.m_playerTeamWidgets[playerIndex].SetText(GetTeamString(GetTeamFromCarImageIndex(0)))
-            .SetPosition(new Vec2(0.65, 1.0))
+        this.m_playerTeamWidgets[playerIndex].SetText(GetTeamString(GetTeamFromCarImageIndex(defaultCarIndex)))
+            .SetPosition(new Vec2(0.75, 0.8))
             .SetDimensions(new Vec2(0.3, 1.0))
             .SetPivot(new Vec2(0.0, 0.5))
             .SetAlignment(new Vec2(0.05, 0.0))
-            .SetColor(GetTeamColor(GetTeamFromCarImageIndex(0)))
+            .SetColor(GetTeamColor(GetTeamFromCarImageIndex(defaultCarIndex)))
             .SetFontSize(4.0)
             .SetVisible(false);
     }
 
     InitializeGameUI()
     {
+        this.m_gameWidget = g_ui.CreateWidget();
+        this.m_gameWidget.SetPosition(new Vec2(0.0, 0.0))
+            .SetDimensions(new Vec2(1.0, 1.0))
+            .SetBackgroundColor(new Rgba8(0, 0, 0, 0))
+            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 0))
+            .SetVisible(false);
 
+        this.m_blueTeamScoreWidget = g_ui.CreateWidget(this.m_gameWidget);
+        this.m_blueTeamScoreWidget.SetPosition(new Vec2(0.495, 1.0))
+            .SetDimensions(new Vec2(0.05 / g_aspect, 0.05))
+            .SetPivot(new Vec2(1.0, 1.0))
+            .SetAlignment(new Vec2(0.5, 0.5))
+            .SetText("0")
+            .SetFontSize(4.0)
+            .SetBackgroundColor(TERTIARY_COLOR)
+            .SetColor(GetTeamColor(Team.BLUE));
+
+        this.m_redTeamScoreWidget = g_ui.CreateWidget(this.m_gameWidget);
+        this.m_redTeamScoreWidget.SetPosition(new Vec2(0.505, 1.0))
+            .SetDimensions(new Vec2(0.05 / g_aspect, 0.05))
+            .SetPivot(new Vec2(0.0, 1.0))
+            .SetAlignment(new Vec2(0.5, 0.5))
+            .SetText("0")
+            .SetFontSize(4.0)
+            .SetBackgroundColor(TERTIARY_COLOR)
+            .SetColor(GetTeamColor(Team.RED));
+
+        this.m_timeWidget = g_ui.CreateWidget(this.m_gameWidget);
+        this.m_timeWidget.SetPosition(new Vec2(0.5, 0.))
+            .SetDimensions(new Vec2(0.3 / g_aspect, 0.05))
+            .SetPivot(new Vec2(0.5, 0.0))
+            .SetAlignment(new Vec2(0.5, 0.5))
+            .SetText(GetTimeStringFromSeconds(Game.MATCH_DURATION_SECONDS))
+            .SetFontSize(4.0)
+            .SetBackgroundColor(TERTIARY_COLOR_VARIANT_DARK)
+            .SetColor(Rgba8.WHITE);
     }
 
     InitializeMatchEndUI()
     {
+        this.m_matchEndWidget = g_ui.CreateWidget();
+        this.m_matchEndWidget.SetPosition(new Vec2(0.0, 0.0))
+            .SetDimensions(new Vec2(1.0, 1.0))
+            .SetBackgroundColor(new Rgba8(0, 0, 0, 0))
+            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 0))
+            .SetVisible(false);
+
+        this.m_matchEndWinnerTextWidget = g_ui.CreateWidget(this.m_matchEndWidget);
 
     }
 
@@ -341,8 +423,6 @@ export default class Game
         if (g_aspect > ASPECT)
         {
             // Need pillarbox borders
-
-            // Calculate for world camera
             const windowWorldWidth = WORLD_SIZE_Y * g_aspect;
             const deltaWorldWidth = windowWorldWidth - WORLD_SIZE_X;
             this.m_worldCamera.SetOrthoView(Vec2.ZERO.GetSum(Vec2.WEST.GetScaled(deltaWorldWidth * 0.5)), new Vec2(WORLD_SIZE_X + deltaWorldWidth * 0.5, WORLD_SIZE_Y));
@@ -377,6 +457,18 @@ export default class Game
 
     Update_Menu()
     {
+        if (g_input.WasKeyJustPressed("UP_ARROW"))
+        {
+            g_ui.SetLastHoveredWidget(g_ui.GetPreviousWidget());
+        }
+        if (g_input.WasKeyJustPressed("DOWN_ARROW"))
+        {
+            g_ui.SetLastHoveredWidget(g_ui.GetNextWidget());
+        }
+        if (g_input.WasKeyJustPressed("Space"))
+        {
+            g_console.Execute(g_ui.GetLastHoveredWidget().m_clickEventName);
+        }
     }
 
     Update_Credits()
@@ -396,11 +488,6 @@ export default class Game
 
     Update_Lobby()
     {
-        if (g_input.WasKeyJustPressed("Space"))
-        {
-            this.m_nextState = GameState.GAME;
-        }
-
         const numConnectedControllers = g_input.m_gamepads.length;
 
         this.HandleLobbyInputsForController(0);
@@ -456,8 +543,8 @@ export default class Game
             {
                 this.m_playerJoinInfoTextWidgets[controllerIndex].SetText("Press A when Ready!");
                 this.SetWidgetsVisibleForPlayer(controllerIndex);
-                this.m_players[controllerIndex] = new PlayerController(controllerIndex);
-                this.m_playerCarChoiceIndexes[controllerIndex] = 0;
+                this.m_players[controllerIndex] = new PlayerController(controllerIndex, controllerIndex % 2 === 0 ? Team.BLUE : Team.RED);
+                this.m_playerCarChoiceIndexes[controllerIndex] = controllerIndex % 2 === 0 ? 0 : NUM_CAR_CHOICES / 2;
                 this.m_playerStatus[controllerIndex] = PlayerState.JOINED;
             }
             else if (this.m_playerStatus[controllerIndex] === PlayerState.JOINED)
@@ -499,14 +586,18 @@ export default class Game
 
     SetWidgetsVisibleForPlayer(playerIndex)
     {
+        this.m_playerPrevCarButtonWidgets[playerIndex].SetVisible(true);
         this.m_playerCarWidgets[playerIndex].SetVisible(true);
+        this.m_playerNextCarButtonWidgets[playerIndex].SetVisible(true);
         this.m_playerTeamTextWidgets[playerIndex].SetVisible(true);
         this.m_playerTeamWidgets[playerIndex].SetVisible(true);
     }
 
     SetWidgetsHiddenForPlayer(playerIndex)
     {
+        this.m_playerPrevCarButtonWidgets[playerIndex].SetVisible(false);
         this.m_playerCarWidgets[playerIndex].SetVisible(false);
+        this.m_playerNextCarButtonWidgets[playerIndex].SetVisible(false);
         this.m_playerTeamTextWidgets[playerIndex].SetVisible(false);
         this.m_playerTeamWidgets[playerIndex].SetVisible(false);
     }
@@ -566,7 +657,7 @@ export default class Game
 
     ClearScreen()
     {
-        g_renderer.ClearScreen(TERTIARY_COLOR);
+        g_renderer.ClearScreen(Rgba8.BLACK);
     }
 
     Render()
@@ -653,21 +744,25 @@ export default class Game
     Enter_Attract()
     {
         this.m_attractWidget.SetVisible(true);
+        this.m_attractWidget.SetFocus(true);
     }
 
     Exit_Attract()
     {
         this.m_attractWidget.SetVisible(false);
+        this.m_attractWidget.SetFocus(false);
     }
 
     Enter_Menu()
     {
         this.m_menuWidget.SetVisible(true);
+        this.m_menuWidget.SetFocus(true);
     }
 
     Exit_Menu()
     {
         this.m_menuWidget.SetVisible(false);
+        this.m_menuWidget.SetFocus(false);
     }
 
     Enter_Credits()
@@ -714,12 +809,16 @@ export default class Game
 
     Enter_Game()
     {
+        this.m_gameWidget.SetVisible(true);
+        this.m_gameWidget.SetFocus(true);
+
         this.m_map = new Map(this);
     }
 
     Exit_Game()
     {
-
+        this.m_gameWidget.SetVisible(false);
+        this.m_gameWidget.SetFocus(false);
     }
 
     Enter_MatchEnd()

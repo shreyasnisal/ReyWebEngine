@@ -77,7 +77,7 @@ export default class App
         if (this.m_deltaSecondsSum >= 1.0)
         {
             const averageDeltaSeconds = this.m_deltaSecondsSum / this.m_numFrames;
-            g_debugRenderSystem.AddScreenText("FPS: " + (1.0 / averageDeltaSeconds).toFixed(2), new Vec2(SCREEN_SIZE_Y * g_aspect - 32.0, SCREEN_SIZE_Y - 32.0), 16.0, new Vec2(1.0, 0.0), 1.0, Rgba8.WHITE, Rgba8.WHITE);
+            g_debugRenderSystem.AddScreenText("FPS: " + (1.0 / averageDeltaSeconds).toFixed(0), new Vec2(SCREEN_SIZE_Y * g_aspect - 24.0, SCREEN_SIZE_Y - 24.0), 12.0, new Vec2(1.0, 0.0), 1.0, Rgba8.WHITE, Rgba8.WHITE);
             this.m_numFrames = 0;
             this.m_deltaSecondsSum = 0.0;
         }

@@ -5,11 +5,11 @@ import {
     WORLD_SIZE_Y,
     SCREEN_SIZE_Y,
     Team,
-    GetTimeStringFromSeconds, CAR_IMAGE_PATHS
+    GetTimeStringFromSeconds, CAR_IMAGE_PATHS, TERTIARY_COLOR_VARIANT_DARK
 } from "/ThrottleBall/Framework/GameCommon.js";
 import Ball from "/ThrottleBall/Gameplay/Ball.js";
 import Car from "/ThrottleBall/Gameplay/Car.js";
-import {GameState} from "/ThrottleBall/Framework/Game.js";
+import Game, { GameState } from "/ThrottleBall/Framework/Game.js";
 import Goal from "/ThrottleBall/Gameplay/Goal.js";
 
 import {g_debugRenderSystem, g_input, g_renderer, g_audio} from "/Engine/Core/EngineCommon.js";
@@ -43,8 +43,10 @@ export default class Map
         this.m_redTeamScore = 0;
         this.m_isSuddenDeath = false;
 
-        this.m_matchTimer = new Stopwatch(300.0, this.m_game.m_clock);
+        this.m_matchTimer = new Stopwatch(Game.MATCH_DURATION_SECONDS, this.m_game.m_clock);
         this.m_matchTimer.Start();
+
+        this.m_clockBlinkTimer = new Stopwatch(1.0, this.m_game.m_clock);
 
         // DebugFlags
         this.m_drawDebug = false;
@@ -87,11 +89,6 @@ export default class Map
 
             this.m_cars.push(new Car(this, carPosition, carOrientation, this.m_game.m_players[carIndex], this.m_game.m_players[carIndex].m_team, CAR_IMAGE_PATHS[this.m_game.m_playerCarChoiceIndexes[carIndex]]));
             this.m_game.m_players[carIndex].SetCar(this.m_cars[carIndex]);
-        }
-
-        for (let carIndex = 0; carIndex < numCars; carIndex++)
-        {
-
         }
     }
 
@@ -160,8 +157,8 @@ export default class Map
         this.PushCarsIntoField();
         this.PushBallIntoField();
 
-        // Check for math end
         this.CheckMatchEnd();
+        this.UpdateHUD();
     }
 
     HandleDevCheats()
@@ -389,8 +386,6 @@ export default class Map
             return;
         }
 
-        g_audio.PlaySound(this.m_carVsBallSFX);
-
         const dispCarCenterToImpactPoint = impactPointOnCar.GetDifference(car.m_position);
         const impactPointDistanceFromCenterAlongCarFrame = MathUtils.GetProjectedLength2D(dispCarCenterToImpactPoint, carBounds.m_iBasisNormal);
         const impactPointFractionFromCenterAlongCarFrame = impactPointDistanceFromCenterAlongCarFrame / Car.FRAME_LENGTH;
@@ -444,6 +439,8 @@ export default class Map
         car.m_frontAxleVelocity = carImpactPointFinalVelocity.GetScaled(impactFrontWeight);
         car.m_backAxleVelocity = carImpactPointFinalVelocity.GetScaled(impactBackWeight);
 
+        g_audio.PlaySound(this.m_carVsBallSFX, false, MathUtils.RangeMapClamped(ballNormalMomentumInCoMFrame.GetLength(), 0.0, Ball.MASS * 100.0, 0.0, 1.0));
+
         car.PerformFrameCorrectionAndUpdatePosition();
     }
 
@@ -457,16 +454,6 @@ export default class Map
                 const car2 = this.m_cars[car2Index];
 
                 this.HandleCarVsCarCollision(car1, car2);
-
-                // const car1Bounds = car1.GetBounds();
-                // const car2Bounds = car2.GetBounds();
-                // MathUtils.PushOBB2OutOfEachOther(car1Bounds, car2Bounds);
-                // car1.m_frontAxlePosition = car1Bounds.m_center.GetSum(car1.GetForwardNormal().GetScaled(Car.FRAME_LENGTH * 0.5));
-                // car1.m_backAxlePosition = car1Bounds.m_center.GetDifference(car1.GetForwardNormal().GetScaled(Car.FRAME_LENGTH * 0.5));
-                // car2.m_frontAxlePosition = car2Bounds.m_center.GetSum(car2.GetForwardNormal().GetScaled(Car.FRAME_LENGTH * 0.5));
-                // car2.m_backAxlePosition = car2Bounds.m_center.GetDifference(car2.GetForwardNormal().GetScaled(Car.FRAME_LENGTH * 0.5));
-                // car1.PerformFrameCorrectionAndUpdatePosition();
-                // car2.PerformFrameCorrectionAndUpdatePosition();
             }
         }
     }
@@ -638,24 +625,22 @@ export default class Map
 
         if (MathUtils.PushDiscOutOfFixedPoint2D(ball.m_position, Ball.RADIUS, nearestPointOnGoalPostBounds0))
         {
-            g_audio.PlaySound(this.m_ballVsGoalPost);
-
             const dispBallToNearestPoint = nearestPointOnGoalPostBounds0.GetDifference(ball.m_position);
             const ballNormalVelocity = MathUtils.GetProjectedOnto2D(ball.m_velocity, dispBallToNearestPoint);
             const ballTangentVelocity = ball.m_velocity.GetDifference(ballNormalVelocity);
             ballNormalVelocity.Scale(-Ball.ELASTICITY * Goal.POLE_ELASTICITY);
             ball.m_velocity = ballNormalVelocity.GetSum(ballTangentVelocity);
+            g_audio.PlaySound(this.m_ballVsGoalPost, false, MathUtils.RangeMapClamped(ballNormalVelocity.GetLength(), 0.0, Ball.MASS * Ball.MAX_VELOCITY, 0.0, 1.0));
         }
 
         if (MathUtils.PushDiscOutOfFixedPoint2D(ball.m_position, Ball.RADIUS, nearestPointOnGoalPostBounds1))
         {
-            g_audio.PlaySound(this.m_ballVsGoalPost);
-
             const dispBallToNearestPoint = nearestPointOnGoalPostBounds1.GetDifference(ball.m_position);
             const ballNormalVelocity = MathUtils.GetProjectedOnto2D(ball.m_velocity, dispBallToNearestPoint);
             const ballTangentVelocity = ball.m_velocity.GetDifference(ballNormalVelocity);
             ballNormalVelocity.Scale(-Ball.ELASTICITY * Goal.POLE_ELASTICITY);
             ball.m_velocity = ballNormalVelocity.GetSum(ballTangentVelocity);
+            g_audio.PlaySound(this.m_ballVsGoalPost, false, MathUtils.RangeMapClamped(ballNormalVelocity.GetLength(), 0.0, Ball.MASS * Ball.MAX_VELOCITY, 0.0, 1.0));
         }
 
         const goalBounds = goal.GetBounds();
@@ -705,25 +690,25 @@ export default class Map
     {
         if (this.m_ball.m_position.x + Ball.RADIUS > WORLD_SIZE_X)
         {
-            g_audio.PlaySound(this.m_ballBoundsSFX);
+            g_audio.PlaySound(this.m_ballBoundsSFX, false, MathUtils.RangeMapClamped(this.m_ball.m_velocity.GetLength(), 0.0, Ball.MASS * Ball.MAX_VELOCITY, 0.0, 1.0));
             this.m_ball.m_position.x = WORLD_SIZE_X - Ball.RADIUS;
             this.m_ball.m_velocity.x = -this.m_ball.m_velocity.x;
         }
         if (this.m_ball.m_position.x - Ball.RADIUS < 0.0)
         {
-            g_audio.PlaySound(this.m_ballBoundsSFX);
+            g_audio.PlaySound(this.m_ballBoundsSFX, false, MathUtils.RangeMapClamped(this.m_ball.m_velocity.GetLength(), 0.0, Ball.MASS * Ball.MAX_VELOCITY, 0.0, 1.0));
             this.m_ball.m_position.x = Ball.RADIUS;
             this.m_ball.m_velocity.x = -this.m_ball.m_velocity.x;
         }
         if (this.m_ball.m_position.y + Ball.RADIUS > WORLD_SIZE_Y)
         {
-            g_audio.PlaySound(this.m_ballBoundsSFX);
+            g_audio.PlaySound(this.m_ballBoundsSFX, false, MathUtils.RangeMapClamped(this.m_ball.m_velocity.GetLength(), 0.0, Ball.MASS * Ball.MAX_VELOCITY, 0.0, 1.0));
             this.m_ball.m_position.y = WORLD_SIZE_Y - Ball.RADIUS;
             this.m_ball.m_velocity.y = -this.m_ball.m_velocity.y;
         }
         if (this.m_ball.m_position.y - Ball.RADIUS < 0.0)
         {
-            g_audio.PlaySound(this.m_ballBoundsSFX);
+            g_audio.PlaySound(this.m_ballBoundsSFX, false, MathUtils.RangeMapClamped(this.m_ball.m_velocity.GetLength(), 0.0, Ball.MASS * Ball.MAX_VELOCITY, 0.0, 1.0));
             this.m_ball.m_position.y = Ball.RADIUS;
             this.m_ball.m_velocity.y = -this.m_ball.m_velocity.y;
         }
@@ -732,10 +717,10 @@ export default class Map
     Render()
     {
         this.RenderField();
+        this.RenderShadows();
         this.RenderCars();
         this.m_ball.Render();
         this.RenderGoals();
-        this.RenderHUD();
     }
 
     RenderField()
@@ -773,6 +758,17 @@ export default class Map
         g_renderer.DrawVertexArray(fieldVerts);
     }
 
+    RenderShadows()
+    {
+        for (let carIndex = 0; carIndex < this.m_cars.length; carIndex++)
+        {
+            this.m_cars[carIndex].RenderShadow();
+        }
+        this.m_ball.RenderShadow();
+        this.m_blueTeamGoal.RenderShadow();
+        this.m_redTeamGoal.RenderShadow();
+    }
+
     RenderCars()
     {
         for (let carIndex = 0; carIndex < this.m_cars.length; carIndex++)
@@ -787,17 +783,69 @@ export default class Map
         this.m_redTeamGoal.Render();
     }
 
-    RenderHUD()
+    UpdateHUD()
     {
-        g_debugRenderSystem.AddScreenText(this.m_blueTeamScore + " - " + this.m_redTeamScore, new Vec2(SCREEN_SIZE_Y * g_aspect * 0.5, SCREEN_SIZE_Y), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
+        if (g_aspect >= 2.0)
+        {
+            let isAnyCarOrBallUnderClockWidget = false;
+            for (let carIndex = 0; carIndex < this.m_cars.length; carIndex++)
+            {
+                if ((this.m_cars[carIndex].m_position.x > WORLD_SIZE_X * 0.5 - WORLD_SIZE_X * 0.15 / g_aspect) && (this.m_cars[carIndex].m_position.x < WORLD_SIZE_X * 0.5 + WORLD_SIZE_X * 0.3 / g_aspect) && (this.m_cars[carIndex].m_position.y < WORLD_SIZE_Y * 0.05))
+                {
+                    isAnyCarOrBallUnderClockWidget = true;
+                    break;
+                }
+            }
+            if ((this.m_ball.m_position.x > WORLD_SIZE_X * 0.5 - WORLD_SIZE_X * 0.15 / g_aspect) && (this.m_ball.m_position.x < WORLD_SIZE_X * 0.5 + WORLD_SIZE_X * 0.3 / g_aspect) && (this.m_ball.m_position.y < WORLD_SIZE_Y * 0.05))
+            {
+                isAnyCarOrBallUnderClockWidget = true;
+            }
+
+            if (isAnyCarOrBallUnderClockWidget)
+            {
+                this.m_game.m_timeWidget.SetBackgroundColor(new Rgba8(TERTIARY_COLOR_VARIANT_DARK.r, TERTIARY_COLOR_VARIANT_DARK.g, TERTIARY_COLOR_VARIANT_DARK.b, 195));
+            }
+            else
+            {
+                this.m_game.m_timeWidget.SetBackgroundColor(TERTIARY_COLOR_VARIANT_DARK);
+            }
+        }
+
+
         if (!this.m_isSuddenDeath)
         {
-            g_debugRenderSystem.AddScreenText(GetTimeStringFromSeconds(this.m_matchTimer.GetRemainingSeconds()), new Vec2(SCREEN_SIZE_Y * g_aspect * 0.5, SCREEN_SIZE_Y - 20.0), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
+            this.m_game.m_timeWidget.SetText(GetTimeStringFromSeconds(this.m_matchTimer.GetRemainingSeconds()));
         }
-        else
+
+        if (this.m_matchTimer.GetRemainingSeconds() <= 30.0 && this.m_clockBlinkTimer.IsStopped())
         {
-            g_debugRenderSystem.AddScreenText("Sudden Death!", new Vec2(SCREEN_SIZE_Y * g_aspect * 0.5, SCREEN_SIZE_Y - 20.0), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
+            this.m_clockBlinkTimer.Start();
         }
+
+        if (!this.m_clockBlinkTimer.IsStopped())
+        {
+            while (this.m_clockBlinkTimer.DecrementDurationIfElapsed())
+            {
+                if (this.m_game.m_timeWidget.m_color.Equals(Rgba8.WHITE))
+                {
+                    this.m_game.m_timeWidget.SetColor(Rgba8.RED);
+                }
+                else
+                {
+                    this.m_game.m_timeWidget.SetColor(Rgba8.WHITE);
+                }
+            }
+        }
+
+        // g_debugRenderSystem.AddScreenText(this.m_blueTeamScore + " - " + this.m_redTeamScore, new Vec2(SCREEN_SIZE_Y * g_aspect * 0.5, SCREEN_SIZE_Y), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
+        // if (!this.m_isSuddenDeath)
+        // {
+        //     g_debugRenderSystem.AddScreenText(GetTimeStringFromSeconds(this.m_matchTimer.GetRemainingSeconds()), new Vec2(SCREEN_SIZE_Y * g_aspect * 0.5, SCREEN_SIZE_Y - 20.0), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
+        // }
+        // else
+        // {
+        //     g_debugRenderSystem.AddScreenText("Sudden Death!", new Vec2(SCREEN_SIZE_Y * g_aspect * 0.5, SCREEN_SIZE_Y - 20.0), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
+        // }
     }
 
     ResetCarsAndBall()
@@ -834,10 +882,12 @@ export default class Map
         if (team === Team.BLUE)
         {
             this.m_blueTeamScore++;
+            this.m_game.m_blueTeamScoreWidget.SetText(this.m_blueTeamScore.toString());
         }
         else if (team === Team.RED)
         {
             this.m_redTeamScore++;
+            this.m_game.m_redTeamScoreWidget.SetText(this.m_redTeamScore.toString());
         }
 
         if (this.m_isSuddenDeath)
@@ -855,6 +905,7 @@ export default class Map
             {
                 this.m_matchTimer.Stop();
                 this.m_isSuddenDeath = true;
+                this.m_game.m_timeWidget.SetText("Sudden Death!");
             }
             else
             {

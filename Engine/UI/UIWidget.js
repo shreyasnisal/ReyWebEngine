@@ -427,6 +427,10 @@ export default class UIWidget
     SetClickEventName(clickEventName)
     {
         this.m_clickEventName = clickEventName;
+        if (this.m_uiSystem.GetLastHoveredWidget() == null && this.m_visible && this.m_hasFocus)
+        {
+            this.m_uiSystem.SetLastHoveredWidget(this);
+        }
         return this;
     }
 
