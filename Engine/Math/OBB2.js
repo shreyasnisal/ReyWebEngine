@@ -18,10 +18,12 @@ export default class OBB2
     {
         const jBasisNormal = this.m_iBasisNormal.GetRotated90Degrees();
         const cornerPoints = [];
-        cornerPoints[0] = this.m_center.GetDifference(this.m_iBasisNormal.GetScaled(this.m_halfDimensions.x)).GetDifference(jBasisNormal.GetScaled(this.m_halfDimensions.y));
-        cornerPoints[1] = this.m_center.GetSum(this.m_iBasisNormal.GetScaled(this.m_halfDimensions.x)).GetDifference(jBasisNormal.GetScaled(this.m_halfDimensions.y));
-        cornerPoints[2] = this.m_center.GetSum(this.m_iBasisNormal.GetScaled(this.m_halfDimensions.x)).GetSum(jBasisNormal.GetScaled(this.m_halfDimensions.y));
-        cornerPoints[3] = this.m_center.GetDifference(this.m_iBasisNormal.GetScaled(this.m_halfDimensions.x)).GetSum(jBasisNormal.GetScaled(this.m_halfDimensions.y));
+        const iStep = this.m_iBasisNormal.GetScaled(this.m_halfDimensions.x);
+        const jStep = jBasisNormal.GetScaled(this.m_halfDimensions.y);
+        cornerPoints[0] = this.m_center.GetDifference(iStep).GetDifference(jStep);
+        cornerPoints[1] = this.m_center.GetSum(iStep).GetDifference(jStep);
+        cornerPoints[2] = this.m_center.GetSum(iStep).GetSum(jStep);
+        cornerPoints[3] = this.m_center.GetDifference(iStep).GetSum(jStep);
         return cornerPoints;
     }
 

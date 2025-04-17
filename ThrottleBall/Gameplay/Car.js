@@ -1,12 +1,13 @@
 "use strict";
 
-import { GetTeamColor } from "/ThrottleBall/Framework/GameCommon.js";
+import {GetTeamColor, SHADOW_COLOR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y} from "/ThrottleBall/Framework/GameCommon.js";
 
 import {g_debugRenderSystem, g_renderer} from "/Engine/Core/EngineCommon.js";
 
 import * as VertexUtils from "/Engine/Core/VertexUtils.js";
 import Rgba8 from "/Engine/Core/Rgba8.js";
 
+import AABB2 from "/Engine/Math/AABB2.js";
 import * as MathUtils from "/Engine/Math/MathUtils.js";
 import OBB2 from "/Engine/Math/OBB2.js";
 import Vec2 from "/Engine/Math/Vec2.js";
@@ -17,23 +18,23 @@ import { BlendMode, CullMode, DepthMode } from "/Engine/Renderer/Renderer.js";
 export default class Car
 {
     // To change friction, change only the COEFFICIENTS!
-    static ROLLING_FRICTION_COEFFICIENT = 0.01;
-    static FRONT_WHEEL_SLIDING_FRICTION_COEFFICIENT = 0.1;
-    static BACK_WHEEL_SLIDING_FRICTION_COEFFICIENT = 0.05;
-    static MAX_ACCELERATION = 60.0;
-    static MAX_DECELERATION = 60.0;
+    static ROLLING_FRICTION_COEFFICIENT = 0.025;
+    static FRONT_WHEEL_SLIDING_FRICTION_COEFFICIENT = 0.25;
+    static BACK_WHEEL_SLIDING_FRICTION_COEFFICIENT = 0.2;
+    static MAX_ACCELERATION = 150.0;
+    static MAX_DECELERATION = 100.0;
     static FRAME_LENGTH = 10.0;
     static MASS = 100.0;
-    static FRONT_WHEEL_TURN_RATE = 45.0;
+    static FRONT_WHEEL_TURN_RATE = 60.0;
     static MAX_FRONT_WHEEL_ANGULAR_OFFSET = 60.0;
-    static ELASTICITY = 0.8;
+    static ELASTICITY = 0.9;
 
     // Don't change these values
     static ROLLING_FRICTION = Car.ROLLING_FRICTION_COEFFICIENT * 60.0;
     static FRONT_WHEEL_SLIDING_FRICTION = Car.FRONT_WHEEL_SLIDING_FRICTION_COEFFICIENT * 60.0;
     static BACK_WHEEL_SLIDING_FRICTION = Car.BACK_WHEEL_SLIDING_FRICTION_COEFFICIENT * 60.0;
 
-    constructor(map, position, orientation, controller, team)
+    constructor(map, position, orientation, controller, team, texturePath)
     {
         this.m_map = map;
 
@@ -50,6 +51,12 @@ export default class Car
 
         this.m_acceleration = new Vec2(0.0, 0.0);
         this.m_texture = null;
+        if (texturePath != null)
+        {
+            g_renderer.CreateOrGetTextureFromFile(texturePath).then(loadedTexture => {
+                this.m_texture = loadedTexture;
+            });
+        }
 
         this.m_frontWheelRelativeAngularOffset = 0.0;
     }
@@ -132,7 +139,11 @@ export default class Car
     Render()
     {
         const carVerts = [];
-        VertexUtils.AddPCUVertsForOBB2(carVerts, new OBB2(this.m_position, this.GetForwardNormal(), new Vec2(Car.FRAME_LENGTH * 0.5, Car.FRAME_LENGTH * 0.5 * 0.5)), GetTeamColor(this.m_team));
+
+        const shadowPosition = this.m_position.GetSum(Vec2.EAST.GetScaled(SHADOW_OFFSET_X)).GetSum(Vec2.SOUTH.GetScaled(SHADOW_OFFSET_Y));
+        VertexUtils.AddPCUVertsForOBB2(carVerts, new OBB2(shadowPosition, this.GetForwardNormal(), new Vec2(Car.FRAME_LENGTH * 0.5, Car.FRAME_LENGTH * 0.5 * 0.5)), SHADOW_COLOR);
+
+        VertexUtils.AddPCUVertsForOBB2(carVerts, new OBB2(this.m_position, this.GetForwardNormal(), new Vec2(Car.FRAME_LENGTH * 0.5, Car.FRAME_LENGTH * 0.5 * 0.5)));
         g_renderer.BindShader(null);
         g_renderer.SetBlendMode(BlendMode.ALPHA);
         g_renderer.SetCullMode(CullMode.BACK);
@@ -165,8 +176,6 @@ export default class Car
         g_renderer.SetModelConstants();
         g_renderer.BindTexture(null);
         g_renderer.DrawVertexArray(debugCarVerts);
-
-        // g_debugRenderSystem.AddMessage("[Car]:\tPosition = " + this.m_position + "\tFront Axle Velocity = " + this.m_frontAxleVelocity + "\tBack Axle Velocity = " + this.m_backAxleVelocity, 0.0, GetTeamColor(this.m_team));
     }
 
     GetForwardNormal()

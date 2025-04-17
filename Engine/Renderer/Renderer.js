@@ -59,6 +59,12 @@ export class DepthMode
     static DISABLED = "DISABLED";
 }
 
+export class SamplerMode
+{
+    static POINT_CLAMP = "POINT_CLAMP";
+    static BILINEAR_WRAP = "BILINEAR_WRAP";
+}
+
 export class RenderConfig
 {
     constructor()
@@ -95,6 +101,8 @@ export default class Renderer
         this.m_desiredCullMode = CullMode.BACK;
         this.m_currentDepthMode = null;
         this.m_desiredDepthMode = DepthMode.ENABLED;
+        this.m_currentSamplerMode = null;
+        this.m_desiredSamplerMode = SamplerMode.POINT_CLAMP;
 
         this.m_currentShader = null;
         this.m_defaultShader = null;
@@ -128,6 +136,24 @@ export default class Renderer
         // Enable blending
         // Changing blend mode is just changing the blend function
         this.m_context.enable(this.m_context.BLEND);
+
+        this.CreateSamplers();
+        this.m_context.bindSampler(0, this.m_pointClampSampler);
+    }
+
+    CreateSamplers()
+    {
+        this.m_pointClampSampler = this.m_context.createSampler();
+        this.m_context.samplerParameterf(this.m_pointClampSampler, this.m_context.TEXTURE_MIN_FILTER, this.m_context.NEAREST);
+        this.m_context.samplerParameterf(this.m_pointClampSampler, this.m_context.TEXTURE_MAG_FILTER, this.m_context.NEAREST);
+        this.m_context.samplerParameterf(this.m_pointClampSampler, this.m_context.TEXTURE_WRAP_S, this.m_context.CLAMP_TO_EDGE);
+        this.m_context.samplerParameterf(this.m_pointClampSampler, this.m_context.TEXTURE_WRAP_T, this.m_context.CLAMP_TO_EDGE);
+
+        this.m_biliearWrapSampler = this.m_context.createSampler();
+        this.m_context.samplerParameterf(this.m_biliearWrapSampler, this.m_context.TEXTURE_MIN_FILTER, this.m_context.LINEAR);
+        this.m_context.samplerParameterf(this.m_biliearWrapSampler, this.m_context.TEXTURE_MAG_FILTER, this.m_context.LINEAR);
+        this.m_context.samplerParameterf(this.m_biliearWrapSampler, this.m_context.TEXTURE_WRAP_S, this.m_context.REPEAT);
+        this.m_context.samplerParameterf(this.m_biliearWrapSampler, this.m_context.TEXTURE_WRAP_T, this.m_context.REPEAT);
     }
 
     BeginFrame()
@@ -370,16 +396,17 @@ export default class Renderer
         this.m_desiredBlendMode = blendMode;
     }
 
+    SetSamplerMode(samplerMode)
+    {
+        this.m_desiredSamplerMode = samplerMode;
+    }
+
     SetStatesIfChanged()
     {
-        // Set Blend mode if changed
         this.SetBlendModeIfChanged();
-
-        // Set Cull mode if changed
         this.SetCullModeIfChanged();
-
-        // Set Depth mode if changed
         this.SetDepthModeIfChanged();
+        this.SetSamplerModeIfChanged();
     }
 
     SetBlendModeIfChanged()
@@ -447,6 +474,25 @@ export default class Renderer
         }
 
         this.m_currentDepthMode = this.m_desiredDepthMode;
+    }
+
+    SetSamplerModeIfChanged()
+    {
+        if (this.m_currentSamplerMode === this.m_desiredSamplerMode)
+        {
+            return;
+        }
+
+        if (this.m_desiredSamplerMode === SamplerMode.POINT_CLAMP)
+        {
+            this.m_context.bindSampler(0, this.m_pointClampSampler);
+        }
+        else if (this.m_desiredSamplerMode === SamplerMode.BILINEAR_WRAP)
+        {
+            this.m_context.bindSampler(0, this.m_biliearWrapSampler);
+        }
+
+        this.m_currentSamplerMode = this.m_desiredSamplerMode;
     }
 
     async CreateOrGetTextureFromFile(filename)

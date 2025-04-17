@@ -15,7 +15,7 @@ import {
     SECONDARY_COLOR_VARIANT_DARK,
     TERTIARY_COLOR,
     TERTIARY_COLOR_VARIANT_LIGHT,
-    TERTIARY_COLOR_VARIANT_DARK
+    TERTIARY_COLOR_VARIANT_DARK, ASPECT, NUM_CAR_CHOICES, CAR_IMAGE_PATHS, GetTeamFromCarImageIndex, GetTeamString
 } from "/ThrottleBall/Framework/GameCommon.js";
 
 import {SubscribeButtonEvents} from "/ThrottleBall/Framework/ButtonEvents.js";
@@ -40,6 +40,8 @@ import Rgba8 from "/Engine/Core/Rgba8.js";
 import Stopwatch from "/Engine/Core/Stopwatch.js"
 import * as VertexUtils from "/Engine/Core/VertexUtils.js";
 
+import { XboxButtonID } from "/Engine/Input/XboxController.js";
+
 import AABB2 from "/Engine/Math/AABB2.js";
 import * as MathUtils from "/Engine/Math/MathUtils.js";
 import Vec2 from "/Engine/Math/Vec2.js";
@@ -48,6 +50,13 @@ import Camera from "/Engine/Renderer/Camera.js";
 import { BlendMode, CullMode, DepthMode, g_aspect, VertexType } from "/Engine/Renderer/Renderer.js";
 
 import * as DOM from "/Engine/Window/DomManager.js";
+
+export class PlayerState
+{
+    static NOT_JOINED = 0;
+    static JOINED = 1;
+    static READY = 2;
+}
 
 
 export class GameState
@@ -88,6 +97,8 @@ export default class Game
         this.m_nextState = GameState.NONE;
 
         this.m_players = [];
+        this.m_playerCarChoiceIndexes = [];
+        this.m_playerStatus = [];
         this.m_map = null;
 
         this.SetGlobalRendererSettings();
@@ -108,7 +119,6 @@ export default class Game
 
     LoadAssets()
     {
-        this.m_testSound = g_audio.CreateSound("/ThrottleBall/Data/Audio/TestSound.mp3");
     }
 
     InitializeUI()
@@ -143,7 +153,7 @@ export default class Game
             .SetColor(new Rgba8(255, 255, 255, 255));
 
         const attractTextWidget = g_ui.CreateWidget(this.m_attractWidget);
-        attractTextWidget.SetText("Click anywhere on the screen, then Spacebar to Start...")
+        attractTextWidget.SetText("Connect a controller and press A to Start...")
             .SetPosition(new Vec2(0.5, 0.1))
             .SetDimensions(new Vec2(0.5, 0.5))
             .SetPivot(new Vec2(0.5, 0.5))
@@ -173,12 +183,122 @@ export default class Game
             .SetColor(TERTIARY_COLOR)
             .SetHoverColor(TERTIARY_COLOR_VARIANT_LIGHT)
             .SetBorderRadius(0.5)
-            .SetClickEventName("Navigate target=" + GameState.MENU);
+            .SetClickEventName("navigate target=" + GameState.MENU);
     }
 
     InitializeLobbyUI()
     {
+        this.m_lobbyWidget = g_ui.CreateWidget();
+        this.m_lobbyWidget.SetPosition(new Vec2(0.0, 0.0))
+            .SetDimensions(new Vec2(1.0, 1.0))
+            .SetBackgroundColor(new Rgba8(0, 0, 0, 0))
+            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 0))
+            .SetVisible(false);
 
+        this.m_playerLobbyWidgets = [];
+        this.m_playerJoinInfoTextWidgets = [];
+        this.m_playerCarWidgets = [];
+        this.m_playerTeamTextWidgets = [];
+        this.m_playerTeamWidgets = [];
+
+        //-----------------------------------------------------------------------------
+        // Player 1
+        //-----------------------------------------------------------------------------
+
+        this.m_playerLobbyWidgets[0] = g_ui.CreateWidget(this.m_lobbyWidget);
+        this.m_playerLobbyWidgets[0].SetPosition(new Vec2(0.0, 0.75))
+            .SetDimensions(new Vec2(1.0, 0.25))
+            .SetBackgroundColor(new Rgba8(0, 0, 0, 255))
+            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 255));
+
+        this.CreateLobbyWidgetsForPlayerIndexParentedToWidget(0, this.m_playerLobbyWidgets[0]);
+
+        //-----------------------------------------------------------------------------
+        // Player 2
+        //-----------------------------------------------------------------------------
+
+        this.m_playerLobbyWidgets[1] = g_ui.CreateWidget(this.m_lobbyWidget);
+        this.m_playerLobbyWidgets[1].SetPosition(new Vec2(0.0, 0.5))
+            .SetDimensions(new Vec2(1.0, 0.25))
+            .SetBackgroundColor(new Rgba8(0, 0, 0, 255))
+            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 255));
+
+        this.CreateLobbyWidgetsForPlayerIndexParentedToWidget(1, this.m_playerLobbyWidgets[1]);
+
+
+        //-----------------------------------------------------------------------------
+        // Player 3
+        //-----------------------------------------------------------------------------
+
+        this.m_playerLobbyWidgets[2] = g_ui.CreateWidget(this.m_lobbyWidget);
+        this.m_playerLobbyWidgets[2].SetPosition(new Vec2(0.0, 0.25))
+            .SetDimensions(new Vec2(1.0, 0.25))
+            .SetBackgroundColor(new Rgba8(0, 0, 0, 255))
+            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 255));
+
+        this.CreateLobbyWidgetsForPlayerIndexParentedToWidget(2, this.m_playerLobbyWidgets[2]);
+
+        //-----------------------------------------------------------------------------
+        // Player 4
+        //-----------------------------------------------------------------------------
+
+        this.m_playerLobbyWidgets[3] = g_ui.CreateWidget(this.m_lobbyWidget);
+        this.m_playerLobbyWidgets[3].SetPosition(new Vec2(0.0, 0.0))
+            .SetDimensions(new Vec2(1.0, 0.25))
+            .SetBackgroundColor(new Rgba8(0, 0, 0, 255))
+            .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 255));
+
+        this.CreateLobbyWidgetsForPlayerIndexParentedToWidget(3, this.m_playerLobbyWidgets[3]);
+    }
+
+    CreateLobbyWidgetsForPlayerIndexParentedToWidget(playerIndex, parentWidget)
+    {
+        const player2TextWidget = g_ui.CreateWidget(parentWidget);
+        player2TextWidget.SetText("Player " + (playerIndex + 1))
+            .SetPosition(new Vec2(0.0, 1.0))
+            .SetDimensions(new Vec2(0.3, 1.0))
+            .SetPivot(new Vec2(0.0, 0.5))
+            .SetAlignment(new Vec2(0.05, 0.0))
+            .SetColor(Rgba8.WHITE)
+            .SetFontSize(4.0);
+
+        this.m_playerJoinInfoTextWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
+        this.m_playerJoinInfoTextWidgets[playerIndex].SetText("Connect a controller to join!")
+            .SetPosition(new Vec2(0.0, 0.6))
+            .SetDimensions(new Vec2(0.3, 1.0))
+            .SetPivot(new Vec2(0.0, 0.5))
+            .SetAlignment(new Vec2(0.05, 0.0))
+            .SetColor(Rgba8.WHITE)
+            .SetFontSize(2.0);
+
+        this.m_playerCarWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
+        this.m_playerCarWidgets[playerIndex].SetImage(CAR_IMAGE_PATHS[0])
+            .SetPosition(new Vec2(0.3, 0.5))
+            .SetDimensions(new Vec2(0.3, 0.5))
+            .SetPivot(new Vec2(0.0, 0.5))
+            .SetAlignment(new Vec2(0.0, 0.0))
+            .SetColor(Rgba8.WHITE)
+            .SetVisible(false);
+
+        this.m_playerTeamTextWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
+        this.m_playerTeamTextWidgets[playerIndex] .SetText("Team")
+            .SetPosition(new Vec2(0.6, 1.0))
+            .SetDimensions(new Vec2(0.3, 1.0))
+            .SetPivot(new Vec2(0.0, 0.5))
+            .SetAlignment(new Vec2(0.05, 0.0))
+            .SetColor(Rgba8.WHITE)
+            .SetFontSize(4.0)
+            .SetVisible(false);
+
+        this.m_playerTeamWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
+        this.m_playerTeamWidgets[playerIndex].SetText(GetTeamString(GetTeamFromCarImageIndex(0)))
+            .SetPosition(new Vec2(0.65, 1.0))
+            .SetDimensions(new Vec2(0.3, 1.0))
+            .SetPivot(new Vec2(0.0, 0.5))
+            .SetAlignment(new Vec2(0.05, 0.0))
+            .SetColor(GetTeamColor(GetTeamFromCarImageIndex(0)))
+            .SetFontSize(4.0)
+            .SetVisible(false);
     }
 
     InitializeGameUI()
@@ -213,13 +333,45 @@ export default class Game
         }
 
         this.HandleStateChange();
+        this.UpdateCameras();
+    }
+
+    UpdateCameras()
+    {
+        if (g_aspect > ASPECT)
+        {
+            // Need pillarbox borders
+
+            // Calculate for world camera
+            const windowWorldWidth = WORLD_SIZE_Y * g_aspect;
+            const deltaWorldWidth = windowWorldWidth - WORLD_SIZE_X;
+            this.m_worldCamera.SetOrthoView(Vec2.ZERO.GetSum(Vec2.WEST.GetScaled(deltaWorldWidth * 0.5)), new Vec2(WORLD_SIZE_X + deltaWorldWidth * 0.5, WORLD_SIZE_Y));
+        }
+        else if (g_aspect < ASPECT)
+        {
+            // Need letterbox borders
+            const windowWorldHeight = WORLD_SIZE_X / g_aspect;
+            const deltaWorldHeight = windowWorldHeight - WORLD_SIZE_Y;
+            this.m_worldCamera.SetOrthoView(Vec2.ZERO.GetSum(Vec2.SOUTH.GetScaled(deltaWorldHeight * 0.5)), new Vec2(WORLD_SIZE_X, WORLD_SIZE_Y + deltaWorldHeight * 0.5));
+        }
+        else
+        {
+            // Remove all borders, aspects are exactly equal
+            this.m_worldCamera.SetOrthoView(Vec2.ZERO, new Vec2(WORLD_SIZE_X, WORLD_SIZE_Y));
+        }
+        this.m_screenCamera.SetOrthoView(Vec2.ZERO, new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y));
     }
 
     Update_Attract()
     {
-        if (g_input.WasKeyJustPressed("Space"))
+        const numConnectedControllers = g_input.m_gamepads.length;
+        for (let controllerIndex = 0; controllerIndex < numConnectedControllers; controllerIndex++)
         {
-            this.m_nextState = GameState.MENU;
+            const controller = g_input.GetController(controllerIndex);
+            if (controller.WasButtonJustPressed(XboxButtonID.A))
+            {
+                this.m_nextState = GameState.LOBBY;
+            }
         }
     }
 
@@ -248,14 +400,126 @@ export default class Game
         {
             this.m_nextState = GameState.GAME;
         }
-        const screenCenter = new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y).GetScaled(0.5);
-        g_debugRenderSystem.AddScreenText("Lobby\nPress Space to Start", screenCenter, 40.0, new Vec2(0.5, 0.5), 0.0, Rgba8.WHITE, Rgba8.WHITE);
+
+        const numConnectedControllers = g_input.m_gamepads.length;
+
+        this.HandleLobbyInputsForController(0);
+        this.HandleLobbyInputsForController(1);
+        this.HandleLobbyInputsForController(2);
+        this.HandleLobbyInputsForController(3);
+    }
+
+    HandleLobbyInputsForController(controllerIndex)
+    {
+        if (controllerIndex >= g_input.m_gamepads.length)
+        {
+            return;
+        }
+
+        if (!this.m_playerStatus[controllerIndex])
+        {
+            this.m_playerStatus[controllerIndex] = PlayerState.NOT_JOINED;
+            this.m_playerJoinInfoTextWidgets[controllerIndex].SetText("Press A to join");
+        }
+
+        const controller = g_input.GetController(controllerIndex);
+
+        if (controller.WasButtonJustPressed(XboxButtonID.LEFT_SHOULDER) && this.m_playerStatus[controllerIndex] === PlayerState.JOINED)
+        {
+            this.m_playerCarChoiceIndexes[controllerIndex]--;
+            if (this.m_playerCarChoiceIndexes[controllerIndex] < 0)
+            {
+                this.m_playerCarChoiceIndexes[controllerIndex] = NUM_CAR_CHOICES - 1;
+            }
+            this.m_playerCarWidgets[controllerIndex].SetImage(CAR_IMAGE_PATHS[this.m_playerCarChoiceIndexes[controllerIndex]]);
+            this.m_players[controllerIndex].m_team = GetTeamFromCarImageIndex(this.m_playerCarChoiceIndexes[controllerIndex]);
+            this.m_playerTeamWidgets[controllerIndex]
+                .SetText(GetTeamString(this.m_players[controllerIndex].m_team))
+                .SetColor(GetTeamColor(this.m_players[controllerIndex].m_team));
+        }
+        if (controller.WasButtonJustPressed(XboxButtonID.RIGHT_SHOULDER) && this.m_playerStatus[controllerIndex] === PlayerState.JOINED)
+        {
+            this.m_playerCarChoiceIndexes[controllerIndex]++;
+            if (this.m_playerCarChoiceIndexes[controllerIndex] === NUM_CAR_CHOICES)
+            {
+                this.m_playerCarChoiceIndexes[controllerIndex] = 0;
+            }
+            this.m_playerCarWidgets[controllerIndex].SetImage(CAR_IMAGE_PATHS[this.m_playerCarChoiceIndexes[controllerIndex]]);
+            this.m_players[controllerIndex].m_team = GetTeamFromCarImageIndex(this.m_playerCarChoiceIndexes[controllerIndex]);
+            this.m_playerTeamWidgets[controllerIndex]
+                .SetText(GetTeamString(this.m_players[controllerIndex].m_team))
+                .SetColor(GetTeamColor(this.m_players[controllerIndex].m_team));
+        }
+        if (controller.WasButtonJustPressed(XboxButtonID.A))
+        {
+            if (this.m_playerStatus[controllerIndex] === PlayerState.NOT_JOINED)
+            {
+                this.m_playerJoinInfoTextWidgets[controllerIndex].SetText("Press A when Ready!");
+                this.SetWidgetsVisibleForPlayer(controllerIndex);
+                this.m_players[controllerIndex] = new PlayerController(controllerIndex);
+                this.m_playerCarChoiceIndexes[controllerIndex] = 0;
+                this.m_playerStatus[controllerIndex] = PlayerState.JOINED;
+            }
+            else if (this.m_playerStatus[controllerIndex] === PlayerState.JOINED)
+            {
+                this.m_playerStatus[controllerIndex] = PlayerState.READY;
+                this.m_playerJoinInfoTextWidgets[controllerIndex].SetText("Ready!");
+            }
+            else
+            {
+                // Check if all players are ready
+                let areAllPlayersReady = true;
+                for (let playerIndex = 0; playerIndex < this.m_players.length; playerIndex++)
+                {
+                    if (this.m_playerStatus[playerIndex] === PlayerState.JOINED)
+                    {
+                        areAllPlayersReady = false;
+                        break;
+                    }
+                }
+                if (areAllPlayersReady)
+                {
+                    this.m_nextState = GameState.GAME;
+                }
+            }
+        }
+        if (controller.WasButtonJustPressed(XboxButtonID.B) && this.m_playerStatus[controllerIndex] === PlayerState.READY)
+        {
+            this.m_playerStatus[controllerIndex] = PlayerState.JOINED;
+            this.m_playerJoinInfoTextWidgets[controllerIndex].SetText("Press A when Ready!");
+        }
+        else if (controller.WasButtonJustPressed(XboxButtonID.B) && this.m_playerStatus[controllerIndex] === PlayerState.JOINED)
+        {
+            this.m_playerStatus[controllerIndex] = PlayerState.NOT_JOINED;
+            this.m_players.splice(controllerIndex, 1);
+            this.m_playerCarChoiceIndexes.splice(controllerIndex, 1);
+            this.SetWidgetsHiddenForPlayer(controllerIndex);
+        }
+    }
+
+    SetWidgetsVisibleForPlayer(playerIndex)
+    {
+        this.m_playerCarWidgets[playerIndex].SetVisible(true);
+        this.m_playerTeamTextWidgets[playerIndex].SetVisible(true);
+        this.m_playerTeamWidgets[playerIndex].SetVisible(true);
+    }
+
+    SetWidgetsHiddenForPlayer(playerIndex)
+    {
+        this.m_playerCarWidgets[playerIndex].SetVisible(false);
+        this.m_playerTeamTextWidgets[playerIndex].SetVisible(false);
+        this.m_playerTeamWidgets[playerIndex].SetVisible(false);
     }
 
     Update_Game()
     {
         for (let playerIndex = 0; playerIndex < this.m_players.length; playerIndex++)
         {
+                if (this.m_players[playerIndex] == null)
+                {
+                    continue;
+                }
+
             this.m_players[playerIndex].HandleMovementInput();
         }
         this.m_map.Update();
@@ -263,15 +527,15 @@ export default class Game
 
     Update_MatchEnd()
     {
-        let messageColor = GetTeamColor(Team.PURPLE);
-        let messageText = "Purple Team Won!";
+        let messageColor = GetTeamColor(Team.RED);
+        let messageText = "Red Team Won!";
 
-        if (this.m_map.m_pinkTeamScore > this.m_map.m_purpleTeamScore)
+        if (this.m_map.m_blueTeamScore > this.m_map.m_redTeamScore)
         {
-            messageColor = GetTeamColor(Team.PINK);
-            messageText = "Pink Team Won!";
+            messageColor = GetTeamColor(Team.BLUE);
+            messageText = "Blue Team Won!";
         }
-        messageText += "\n" + this.m_map.m_pinkTeamScore + "-" + this.m_map.m_purpleTeamScore;
+        messageText += "\n" + this.m_map.m_blueTeamScore + "-" + this.m_map.m_redTeamScore;
         const screenCenter = new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y).GetScaled(0.5);
         g_debugRenderSystem.AddScreenText(messageText, screenCenter, 40.0, new Vec2(0.5, 0.5), 0.0, messageColor, messageColor);
     }
@@ -297,11 +561,6 @@ export default class Game
         if (g_input.WasKeyJustReleased('T'))
         {
             this.m_clock.SetTimeScale(1.0);
-        }
-
-        if (g_input.WasKeyJustPressed('Y'))
-        {
-            g_audio.PlaySound(this.m_testSound);
         }
     }
 
@@ -367,6 +626,21 @@ export default class Game
         g_renderer.BeginCamera(this.m_worldCamera);
         {
             this.m_map.Render();
+
+            // Render letterbox/pillarbox borders last
+            const borderVerts = [];
+            VertexUtils.AddPCUVertsForAABB2(borderVerts, new AABB2(new Vec2(this.m_worldCamera.GetOrthoBottomLeft().x, this.m_worldCamera.GetOrthoBottomLeft().y), new Vec2(this.m_worldCamera.GetOrthoTopRight().x, 0.0)), TERTIARY_COLOR);
+            VertexUtils.AddPCUVertsForAABB2(borderVerts, new AABB2(new Vec2(this.m_worldCamera.GetOrthoBottomLeft().x, this.m_worldCamera.GetOrthoBottomLeft().y), new Vec2(0.0, this.m_worldCamera.GetOrthoTopRight().y)), TERTIARY_COLOR);
+            VertexUtils.AddPCUVertsForAABB2(borderVerts, new AABB2(new Vec2(WORLD_SIZE_X, 0.0), new Vec2(this.m_worldCamera.GetOrthoTopRight().x, this.m_worldCamera.GetOrthoTopRight().y)), TERTIARY_COLOR);
+            VertexUtils.AddPCUVertsForAABB2(borderVerts, new AABB2(new Vec2(0.0, WORLD_SIZE_Y), new Vec2(this.m_worldCamera.GetOrthoTopRight().x, this.m_worldCamera.GetOrthoTopRight().y)), TERTIARY_COLOR);
+            g_renderer.BindShader(null);
+            g_renderer.SetBlendMode(BlendMode.ALPHA);
+            g_renderer.SetCullMode(CullMode.BACK);
+            g_renderer.SetDepthMode(DepthMode.DISABLED);
+            g_renderer.SetModelConstants();
+            g_renderer.BindTexture(null);
+            g_renderer.DrawVertexArray(borderVerts);
+
         }
         g_renderer.EndCamera(this.m_worldCamera);
     }
@@ -428,16 +702,14 @@ export default class Game
 
     Enter_Lobby()
     {
-        // Create all players
-        this.m_players.push(new PlayerController(0));
-        this.m_players.push(new PlayerController(1));
-        this.m_players.push(new PlayerController(2));
-        this.m_players.push(new PlayerController(3));
+        this.m_lobbyWidget.SetVisible(true);
+        this.m_lobbyWidget.SetFocus(true);
     }
 
     Exit_Lobby()
     {
-
+        this.m_lobbyWidget.SetVisible(false);
+        this.m_lobbyWidget.SetFocus(false);
     }
 
     Enter_Game()

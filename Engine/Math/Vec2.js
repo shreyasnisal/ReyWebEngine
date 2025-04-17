@@ -7,6 +7,7 @@ import Vec3 from "/Engine/Math/Vec3.js";
 export default class Vec2
 {
     static ZERO = Object.freeze(new Vec2(0, 0));
+    static ONE = Object.freeze(new Vec2(1, 1));
     static EAST = Object.freeze(new Vec2(1, 0));
     static WEST = Object.freeze(new Vec2(-1, 0));
     static NORTH = Object.freeze(new Vec2(0, 1));

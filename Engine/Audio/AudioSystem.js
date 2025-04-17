@@ -35,17 +35,12 @@ export default class AudioSystem
 
     }
 
-    CreateSound(soundFilePath, is3D = false)
+    PlaySound(soundFilePath, isLooped = false, volume = 1.0, speed = 1.0, paused = false)
     {
         const sound = new Audio(soundFilePath);
         sound.controls = false;
         sound.crossOrigin = "anonymous";
 
-        return sound;
-    }
-
-    PlaySound(sound, isLooped = false, volume = 1.0, speed = 1.0, paused = false)
-    {
         sound.loop = isLooped;
         sound.volume = volume;
         sound.playbackRate = speed;

@@ -286,6 +286,16 @@ export function IsPointInsideAABB2(referencePoint, box)
 {
     return (referencePoint.x > box.m_mins.x && referencePoint.x < box.m_maxs.x && referencePoint.y > box.m_mins.y && referencePoint.y < box.m_maxs.y);
 }
+
+export function IsPointInsideOBB2(referencePoint, box)
+{
+    const displacementCenterToPoint = box.m_center.GetDifference(referencePoint);
+    const jBasisNormal = box.m_iBasisNormal.GetRotated90Degrees();
+
+    return (Math.abs(GetProjectedLength2D(displacementCenterToPoint, box.m_iBasisNormal)) < box.m_halfDimensions.x &&
+        Math.abs(GetProjectedLength2D(displacementCenterToPoint, jBasisNormal)) < box.m_halfDimensions.y);
+}
+
 //------------------------------------------------------------------------------------------------------------
 
 // Nearest Points

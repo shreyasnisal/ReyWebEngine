@@ -1,7 +1,11 @@
 "use strict";
 
 import {g_eventSystem, g_renderer} from "/Engine/Core/EngineCommon.js";
+
+import Vec2 from "/Engine/Math/Vec2.js";
+
 import UIWidget from "/Engine/UI/UIWidget.js";
+import {g_aspect} from "/Engine/Renderer/Renderer.js";
 
 
 export class UISystemConfig
@@ -47,6 +51,9 @@ export default class UISystem
         {
             this.m_lastHoveredWidget = null;
         }
+
+        this.m_config.m_camera.SetOrthoView(Vec2.ZERO, new Vec2(g_aspect, 1.0));
+        this.m_rootWidget.SetDimensions(this.m_config.m_camera.m_orthoView.GetDimensions());
         this.m_rootWidget.Update();
     }
 

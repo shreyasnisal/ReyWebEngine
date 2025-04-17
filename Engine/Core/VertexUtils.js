@@ -182,6 +182,33 @@ export function AddPCUVertsForRoundedBox(verts, bounds, borderRadius, color = Rg
     AddPCUVertsForOrientedSector2D(verts, new Vec2(boxBounds.m_maxs.x, boxBounds.m_mins.y), 315.0, 90.0, borderRadius, color);
 }
 
+export function AddPCUVertsForOBB2(verts, box, color = Rgba8.WHITE, uvCoords = AABB2.ZERO_TO_ONE)
+{
+    const vertexPositions = box.GetCornerPoints();
+
+    const vertexBL = new Vertex_PCU(vertexPositions[0].GetAsVec3(), color, new Vec2(uvCoords.m_mins.x, uvCoords.m_mins.y));
+    const vertexBR = new Vertex_PCU(vertexPositions[1].GetAsVec3(), color, new Vec2(uvCoords.m_maxs.x, uvCoords.m_mins.y));
+    const vertexTR = new Vertex_PCU(vertexPositions[2].GetAsVec3(), color, new Vec2(uvCoords.m_maxs.x, uvCoords.m_maxs.y));
+    const vertexTL = new Vertex_PCU(vertexPositions[3].GetAsVec3(), color, new Vec2(uvCoords.m_mins.x, uvCoords.m_maxs.y));
+
+    verts.push(vertexBL);
+    verts.push(vertexBR);
+    verts.push(vertexTR);
+
+    verts.push(vertexBL);
+    verts.push(vertexTR);
+    verts.push(vertexTL);
+}
+
+export function AddPCUVertsForArrow2D(verts, tailPos, tipPos, arrowSize, lineThickness, color)
+{
+    AddPCUVertsForLineSegment2D(verts, tailPos, tipPos, lineThickness, color);
+
+    const arrowDirection = tipPos.GetDifference(tailPos).GetNormalized();
+    AddPCUVertsForLineSegment2D(verts, tipPos, tipPos.GetSum(arrowDirection.GetRotatedDegrees(135.0).GetScaled(arrowSize)), lineThickness, color);
+    AddPCUVertsForLineSegment2D(verts, tipPos, tipPos.GetSum(arrowDirection.GetRotatedDegrees(-135.0).GetScaled(arrowSize)), lineThickness, color);
+}
+
 export function AddPCUVertsForQuad3D(verts, bottomLeftPosition, bottomRightPosition, topRightPosition, topLeftPosition, color = Rgba8.WHITE, uvCoords = AABB2.ZERO_TO_ONE)
 {
     const bottomLeftVertex = new Vertex_PCU(bottomLeftPosition, color, uvCoords.m_mins);
@@ -283,31 +310,4 @@ export function AddPCUVertsForSphere3D(verts, center, radius, color = Rgba8.WHIT
             AddPCUVertsForQuad3D(verts, BL, BR, TR, TL, color, new AABB2(new Vec2(uMin, vMin), new Vec2(uMax, vMax)));
         }
     }
-}
-
-export function AddPCUVertsForOBB2(verts, box, color = Rgba8.WHITE)
-{
-    const vertexPositions = box.GetCornerPoints();
-
-    const vertex1 = new Vertex_PCU(vertexPositions[0].GetAsVec3(), color, Vec2.ZERO);
-    const vertex2 = new Vertex_PCU(vertexPositions[1].GetAsVec3(), color, Vec2.ZERO);
-    const vertex3 = new Vertex_PCU(vertexPositions[2].GetAsVec3(), color, Vec2.ZERO);
-    const vertex4 = new Vertex_PCU(vertexPositions[3].GetAsVec3(), color, Vec2.ZERO);
-
-    verts.push(vertex1);
-    verts.push(vertex2);
-    verts.push(vertex3);
-
-    verts.push(vertex1);
-    verts.push(vertex3);
-    verts.push(vertex4);
-}
-
-export function AddPCUVertsForArrow2D(verts, tailPos, tipPos, arrowSize, lineThickness, color)
-{
-    AddPCUVertsForLineSegment2D(verts, tailPos, tipPos, lineThickness, color);
-
-    const arrowDirection = tipPos.GetDifference(tailPos).GetNormalized();
-    AddPCUVertsForLineSegment2D(verts, tipPos, tipPos.GetSum(arrowDirection.GetRotatedDegrees(135.0).GetScaled(arrowSize)), lineThickness, color);
-    AddPCUVertsForLineSegment2D(verts, tipPos, tipPos.GetSum(arrowDirection.GetRotatedDegrees(-135.0).GetScaled(arrowSize)), lineThickness, color);
 }

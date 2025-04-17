@@ -1,5 +1,7 @@
 "use strict";
 
+import {SHADOW_COLOR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y} from "/ThrottleBall/Framework/GameCommon.js";
+
 import {g_debugRenderSystem, g_renderer} from "/Engine/Core/EngineCommon.js";
 
 import Rgba8 from "/Engine/Core/Rgba8.js";
@@ -8,16 +10,16 @@ import * as VertexUtils from "/Engine/Core/VertexUtils.js";
 import AABB2 from "/Engine/Math/AABB2.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 
-import {BlendMode, CullMode, DepthMode} from "/Engine/Renderer/Renderer.js";
+import {BlendMode, CullMode, DepthMode, SamplerMode} from "/Engine/Renderer/Renderer.js";
 
 
 export default class Ball
 {
     // To change the friction, change ONLY the COEFFICIENTS!
-    static ROLLING_FRICTION_COEFFICIENT = 0.01;
+    static ROLLING_FRICTION_COEFFICIENT = 0.005;
     static RADIUS = 2.0;
     static MASS = 1.0;
-    static ELASTICITY = 0.8;
+    static ELASTICITY = 0.9;
 
     // Don't change these values
     static ROLLING_FRICTION = Ball.ROLLING_FRICTION_COEFFICIENT * 100.0;
@@ -31,10 +33,12 @@ export default class Ball
         this.m_acceleration = new Vec2(0.0, 0.0);
 
         this.m_texture = null;
-        g_renderer.CreateOrGetTextureFromFile("/ThrottleBall/Data/Images/ball_soccer2.png").then(loadedTexture =>
+        g_renderer.CreateOrGetTextureFromFile("/ThrottleBall/Data/Images/Ball.png").then(loadedTexture =>
         {
             this.m_texture = loadedTexture;
         })
+
+        this.m_uvOffset = new Vec2(0.0, 0.0);
     }
 
     Update()
@@ -59,16 +63,26 @@ export default class Ball
 
         // Reset acceleration: Acceleration is accumulated each frame
         this.m_acceleration = new Vec2(0.0, 0.0);
+
+        this.m_uvOffset.Add(this.m_velocity.GetScaled(0.001));
     }
 
     Render()
     {
         const ballVerts = [];
-        VertexUtils.AddPCUVertsForDisc2D(ballVerts, this.m_position, Ball.RADIUS, Rgba8.WHITE, AABB2.ZERO_TO_ONE, 32);
+
+        const uvMins = new Vec2(this.m_uvOffset.x % 2.0, this.m_uvOffset.y % 2.0);
+        const uvMaxs = uvMins.GetSum(new Vec2(2.0, 2.0));
+        const uvs = new AABB2(uvMins, uvMaxs);
+
+        const shadowPosition = this.m_position.GetSum(Vec2.EAST.GetScaled(SHADOW_OFFSET_X)).GetSum(Vec2.SOUTH.GetScaled(SHADOW_OFFSET_Y));
+        VertexUtils.AddPCUVertsForDisc2D(ballVerts, shadowPosition, Ball.RADIUS, SHADOW_COLOR, AABB2.ZERO_TO_ONE, 32);
+        VertexUtils.AddPCUVertsForDisc2D(ballVerts, this.m_position, Ball.RADIUS, Rgba8.WHITE, uvs, 32);
         g_renderer.BindShader(null);
         g_renderer.SetBlendMode(BlendMode.ALPHA);
         g_renderer.SetCullMode(CullMode.BACK);
         g_renderer.SetDepthMode(DepthMode.DISABLED);
+        g_renderer.SetSamplerMode(SamplerMode.BILINEAR_WRAP);
         g_renderer.SetModelConstants();
         g_renderer.BindTexture(this.m_texture);
         g_renderer.DrawVertexArray(ballVerts);
@@ -92,9 +106,6 @@ export default class Ball
         g_renderer.SetModelConstants();
         g_renderer.BindTexture(null);
         g_renderer.DrawVertexArray(ballDebugVerts);
-
-        // Debug Messages
-        // g_debugRenderSystem.AddMessage("[Ball]:\tPosition = " + this.m_position.toString() + "\tVelocity = " + this.m_velocity.toString(), 0.0);
     }
 
     AddForce(force)

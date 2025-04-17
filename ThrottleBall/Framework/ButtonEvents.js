@@ -8,7 +8,7 @@ import {g_eventSystem} from "/Engine/Core/EngineCommon.js";
 
 export function SubscribeButtonEvents()
 {
-    g_eventSystem.SubscribeEventCallbackFunction("Navigate", Event_Navigate);
+    g_eventSystem.SubscribeEventCallbackFunction("navigate", Event_Navigate);
 }
 
 function Event_Navigate(args)

@@ -12,8 +12,8 @@ export default class Vertex_PCU
 
     constructor(position = Vec3.ZERO, color = Rgba8.WHITE, uvTexCoords = Vec2.ZERO)
     {
-        this.m_position = position;
-        this.m_color = color;
-        this.m_uvTexCoords = uvTexCoords;
+        this.m_position = new Vec3(position.x, position.y, position.z);
+        this.m_color = new Rgba8(color.r, color.g, color.b, color.a);
+        this.m_uvTexCoords = new Vec2(uvTexCoords.x, uvTexCoords.y);
     }
 }

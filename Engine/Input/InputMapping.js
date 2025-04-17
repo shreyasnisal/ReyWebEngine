@@ -53,7 +53,11 @@ const InputMapping =
     "F9": "F9",
     "F10": "F10",
     "F11": "F11",
-    "F12": "F12"
+    "F12": "F12",
+    "UP_ARROW": "ArrowUp",
+    "DOWN_ARROW": "ArrowDown",
+    "LEFT_ARROW": "ArrowLeft",
+    "RIGHT_ARROW": "ArrowRight",
 };
 
 export default InputMapping;

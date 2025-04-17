@@ -1,6 +1,7 @@
 "use strict";
 
 import { g_input } from "/Engine/Core/EngineCommon.js";
+import { Team } from "/ThrottleBall/Framework/GameCommon.js";
 
 
 export default class PlayerController
@@ -8,6 +9,7 @@ export default class PlayerController
     constructor(playerID)
     {
         this.m_playerID = playerID;
+        this.m_team = Team.BLUE;
     }
 
     SetCar(car)
