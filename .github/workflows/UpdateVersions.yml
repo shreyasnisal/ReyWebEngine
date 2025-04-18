@@ -66,18 +66,19 @@ jobs:
             PATCH=$(echo "$VERSION" | cut -d. -f3)
             echo "MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
 
-            echo -n "$BUMP_TYPE" | od -c
             BUMP_TYPE=$(echo "$BUMP_TYPE" | xargs)
-
             case "$BUMP_TYPE" in
-              major)
+              "major")
+                echo "🛠 Bumping major version"
                 ((MAJOR++)); MINOR=0; PATCH=0 ;;
-              minor)
+              "minor")
+                echo "🛠 Bumping minor version"
                 ((MINOR++)); PATCH=0 ;;
-              patch)
+              "patch")
+                echo "🛠 Bumping patch version"
                 ((PATCH++)) ;;
-                *)
-                echo "❌ Unknown bump type: $BUMP_TYPE"
+              *)
+                echo "❌ Unknown bump type: '$BUMP_TYPE'"
                 exit 1 ;;
             esac
 
