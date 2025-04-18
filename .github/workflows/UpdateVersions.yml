@@ -57,6 +57,7 @@ jobs:
             fi
 
             VERSION=$(jq -r .version "$VERSION_FILE")
+            echo "Version: $VERSION"
             IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
 
             case "${{ steps.parse.outputs.bump_type }}" in
