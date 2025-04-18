@@ -70,18 +70,18 @@ jobs:
             case "$BUMP_TYPE" in
               "major")
                 echo "🛠 Bumping major version"
-                ((MAJOR++))
+                MAJOR=$((MAJOR+1))
                 MINOR=0; PATCH=0
                 ;;
               "minor")
                 echo "🛠 Bumping minor version"
-                ((MINOR++))
+                MINOR=$((MINOR+1))
                 PATCH=0
                 echo "📈 New minor version: $MINOR"
                 ;;
               "patch")
                 echo "🛠 Bumping patch version"
-                ((PATCH++))
+                PATCH=$((PATCH+1))
                 echo "📈 New patch version: $PATCH"
                 ;;
               *)
