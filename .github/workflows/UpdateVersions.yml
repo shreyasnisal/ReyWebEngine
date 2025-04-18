@@ -70,18 +70,24 @@ jobs:
             case "$BUMP_TYPE" in
               "major")
                 echo "🛠 Bumping major version"
-                ((MAJOR++)); MINOR=0; PATCH=0 ;;
+                ((MAJOR++))
+                MINOR=0; PATCH=0
+                ;;
               "minor")
                 echo "🛠 Bumping minor version"
-                ((MINOR++)); PATCH=0
-                echo "📈 New minor version: $MINOR" ;;
+                ((MINOR++))
+                PATCH=0
+                echo "📈 New minor version: $MINOR"
+                ;;
               "patch")
                 echo "🛠 Bumping patch version"
                 ((PATCH++))
-                echo "📈 New patch version: $PATCH" ;;
+                echo "📈 New patch version: $PATCH"
+                ;;
               *)
                 echo "❌ Unknown bump type: '$BUMP_TYPE'"
-                exit 1 ;;
+                exit 1
+                ;;
             esac
 
             NEW_VERSION="$MAJOR.$MINOR.$PATCH"
