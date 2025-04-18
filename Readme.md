@@ -6,7 +6,9 @@
 
 This is my custom JavaScript game engine, with support for 2D and 3D rendering (WebGL), Virtual Reality (WebXR), OBJ model loading using a custom parser, dev console, event system and more.
 
-An online demo is [available here](https://sandbox.reynisal.com).
+View online demos for games here:
+- [Sandbox](https://sandbox.reynisal.com)
+- [Throttle Ball](https://throttle-ball.reynisal.com)
 
 ## Requirements
 [Node.js](https://nodejs.org/en/download)
