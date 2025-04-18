@@ -42,6 +42,7 @@ import {
 } from "/Engine/Core/EngineCommon.js";
 
 import Clock from "/Engine/Core/Clock.js";
+import * as FileUtils from "/Engine/Core/FileUtils.js";
 import Rgba8 from "/Engine/Core/Rgba8.js";
 import Stopwatch from "/Engine/Core/Stopwatch.js"
 import * as VertexUtils from "/Engine/Core/VertexUtils.js";
@@ -168,6 +169,38 @@ export default class Game
             .SetAlignment(new Vec2(0.5, 0.5))
             .SetColor(new Rgba8(255, 255, 255, 255))
             .SetFontSize(4.0);
+
+        this.m_engineVersion = "";
+        FileUtils.ReadToString("/Engine/version.json").then(versionJson =>
+        {
+            const versionJsonParsed = JSON.parse(versionJson);
+            this.m_engineVersion = versionJsonParsed["version"];
+        })
+
+        this.m_engineVersionWidget = g_ui.CreateWidget(this.m_attractWidget);
+        this.m_engineVersionWidget.SetText("Loading engine version")
+            .SetPosition(new Vec2(0.01, 1.0))
+            .SetDimensions(new Vec2(1.0, 0.05))
+            .SetPivot(new Vec2(0.0, 1.0))
+            .SetAlignment(new Vec2(0.0, 0.5))
+            .SetFontSize(2.0)
+            .SetColor(Rgba8.WHITE);
+
+        this.m_gameVersion = "";
+        FileUtils.ReadToString("/ThrottleBall/version.json").then(versionJson =>
+        {
+            const versionJsonParsed = JSON.parse(versionJson);
+            this.m_gameVersion = versionJsonParsed["version"];
+        })
+
+        this.m_gameVersionWidget = g_ui.CreateWidget(this.m_attractWidget);
+        this.m_gameVersionWidget.SetText("Loading game version")
+            .SetPosition(new Vec2(0.01, 0.975))
+            .SetDimensions(new Vec2(1.0, 0.05))
+            .SetPivot(new Vec2(0.0, 1.0))
+            .SetAlignment(new Vec2(0.0, 0.5))
+            .SetFontSize(2.0)
+            .SetColor(Rgba8.WHITE);
     }
 
     InitializeMenuUI()
@@ -452,6 +485,15 @@ export default class Game
             {
                 this.m_nextState = GameState.LOBBY;
             }
+        }
+
+        if (this.m_engineVersion !== "")
+        {
+            this.m_engineVersionWidget.SetText("Engine Version: " + this.m_engineVersion);
+        }
+        if (this.m_gameVersion !== "")
+        {
+            this.m_gameVersionWidget.SetText("Game Version: " + this.m_gameVersion);
         }
     }
 
