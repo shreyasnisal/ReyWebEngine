@@ -1,0 +1,82 @@
+name: Auto Version Bump by Project
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Parse commit message
+      id: parse
+      run: |
+        COMMIT_MSG=$(git log -1 --pretty=%B)
+        echo "Commit: $COMMIT_MSG"
+
+        # Extract project names and bump type
+        RAW_SCOPE=$(echo "$COMMIT_MSG" | sed -nE 's/^\[([^\]]+)\].*/\1/p')
+        BUMP_TYPE=$(echo "$COMMIT_MSG" | sed -nE 's/^\[[^]]+\] *([a-z]+):.*/\1/p')
+
+        if [ -z "$RAW_SCOPE" ] || [ -z "$BUMP_TYPE" ]; then
+          echo "❌ Commit format invalid or missing bump type. Skipping version bump."
+          echo "projects=" >> $GITHUB_OUTPUT
+          echo "bump_type=none" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        # Normalize
+        PROJECTS=$(echo $RAW_SCOPE | tr -d ' ' | tr ',' ' ')
+        echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
+        echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+
+    - name: Bump versions
+      if: steps.parse.outputs.bump_type != 'none'
+      run: |
+        bump_type="${{ steps.parse.outputs.bump_type }}"
+        for project in ${{ steps.parse.outputs.projects }}; do
+          echo "📦 Bumping $project ($bump_type)"
+          FILE="$project/version.json"
+          if [ ! -f "$FILE" ]; then
+            echo "⚠️ Skipping: $FILE not found"
+            continue
+          fi
+
+          VERSION=$(jq -r .version "$FILE")
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          case "$bump_type" in
+            major)
+              MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor)
+              MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch)
+              PATCH=$((PATCH + 1)) ;;
+            *)
+              echo "⚠️ Unknown bump type: $bump_type"
+              continue ;;
+          esac
+
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "{ \"version\": \"$NEW_VERSION\" }" > "$FILE"
+          echo "✅ $project bumped to $NEW_VERSION"
+        done
+
+    - name: Commit and push version changes
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+        git add */version.json
+        git diff --cached --quiet && echo "No version changes to commit" || (git commit -m "ci: bump version(s)" && git push)
