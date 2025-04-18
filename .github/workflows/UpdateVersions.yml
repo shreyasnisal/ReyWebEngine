@@ -46,6 +46,7 @@ jobs:
 
       - name: Bump version.json for each project
         if: steps.parse.outputs.bump_type != 'none'
+        shell: bash
         run: |
           for PROJECT in ${{ steps.parse.outputs.projects }}; do
             VERSION_FILE="$PROJECT/version.json"
