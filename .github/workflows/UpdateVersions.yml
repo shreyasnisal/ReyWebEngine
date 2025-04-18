@@ -64,7 +64,7 @@ jobs:
             MAJOR=$(echo "$VERSION" | cut -d. -f1)
             MINOR=$(echo "$VERSION" | cut -d. -f2)
             PATCH=$(echo "$VERSION" | cut -d. -f3)
-            echo "MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
+            echo "MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH" | od -c
 
             BUMP_TYPE=$(echo "$BUMP_TYPE" | xargs)
             case "$BUMP_TYPE" in
