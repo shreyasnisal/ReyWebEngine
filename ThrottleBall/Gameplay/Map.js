@@ -499,8 +499,6 @@ export default class Map
                 car2NetImpactPoint.Add(impactPointOnCar2);
 
                 numImpacts++;
-
-                // MathUtils.PushOBB2OutOfEachOther(car1Bounds, car2Bounds);
             }
         }
 
@@ -516,15 +514,13 @@ export default class Map
                 const impactPointSignedDistanceFromCar2Center = MathUtils.GetProjectedLength2D(dispCar2CenterToImpactPoint, car2Bounds.m_iBasisNormal);
                 netImpactSignedDistanceFromCenterOnCar2 += impactPointSignedDistanceFromCar2Center;
 
-                const impactPointOnCar1 = car2CornerPoints[car2CornerPointIdx];
-                car1NetImpactPoint.Add(impactPointOnCar1);
-
-                const impactPointOnCar2 = car2Bounds.m_center.GetSum(car2Bounds.m_iBasisNormal.GetScaled(impactPointSignedDistanceFromCar2Center)).GetSum(car2Bounds.m_iBasisNormal.GetRotated90Degrees().GetScaled(car2Bounds.m_halfDimensions.y));
+                const impactPointOnCar2 = car2CornerPoints[car2CornerPointIdx];
                 car2NetImpactPoint.Add(impactPointOnCar2);
 
-                numImpacts++;
+                const impactPointOnCar1 = car1Bounds.m_center.GetSum(car1Bounds.m_iBasisNormal.GetScaled(impactPointSignedDistanceFromCar1Center)).GetSum(car1Bounds.m_iBasisNormal.GetRotated90Degrees().GetScaled(car1Bounds.m_halfDimensions.y));
+                car1NetImpactPoint.Add(impactPointOnCar1);
 
-                // MathUtils.PushOBB2OutOfEachOther(car1Bounds, car2Bounds);
+                numImpacts++;
             }
         }
 
@@ -541,8 +537,6 @@ export default class Map
             const isCar1InFrontOfCar2 = MathUtils.GetProjectedLength2D(dispCar1ToCar2.GetNormalized().GetScaled(-1.0), car2Bounds.m_iBasisNormal);
             car1NetImpactPoint = car1Bounds.m_center.GetSum(car1Bounds.m_iBasisNormal.GetScaled(isCar2InFrontOfCar1 * car1Bounds.m_halfDimensions.x));
             car2NetImpactPoint = car2Bounds.m_center.GetSum(car2Bounds.m_iBasisNormal.GetScaled(isCar1InFrontOfCar2 * car2Bounds.m_halfDimensions.x));
-            // netImpactSignedDistanceFromCenterOnCar1 = 0.5 * Car.FRAME_LENGTH * isCar2InFrontOfCar1;
-            // netImpactSignedDistanceFromCenterOnCar2 = 0.5 * Car.FRAME_LENGTH * isCar1InFrontOfCar2;
         }
         else
         {
@@ -550,18 +544,17 @@ export default class Map
             netImpactSignedDistanceFromCenterOnCar2 /= numImpacts;
             car1NetImpactPoint.Scale(1.0 / numImpacts);
             car2NetImpactPoint.Scale(1.0 / numImpacts);
-
-            const impactPointFractionFromCenterAlongCar1Frame = netImpactSignedDistanceFromCenterOnCar1 / Car.FRAME_LENGTH;
-            car1ImpactFrontWeight = impactPointFractionFromCenterAlongCar1Frame + 0.5;
-            car1ImpactBackWeight = 1.0 - car1ImpactFrontWeight;
-
-            const impactPointFractionFromCenterAlongCar2Frame = netImpactSignedDistanceFromCenterOnCar2 / Car.FRAME_LENGTH;
-            car2ImpactFrontWeight = impactPointFractionFromCenterAlongCar2Frame + 0.5;
-            car2ImpactBackWeight = 1.0 - car2ImpactFrontWeight;
         }
 
-        // Velocity correction
+        const impactPointFractionFromCenterAlongCar1Frame = netImpactSignedDistanceFromCenterOnCar1 / Car.FRAME_LENGTH;
+        car1ImpactFrontWeight = impactPointFractionFromCenterAlongCar1Frame + 0.5;
+        car1ImpactBackWeight = 1.0 - car1ImpactFrontWeight;
 
+        const impactPointFractionFromCenterAlongCar2Frame = netImpactSignedDistanceFromCenterOnCar2 / Car.FRAME_LENGTH;
+        car2ImpactFrontWeight = impactPointFractionFromCenterAlongCar2Frame + 0.5;
+        car2ImpactBackWeight = 1.0 - car2ImpactFrontWeight;
+
+        // Velocity correction
         const car1NetVelocity = car1.m_frontAxleVelocity.GetSum(car1.m_backAxleVelocity).GetScaled(0.5);
         const car2NetVelocity = car2.m_frontAxleVelocity.GetSum(car2.m_backAxleVelocity).GetScaled(0.5);
 
@@ -579,20 +572,23 @@ export default class Map
             return;
         }
 
-        const car1NetVelocityNormalToImpact = MathUtils.GetProjectedOnto2D(car1NetVelocity, car1DirectionToImpactPoint);
-        const car1NetVelocityTangentToImpact = car1NetVelocity.GetDifference(car1NetVelocityNormalToImpact);
+        const car1FrontAxleVelocityNormalToImpact = MathUtils.GetProjectedOnto2D(car1.m_frontAxleVelocity, car1NetImpactPoint.GetDifference(car1.m_frontAxlePosition));
+        const car1FrontAxleVelocityTangentToImpact = car1.m_frontAxleVelocity.GetDifference(car1FrontAxleVelocityNormalToImpact);
 
-        const car2NetVelocityNormalToImpact = MathUtils.GetProjectedOnto2D(car2NetVelocity, car2DirectionToImpactPoint);
-        const car2NetVelocityTangentToImpact = car2NetVelocity.GetDifference(car2NetVelocityNormalToImpact);
+        const car1BackAxleVelocityNormalToImpact = MathUtils.GetProjectedOnto2D(car1.m_backAxleVelocity, car1NetImpactPoint.GetDifference(car1.m_backAxlePosition));
+        const car1BackAxleVelocityTangentToImpact = car1.m_backAxleVelocity.GetDifference(car1BackAxleVelocityNormalToImpact);
 
-        const car1FinalNetVelocity = car2NetVelocityNormalToImpact.GetScaled(Car.ELASTICITY * Car.ELASTICITY).GetSum(car1NetVelocityTangentToImpact);
-        const car2FinalNetVelocity = car1NetVelocityNormalToImpact.GetScaled(Car.ELASTICITY * Car.ELASTICITY).GetSum(car2NetVelocityTangentToImpact);
+        const car2FrontAxleVelocityNormalToImpact = MathUtils.GetProjectedOnto2D(car2.m_frontAxleVelocity, car2NetImpactPoint.GetDifference(car2.m_frontAxlePosition));
+        const car2FrontAxleVelocityTangentToImpact = car2.m_frontAxleVelocity.GetDifference(car2FrontAxleVelocityNormalToImpact);
 
-        car1.m_frontAxleVelocity = car1FinalNetVelocity.GetScaled(car1ImpactFrontWeight);
-        car1.m_backAxleVelocity = car1FinalNetVelocity.GetScaled(car1ImpactBackWeight);
+        const car2BackAxleVelocityNormalToImpact = MathUtils.GetProjectedOnto2D(car2.m_backAxleVelocity, car2NetImpactPoint.GetDifference(car2.m_backAxlePosition));
+        const car2BackAxleVelocityTangentToImpact = car2.m_backAxleVelocity.GetDifference(car2BackAxleVelocityNormalToImpact);
 
-        car2.m_frontAxleVelocity = car2FinalNetVelocity.GetScaled(car2ImpactFrontWeight);
-        car2.m_backAxleVelocity = car2FinalNetVelocity.GetScaled(car2ImpactBackWeight);
+        car1.m_frontAxleVelocity = car1FrontAxleVelocityTangentToImpact.GetSum(car2FrontAxleVelocityNormalToImpact.GetScaled(car2ImpactFrontWeight)).GetSum(car2BackAxleVelocityNormalToImpact.GetScaled(car2ImpactBackWeight)).GetScaled(car1ImpactFrontWeight);
+        car1.m_backAxleVelocity = car1BackAxleVelocityTangentToImpact.GetSum(car2FrontAxleVelocityNormalToImpact.GetScaled(car2ImpactFrontWeight)).GetSum(car2BackAxleVelocityNormalToImpact.GetScaled(car2ImpactBackWeight)).GetScaled(car1ImpactBackWeight);
+
+        car2.m_frontAxleVelocity = car2FrontAxleVelocityTangentToImpact.GetSum(car1FrontAxleVelocityNormalToImpact.GetScaled(car1ImpactFrontWeight)).GetSum(car1BackAxleVelocityNormalToImpact.GetScaled(car1ImpactBackWeight)).GetScaled(car2ImpactFrontWeight);
+        car2.m_backAxleVelocity = car2BackAxleVelocityTangentToImpact.GetSum(car1FrontAxleVelocityNormalToImpact.GetScaled(car1ImpactFrontWeight)).GetSum(car1BackAxleVelocityNormalToImpact.GetScaled(car1ImpactBackWeight)).GetScaled(car2ImpactBackWeight);
 
         car1.PerformFrameCorrectionAndUpdatePosition();
         car2.PerformFrameCorrectionAndUpdatePosition();
