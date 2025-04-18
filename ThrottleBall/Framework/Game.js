@@ -212,20 +212,6 @@ export default class Game
             .SetHoverBackgroundColor(new Rgba8(0, 0, 0, 0))
             .SetVisible(false)
             .SetFocus(false);
-        //
-        // const menuStartButton = g_ui.CreateWidget(this.m_menuWidget);
-        // menuStartButton.SetText("Start")
-        //     .SetPosition(new Vec2(0.1, 0.6))
-        //     .SetDimensions(new Vec2(0.3, 0.1))
-        //     .SetPivot(new Vec2(0.0, 0.5))
-        //     .SetAlignment(new Vec2(0.01, 0.5))
-        //     .SetFontSize(4.0)
-        //     .SetBackgroundColor(PRIMARY_COLOR)
-        //     .SetHoverBackgroundColor(PRIMARY_COLOR_VARIANT_LIGHT)
-        //     .SetColor(TERTIARY_COLOR)
-        //     .SetHoverColor(TERTIARY_COLOR_VARIANT_LIGHT)
-        //     .SetBorderRadius(0.5)
-        //     .SetClickEventName("navigate target=" + GameState.LOBBY);
     }
 
     InitializeLobbyUI()
