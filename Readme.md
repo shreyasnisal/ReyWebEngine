@@ -4,7 +4,7 @@
 ![Static Badge](https://img.shields.io/badge/Custom%20Engine-dodgerblue?style=flat)
 ![Static Badge](https://img.shields.io/badge/Virtual%20Reality-darkviolet?style=flat)
 
-This is my custom JavaScript game engine, with support for 2D and 3D rendering (WebGL), Virtual Reality (WebXR), OBJ model loading using a custom parser, dev console, event system and more.
+Rey Web Engine is my custom JavaScript game engine, with support for 2D and 3D rendering (WebGL), Virtual Reality (WebXR), OBJ model loading using a custom parser, dev console, event system and more.
 
 View online demos for games here:
 - [Sandbox](https://sandbox.reynisal.com)
