@@ -47,6 +47,8 @@ jobs:
       - name: Bump version.json for each project
         if: steps.parse.outputs.bump_type != 'none'
         shell: bash
+        env:
+          BUMP_TYPE: ${{ steps.parse.outputs.bump_type }}
         run: |
           for PROJECT in ${{ steps.parse.outputs.projects }}; do
             VERSION_FILE="$PROJECT/version.json"
@@ -64,13 +66,16 @@ jobs:
             PATCH=$(echo "$VERSION" | cut -d. -f3)
             echo "MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
 
-            case "${{ steps.parse.outputs.bump_type }}" in
+            case "$BUMP_TYPE" in
               major)
                 ((MAJOR++)); MINOR=0; PATCH=0 ;;
               minor)
                 ((MINOR++)); PATCH=0 ;;
               patch)
                 ((PATCH++)) ;;
+                *)
+                echo "❌ Unknown bump type: $BUMP_TYPE"
+                exit 1 ;;
             esac
 
             NEW_VERSION="$MAJOR.$MINOR.$PATCH"
