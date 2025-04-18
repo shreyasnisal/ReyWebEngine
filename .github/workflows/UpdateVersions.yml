@@ -66,6 +66,8 @@ jobs:
             PATCH=$(echo "$VERSION" | cut -d. -f3)
             echo "MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
 
+            echo "Bump Type: $BUMP_TYPE"
+
             case "$BUMP_TYPE" in
               major)
                 ((MAJOR++)); MINOR=0; PATCH=0 ;;
