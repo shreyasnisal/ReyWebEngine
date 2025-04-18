@@ -175,38 +175,6 @@ export default class Map
         {
             this.m_disableBallCollisions = !this.m_disableBallCollisions;
         }
-        // if (g_input.WasKeyJustPressed("1"))
-        // {
-        //     this.ResetCarsAndBall();
-        // }
-        // if (g_input.WasKeyJustPressed("2"))
-        // {
-        //     this.m_ball.m_position = new Vec2(WORLD_SIZE_X * 0.5, WORLD_SIZE_Y * 0.5);
-        //     this.m_ball.m_velocity = new Vec2(0.0, 0.0);
-        //
-        //     this.m_cars.pop();
-        //     this.m_cars.pop();
-        //
-        //     this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.3, WORLD_SIZE_Y * 0.5), 0.0, this.m_game.m_players[0], Team.BLUE));
-        //     this.m_game.m_players[0].SetCar(this.m_cars[0]);
-        //
-        //     this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.7, WORLD_SIZE_Y * 0.45), 90.0, this.m_game.m_players[1], Team.RED));
-        //     this.m_game.m_players[1].SetCar(this.m_cars[1]);
-        // }
-        // if (g_input.WasKeyJustPressed("3"))
-        // {
-        //     this.m_ball.m_position = new Vec2(WORLD_SIZE_X * 0.5, WORLD_SIZE_Y * 0.5);
-        //     this.m_ball.m_velocity = new Vec2(0.0, 0.0);
-        //
-        //     this.m_cars.pop();
-        //     this.m_cars.pop();
-        //
-        //     this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.3, WORLD_SIZE_Y * 0.5), 0.0, this.m_game.m_players[0], Team.BLUE));
-        //     this.m_game.m_players[0].SetCar(this.m_cars[0]);
-        //
-        //     this.m_cars.push(new Car(this, new Vec2(WORLD_SIZE_X * 0.7, WORLD_SIZE_Y * 0.55), 90.0, this.m_game.m_players[1], Team.RED));
-        //     this.m_game.m_players[1].SetCar(this.m_cars[1]);
-        // }
 
         if (this.m_drawDebug)
         {
