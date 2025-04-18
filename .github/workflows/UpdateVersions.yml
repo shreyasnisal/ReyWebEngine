@@ -20,24 +20,30 @@ jobs:
       with:
         node-version: 18
 
-    - name: Parse commit message
+   - name: Parse commit message
       id: parse
       run: |
         COMMIT_MSG=$(git log -1 --pretty=%B)
         echo "Commit: $COMMIT_MSG"
 
-        # Extract project names and bump type
+        # Extract scope and bump type
         RAW_SCOPE=$(echo "$COMMIT_MSG" | sed -nE 's/^\[([^\]]+)\].*/\1/p')
-        BUMP_TYPE=$(echo "$COMMIT_MSG" | sed -nE 's/^\[[^]]+\] *([a-z]+):.*/\1/p')
+        BUMP_TYPE=$(echo "$COMMIT_MSG" | sed -nE 's/^\[[^]]+\] *([[:alpha:]]+):.*/\1/p' | tr '[:upper:]' '[:lower:]')
 
         if [ -z "$RAW_SCOPE" ] || [ -z "$BUMP_TYPE" ]; then
-          echo "❌ Commit format invalid or missing bump type. Skipping version bump."
+          echo "⚠️ No valid project or bump type specified. Skipping version bump."
           echo "projects=" >> $GITHUB_OUTPUT
           echo "bump_type=none" >> $GITHUB_OUTPUT
           exit 0
         fi
 
-        # Normalize
+        if [[ "$BUMP_TYPE" != "major" && "$BUMP_TYPE" != "minor" && "$BUMP_TYPE" != "patch" ]]; then
+          echo "⚠️ Invalid bump type: '$BUMP_TYPE'. Skipping version bump."
+          echo "projects=" >> $GITHUB_OUTPUT
+          echo "bump_type=none" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
         PROJECTS=$(echo $RAW_SCOPE | tr -d ' ' | tr ',' ' ')
         echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
         echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
