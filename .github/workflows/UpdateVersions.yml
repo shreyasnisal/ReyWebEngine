@@ -22,27 +22,27 @@ jobs:
           COMMIT_MSG=$(git log -1 --pretty=%B)
           echo "Commit: $COMMIT_MSG"
 
-          # Extract scope and bump type
-          RAW_SCOPE=$(echo "$COMMIT_MSG" | sed -nE 's/^\[([^\]]+)\].*/\1/p')
-          BUMP_TYPE=$(echo "$COMMIT_MSG" | sed -nE 's/^\[[^]]+\] *([[:alpha:]]+):.*/\1/p' | tr '[:upper:]' '[:lower:]')
+          # Match: [Project[,Project2,...]] bumpType:
+          if [[ "$COMMIT_MSG" =~ ^\[([A-Za-z0-9_, ]+)\][[:space:]]*([a-zA-Z]+): ]]; then
+            RAW_SCOPE="${BASH_REMATCH[1]}"
+            BUMP_TYPE="${BASH_REMATCH[2],,}"  # Lowercase
 
-          if [ -z "$RAW_SCOPE" ] || [ -z "$BUMP_TYPE" ]; then
-            echo "⚠️ No valid project or bump type specified. Skipping version bump."
+            # Validate bump type
+            if [[ "$BUMP_TYPE" != "major" && "$BUMP_TYPE" != "minor" && "$BUMP_TYPE" != "patch" ]]; then
+              echo "⚠️ Invalid bump type: '$BUMP_TYPE'. Skipping version bump."
+              echo "projects=" >> $GITHUB_OUTPUT
+              echo "bump_type=none" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+
+            PROJECTS=$(echo "$RAW_SCOPE" | tr -d ' ' | tr ',' ' ')
+            echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
+            echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Commit message does not match expected format. Skipping version bump."
             echo "projects=" >> $GITHUB_OUTPUT
             echo "bump_type=none" >> $GITHUB_OUTPUT
-            exit 0
           fi
-
-          if [[ "$BUMP_TYPE" != "major" && "$BUMP_TYPE" != "minor" && "$BUMP_TYPE" != "patch" ]]; then
-            echo "⚠️ Invalid bump type: '$BUMP_TYPE'. Skipping version bump."
-            echo "projects=" >> $GITHUB_OUTPUT
-            echo "bump_type=none" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          PROJECTS=$(echo $RAW_SCOPE | tr -d ' ' | tr ',' ' ')
-          echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
-          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
 
       - name: Bump version.json for each project
         if: steps.parse.outputs.bump_type != 'none'
