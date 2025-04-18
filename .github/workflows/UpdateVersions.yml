@@ -61,28 +61,20 @@ jobs:
 
             VERSION=$(jq -r .version "$VERSION_FILE")
             echo "Version: $VERSION"
-            MAJOR=$(echo "$VERSION" | cut -d. -f1)
-            MINOR=$(echo "$VERSION" | cut -d. -f2)
-            PATCH=$(echo "$VERSION" | cut -d. -f3)
-            echo "MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH" | od -c
 
             BUMP_TYPE=$(echo "$BUMP_TYPE" | xargs)
             case "$BUMP_TYPE" in
               "major")
-                echo "🛠 Bumping major version"
                 MAJOR=$((MAJOR+1))
-                MINOR=0; PATCH=0
+                MINOR=0
+                PATCH=0
                 ;;
               "minor")
-                echo "🛠 Bumping minor version"
                 MINOR=$((MINOR+1))
                 PATCH=0
-                echo "📈 New minor version: $MINOR"
                 ;;
               "patch")
-                echo "🛠 Bumping patch version"
                 PATCH=$((PATCH+1))
-                echo "📈 New patch version: $PATCH"
                 ;;
               *)
                 echo "❌ Unknown bump type: '$BUMP_TYPE'"
@@ -92,41 +84,16 @@ jobs:
 
             NEW_VERSION="$MAJOR.$MINOR.$PATCH"
             echo "🛠 Writing new version to $VERSION_FILE"
-            # Debug: Check if the file exists
-            if [ ! -f "$VERSION_FILE" ]; then
-              echo "❌ $VERSION_FILE does not exist"
-              exit 1
-            fi
-            
-            # Debug: Check contents of $VERSION_FILE before modification
-            echo "📄 Current contents of $VERSION_FILE:"
-            cat "$VERSION_FILE"
-            
             # Attempt to write new version with jq
             jq --arg v "$NEW_VERSION" '.version = $v' "$VERSION_FILE" > tmp.json
-            
-            # Check for jq failure
-            if [ $? -ne 0 ]; then
-              echo "❌ jq failed to process $VERSION_FILE"
-              cat "$VERSION_FILE"
-              exit 1
-            fi
-            
-            # Debug: Check the generated tmp.json before moving
-            echo "📄 Contents of tmp.json after jq operation:"
-            cat tmp.json
-            
             # Move tmp.json to the original file
             mv tmp.json "$VERSION_FILE"
-            
             if [ $? -eq 0 ]; then
               echo "✅ Successfully updated $VERSION_FILE to $NEW_VERSION"
             else
               echo "❌ Failed to move tmp.json to $VERSION_FILE"
               exit 1
             fi
-
-            echo "✅ $PROJECT bumped to $NEW_VERSION"
           done
 
       - name: Commit and push version changes
