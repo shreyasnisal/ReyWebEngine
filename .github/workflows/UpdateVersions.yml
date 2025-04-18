@@ -76,8 +76,8 @@ jobs:
                 ((MINOR++)); PATCH=0 ;;
               "patch")
                 echo "🛠 Bumping patch version"
-                ((PATCH++)) ;;
-                echo "📈 New patch version: $PATCH"
+                ((PATCH++))
+                echo "📈 New patch version: $PATCH" ;;
               *)
                 echo "❌ Unknown bump type: '$BUMP_TYPE'"
                 exit 1 ;;
