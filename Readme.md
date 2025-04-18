@@ -11,6 +11,11 @@ An online demo is [available here](https://sandbox.reynisal.com).
 ## Requirements
 [Node.js](https://nodejs.org/en/download)
 
-## Running the Project
-The project has two scripts defined, sandbox and throttleball. These scripts can be run using the command `npm run sandbox` or `npm run throttleball`.
+## Games Developed in Rey Web Engine
+
+I've developed two games using the Rey Web Engine, a demo 3D project, "Sandbox" and a 2D top-down game, "Throttle Ball".
+
+The project has two scripts defined, one for each project.
+
+These scripts can be run using the command `npm run sandbox` or `npm run throttleball`.
 
