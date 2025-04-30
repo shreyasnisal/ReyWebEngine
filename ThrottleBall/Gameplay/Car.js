@@ -140,6 +140,28 @@ export default class Car
     {
         const carVerts = [];
 
+        // Add verts for wheels
+        const WHEEL_LENGTH = 1.0;
+        const WHEEL_WIDTH = 0.5;
+        const wheelVerts = [];
+        const leftFrontWheelPosition = this.m_position.GetSum(this.GetForwardNormal().GetScaled(Car.FRAME_LENGTH * 0.4 - WHEEL_LENGTH * 0.5)).GetSum(this.GetLeftNormal().GetScaled(Car.FRAME_LENGTH * 0.225 - WHEEL_WIDTH * 0.5));
+        const rightFrontWheelPosition = this.m_position.GetSum(this.GetForwardNormal().GetScaled(Car.FRAME_LENGTH * 0.4 - WHEEL_LENGTH * 0.5)).GetSum(this.GetLeftNormal().GetScaled(-Car.FRAME_LENGTH * 0.225 + WHEEL_WIDTH * 0.5));
+        const leftBackWheelPosition = this.m_position.GetSum(this.GetForwardNormal().GetScaled(-Car.FRAME_LENGTH * 0.4 + WHEEL_LENGTH * 0.5)).GetSum(this.GetLeftNormal().GetScaled(Car.FRAME_LENGTH * 0.225 - WHEEL_WIDTH * 0.5));
+        const rightBackWheelPosition = this.m_position.GetSum(this.GetForwardNormal().GetScaled(-Car.FRAME_LENGTH * 0.4 + WHEEL_LENGTH * 0.5)).GetSum(this.GetLeftNormal().GetScaled(-Car.FRAME_LENGTH * 0.225 + WHEEL_WIDTH * 0.5));
+
+        VertexUtils.AddPCUVertsForOBB2(wheelVerts, new OBB2(leftFrontWheelPosition, this.GetFrontWheelNormal(), new Vec2(WHEEL_LENGTH, WHEEL_WIDTH)), Rgba8.BLACK);
+        VertexUtils.AddPCUVertsForOBB2(wheelVerts, new OBB2(rightFrontWheelPosition, this.GetFrontWheelNormal(), new Vec2(WHEEL_LENGTH, WHEEL_WIDTH)), Rgba8.BLACK);
+        VertexUtils.AddPCUVertsForOBB2(wheelVerts, new OBB2(leftBackWheelPosition, this.GetForwardNormal(), new Vec2(WHEEL_LENGTH, WHEEL_WIDTH)), Rgba8.BLACK);
+        VertexUtils.AddPCUVertsForOBB2(wheelVerts, new OBB2(rightBackWheelPosition, this.GetForwardNormal(), new Vec2(WHEEL_LENGTH, WHEEL_WIDTH)), Rgba8.BLACK);
+
+        g_renderer.BindShader(null);
+        g_renderer.SetBlendMode(BlendMode.ALPHA);
+        g_renderer.SetCullMode(CullMode.BACK);
+        g_renderer.SetDepthMode(DepthMode.DISABLED);
+        g_renderer.SetModelConstants();
+        g_renderer.BindTexture(null);
+        g_renderer.DrawVertexArray(wheelVerts);
+
         VertexUtils.AddPCUVertsForOBB2(carVerts, new OBB2(this.m_position, this.GetForwardNormal(), new Vec2(Car.FRAME_LENGTH * 0.5, Car.FRAME_LENGTH * 0.5 * 0.5)));
         g_renderer.BindShader(null);
         g_renderer.SetBlendMode(BlendMode.ALPHA);

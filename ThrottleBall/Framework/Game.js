@@ -409,7 +409,11 @@ export default class Game
             .SetVisible(false);
 
         this.m_matchEndWinnerTextWidget = g_ui.CreateWidget(this.m_matchEndWidget);
-
+        this.m_matchEndWinnerTextWidget.SetText("")
+            .SetPosition(new Vec2(0.5, 0.5))
+            .SetDimensions(new Vec2(1.0, 0.5))
+            .SetPivot(new Vec2(0.5, 0.5))
+            .SetAlignment(new Vec2(0.5, 0.5));
     }
 
     FixedUpdate(deltaSeconds)

@@ -5,7 +5,7 @@ import {
     WORLD_SIZE_Y,
     SCREEN_SIZE_Y,
     Team,
-    GetTimeStringFromSeconds, CAR_IMAGE_PATHS, TERTIARY_COLOR_VARIANT_DARK
+    GetTimeStringFromSeconds, CAR_IMAGE_PATHS, TERTIARY_COLOR_VARIANT_DARK, GetTeamColor
 } from "/ThrottleBall/Framework/GameCommon.js";
 import Ball from "/ThrottleBall/Gameplay/Ball.js";
 import Car from "/ThrottleBall/Gameplay/Car.js";
@@ -23,7 +23,7 @@ import * as MathUtils from "/Engine/Math/MathUtils.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 
 import {g_aspect} from "/Engine/Renderer/Renderer.js";
-import {DoOBB2Overlap} from "/Engine/Math/MathUtils.js";
+import {PushOBB2OutOfEachOther} from "/Engine/Math/MathUtils.js";
 
 
 export default class Map
@@ -174,6 +174,70 @@ export default class Map
         if (g_input.WasKeyJustPressed("F3"))
         {
             this.m_disableBallCollisions = !this.m_disableBallCollisions;
+        }
+        if (g_input.WasKeyJustPressed("F4"))
+        {
+            this.m_drawDebug = true;
+            this.m_disableBallCollisions = true;
+
+            this.m_ball.m_position = new Vec2(WORLD_SIZE_X * 0.5, WORLD_SIZE_Y * 0.5);
+            this.m_ball.m_velocity = new Vec2(0.0, 0.0);
+
+            let numCarsInBlueTeam = 0;
+            let numCarsInRedTeam = 0;
+            for (let carIndex = 0; carIndex < this.m_cars.length; carIndex++)
+            {
+                if (this.m_cars[carIndex].m_team === Team.BLUE)
+                {
+                    this.m_cars[carIndex].m_position = this.GetCarPositionFromNumCarsInTeamAlreadySpawned(numCarsInBlueTeam, Team.BLUE);
+                    this.m_cars[carIndex].m_position.Add(Vec2.SOUTH.GetScaled(5.0));
+                    numCarsInBlueTeam++;
+                }
+                else if (this.m_cars[carIndex].m_team === Team.RED)
+                {
+                    this.m_cars[carIndex].m_position = this.GetCarPositionFromNumCarsInTeamAlreadySpawned(numCarsInRedTeam, Team.RED);
+                    numCarsInRedTeam++;
+                }
+                const carOrientation = this.m_cars[carIndex].m_team === Team.BLUE ? 0.0 : 90.0;
+                const carForwardNormal = Vec2.MakeFromPolarDegrees(carOrientation);
+                this.m_cars[carIndex].m_acceleration = new Vec2(0.0, 0.0);
+                this.m_cars[carIndex].m_frontAxlePosition = this.m_cars[carIndex].m_position.GetSum(carForwardNormal.GetScaled(Car.FRAME_LENGTH * 0.5));
+                this.m_cars[carIndex].m_frontAxleVelocity = new Vec2(0.0, 0.0);
+                this.m_cars[carIndex].m_backAxlePosition = this.m_cars[carIndex].m_position.GetDifference(carForwardNormal.GetScaled(Car.FRAME_LENGTH * 0.5));
+                this.m_cars[carIndex].m_backAxleVelocity = new Vec2(0.0, 0.0);
+            }
+        }
+        if (g_input.WasKeyJustPressed("F5"))
+        {
+            this.m_drawDebug = true;
+            this.m_disableBallCollisions = true;
+
+            this.m_ball.m_position = new Vec2(WORLD_SIZE_X * 0.5, WORLD_SIZE_Y * 0.5);
+            this.m_ball.m_velocity = new Vec2(0.0, 0.0);
+
+            let numCarsInBlueTeam = 0;
+            let numCarsInRedTeam = 0;
+            for (let carIndex = 0; carIndex < this.m_cars.length; carIndex++)
+            {
+                if (this.m_cars[carIndex].m_team === Team.BLUE)
+                {
+                    this.m_cars[carIndex].m_position = this.GetCarPositionFromNumCarsInTeamAlreadySpawned(numCarsInBlueTeam, Team.BLUE);
+                    this.m_cars[carIndex].m_position.Add(Vec2.NORTH.GetScaled(5.0));
+                    numCarsInBlueTeam++;
+                }
+                else if (this.m_cars[carIndex].m_team === Team.RED)
+                {
+                    this.m_cars[carIndex].m_position = this.GetCarPositionFromNumCarsInTeamAlreadySpawned(numCarsInRedTeam, Team.RED);
+                    numCarsInRedTeam++;
+                }
+                const carOrientation = this.m_cars[carIndex].m_team === Team.BLUE ? 0.0 : 90.0;
+                const carForwardNormal = Vec2.MakeFromPolarDegrees(carOrientation);
+                this.m_cars[carIndex].m_acceleration = new Vec2(0.0, 0.0);
+                this.m_cars[carIndex].m_frontAxlePosition = this.m_cars[carIndex].m_position.GetSum(carForwardNormal.GetScaled(Car.FRAME_LENGTH * 0.5));
+                this.m_cars[carIndex].m_frontAxleVelocity = new Vec2(0.0, 0.0);
+                this.m_cars[carIndex].m_backAxlePosition = this.m_cars[carIndex].m_position.GetDifference(carForwardNormal.GetScaled(Car.FRAME_LENGTH * 0.5));
+                this.m_cars[carIndex].m_backAxleVelocity = new Vec2(0.0, 0.0);
+            }
         }
 
         if (this.m_drawDebug)
@@ -421,18 +485,121 @@ export default class Map
                 const car1 = this.m_cars[car1Index];
                 const car2 = this.m_cars[car2Index];
 
-                this.HandleCarVsCarCollision(car1, car2);
+                this.HandleCarVsCarCollision_v2(car1, car2);
             }
         }
     }
 
-    HandleCarVsCarCollision(car1, car2)
+    // Best guess for what the problem is:
+    // This currently exchanges the impact point velocities for the two cars
+    // The correct version would be to only exchange the velocity along the collision normal
+    HandleCarVsCarCollision_v2(car1, car2)
     {
-
         const car1Bounds = car1.GetBounds();
         const car2Bounds = car2.GetBounds();
 
-        if (!DoOBB2Overlap(car1Bounds, car2Bounds))
+        if (!MathUtils.DoOBB2Overlap(car1Bounds, car2Bounds))
+        {
+            return;
+        }
+
+        const car1Corners = car1Bounds.GetCornerPoints();
+        const car2Corners = car2Bounds.GetCornerPoints();
+
+        let numImpacts = 0;
+        let numImpactsOnC1 = 0;
+        let numImpactsOnC2 = 0;
+        let sumAllOverlapPoints = new Vec2();
+        let sumAllOverlapPointsOnC1 = new Vec2();
+        let sumAllOverlapPointsOnC2 = new Vec2();
+
+        for (let cornerIndex = 0; cornerIndex < 4; cornerIndex++)
+        {
+            if (MathUtils.IsPointInsideOBB2(car1Corners[cornerIndex], car2Bounds))
+            {
+                numImpacts++;
+                numImpactsOnC1++;
+                sumAllOverlapPoints = MathUtils.AddVec2(sumAllOverlapPoints, car1Corners[cornerIndex]);
+                sumAllOverlapPointsOnC1 = MathUtils.AddVec2(sumAllOverlapPointsOnC1, car1Corners[cornerIndex]);
+            }
+
+            if (MathUtils.IsPointInsideOBB2(car2Corners[cornerIndex], car1Bounds))
+            {
+                numImpacts++;
+                numImpactsOnC2++;
+                sumAllOverlapPoints = MathUtils.AddVec2(sumAllOverlapPoints, car2Corners[cornerIndex]);
+                sumAllOverlapPointsOnC2 = MathUtils.AddVec2(sumAllOverlapPointsOnC2, car2Corners[cornerIndex]);
+            }
+        }
+
+        // Average all overlap points to get a single "fake" impact point
+        const impactPoint = sumAllOverlapPoints.GetScaled(1.0 / numImpacts);
+        const collisionNormal = MathUtils.GetCollisionNormalForOverlappingOBB2s(car1Bounds, car2Bounds);
+
+        if (collisionNormal.x === 0.0 && collisionNormal.y === 0)
+        {
+            return;
+        }
+
+        const c1LeftNormal = car1Bounds.m_iBasisNormal.GetRotated90Degrees();
+        const c1DeltaVel = MathUtils.SubtractVec2(car1.m_frontAxleVelocity, car1.m_backAxleVelocity);
+        const c1AngularVel = MathUtils.DotProduct2D(c1DeltaVel, c1LeftNormal);
+        const c1DispCenterToImpactPoint = MathUtils.SubtractVec2(impactPoint, car1Bounds.m_center);
+        const c1CenterVel = MathUtils.AddVec2(car1.m_frontAxleVelocity, car1.m_backAxleVelocity).GetScaled(0.5);
+        const c1VelAtImpactPoint = MathUtils.AddVec2(c1CenterVel, c1DispCenterToImpactPoint.GetRotated90Degrees().GetScaled(c1AngularVel));
+        const c1NormalVelAtImpactPoint = MathUtils.GetProjectedOnto2D(c1VelAtImpactPoint, collisionNormal);
+        const c1TangentVelAtImpactPoint = MathUtils.SubtractVec2(c1VelAtImpactPoint, c1NormalVelAtImpactPoint);
+
+        const c2LeftNormal = car2Bounds.m_iBasisNormal.GetRotated90Degrees();
+        const c2DeltaVel = MathUtils.SubtractVec2(car2.m_frontAxleVelocity, car2.m_backAxleVelocity);
+        const c2AngularVel = MathUtils.DotProduct2D(c2DeltaVel, c2LeftNormal) / Car.FRAME_LENGTH;
+        const c2DispCenterToImpactPoint = MathUtils.SubtractVec2(impactPoint, car2Bounds.m_center);
+        const c2CenterVel = MathUtils.AddVec2(car2.m_frontAxleVelocity, car2.m_backAxleVelocity).GetScaled(0.5);
+        const c2VelAtImpactPoint = MathUtils.AddVec2(c2CenterVel, c2DispCenterToImpactPoint.GetRotated90Degrees().GetScaled(c2AngularVel));
+        const c2NormalVelAtImpactPoint = MathUtils.GetProjectedOnto2D(c2VelAtImpactPoint, collisionNormal.GetScaled(1.0));
+        const c2TangentVelAtImpactPoint = MathUtils.SubtractVec2(c2VelAtImpactPoint, c2NormalVelAtImpactPoint);
+
+        MathUtils.PushOBB2OutOfEachOther(car1Bounds, car2Bounds);
+        car1.m_frontAxlePosition = MathUtils.AddVec2(car1Bounds.m_center, car1Bounds.m_iBasisNormal.GetScaled(car1Bounds.m_halfDimensions.x));
+        car1.m_backAxlePosition = MathUtils.AddVec2(car1Bounds.m_center, car1Bounds.m_iBasisNormal.GetScaled(-car1Bounds.m_halfDimensions.x));
+        car2.m_frontAxlePosition = MathUtils.AddVec2(car2Bounds.m_center, car2Bounds.m_iBasisNormal.GetScaled(car2Bounds.m_halfDimensions.x));
+        car2.m_backAxlePosition = MathUtils.AddVec2(car2Bounds.m_center, car2Bounds.m_iBasisNormal.GetScaled(-car2Bounds.m_halfDimensions.x));
+
+        car1.PerformFrameCorrectionAndUpdatePosition();
+        car2.PerformFrameCorrectionAndUpdatePosition();
+
+        if (MathUtils.AreVelocitiesDiverging2D(c1VelAtImpactPoint, c2VelAtImpactPoint, collisionNormal))
+        {
+            return;
+        }
+
+        const collisionElasticity = Car.ELASTICITY * Car.ELASTICITY;
+
+        const c1FinalVelAtImpactPoint = MathUtils.AddVec2(c1TangentVelAtImpactPoint, c2NormalVelAtImpactPoint.GetScaled(collisionElasticity));
+        const c2FinalVelAtImpactPoint = MathUtils.AddVec2(c2TangentVelAtImpactPoint, c1NormalVelAtImpactPoint.GetScaled(collisionElasticity));
+
+        let c1FinalAngularVel = c1AngularVel + MathUtils.CrossProduct2D(c1DispCenterToImpactPoint, MathUtils.SubtractVec2(c1FinalVelAtImpactPoint, c1VelAtImpactPoint));
+        c1FinalAngularVel /= Car.MASS;
+        let c2FinalAngularVel = c2AngularVel + MathUtils.CrossProduct2D(c2DispCenterToImpactPoint, MathUtils.SubtractVec2(c2FinalVelAtImpactPoint, c2VelAtImpactPoint));
+        c2FinalAngularVel /= Car.MASS;
+
+        const c1FinalCenterVel = MathUtils.SubtractVec2(c1FinalVelAtImpactPoint, c1DispCenterToImpactPoint.GetScaled(c1FinalAngularVel));
+        const c2FinalCenterVel = MathUtils.SubtractVec2(c2FinalVelAtImpactPoint, c2DispCenterToImpactPoint.GetScaled(c2FinalAngularVel));
+
+        car1.m_frontAxleVelocity = MathUtils.AddVec2(c1FinalCenterVel, car1Bounds.m_iBasisNormal.GetRotated90Degrees().GetScaled(car1Bounds.m_halfDimensions.x * c1FinalAngularVel));
+        car1.m_backAxleVelocity = MathUtils.AddVec2(c1FinalCenterVel, car1Bounds.m_iBasisNormal.GetRotated90Degrees().GetScaled(-car1Bounds.m_halfDimensions.x * c1FinalAngularVel));
+
+        car2.m_frontAxleVelocity = MathUtils.AddVec2(c2FinalCenterVel, car2Bounds.m_iBasisNormal.GetRotated90Degrees().GetScaled(car2Bounds.m_halfDimensions.x * c2FinalAngularVel));
+        car2.m_backAxleVelocity = MathUtils.AddVec2(c2FinalCenterVel, car2Bounds.m_iBasisNormal.GetRotated90Degrees().GetScaled(-car2Bounds.m_halfDimensions.x * c2FinalAngularVel));
+
+    }
+
+    HandleCarVsCarCollision(car1, car2)
+    {
+        const car1Bounds = car1.GetBounds();
+        const car2Bounds = car2.GetBounds();
+
+        if (!MathUtils.DoOBB2Overlap(car1Bounds, car2Bounds))
         {
             return;
         }
@@ -463,7 +630,8 @@ export default class Map
                 const impactPointOnCar1 = car1CornerPoints[car1CornerPointIdx];
                 car1NetImpactPoint.Add(impactPointOnCar1);
 
-                const impactPointOnCar2 = car2Bounds.m_center.GetSum(car2Bounds.m_iBasisNormal.GetScaled(impactPointSignedDistanceFromCar2Center)).GetSum(car2Bounds.m_iBasisNormal.GetRotated90Degrees().GetScaled(car2Bounds.m_halfDimensions.y));
+                // const impactPointOnCar2 = car2Bounds.m_center.GetSum(car2Bounds.m_iBasisNormal.GetScaled(impactPointSignedDistanceFromCar2Center)).GetSum(car2Bounds.m_iBasisNormal.GetRotated90Degrees().GetScaled(car2Bounds.m_halfDimensions.y));
+                const impactPointOnCar2 = car2Bounds.m_center.GetSum(dispCar2CenterToImpactPoint);
                 car2NetImpactPoint.Add(impactPointOnCar2);
 
                 numImpacts++;
@@ -485,7 +653,8 @@ export default class Map
                 const impactPointOnCar2 = car2CornerPoints[car2CornerPointIdx];
                 car2NetImpactPoint.Add(impactPointOnCar2);
 
-                const impactPointOnCar1 = car1Bounds.m_center.GetSum(car1Bounds.m_iBasisNormal.GetScaled(impactPointSignedDistanceFromCar1Center)).GetSum(car1Bounds.m_iBasisNormal.GetRotated90Degrees().GetScaled(car1Bounds.m_halfDimensions.y));
+                // const impactPointOnCar1 = car1Bounds.m_center.GetSum(car1Bounds.m_iBasisNormal.GetScaled(impactPointSignedDistanceFromCar1Center)).GetSum(car1Bounds.m_iBasisNormal.GetRotated90Degrees().GetScaled(car1Bounds.m_halfDimensions.y));
+                const impactPointOnCar1 = car1Bounds.m_center.GetSum(dispCar1CenterToImpactPoint);
                 car1NetImpactPoint.Add(impactPointOnCar1);
 
                 numImpacts++;
@@ -535,10 +704,12 @@ export default class Map
         car2.m_frontAxlePosition = car2Bounds.m_center.GetSum(car2Bounds.m_iBasisNormal.GetScaled(Car.FRAME_LENGTH * 0.5));
         car2.m_backAxlePosition = car2Bounds.m_center.GetDifference(car2Bounds.m_iBasisNormal.GetScaled(Car.FRAME_LENGTH * 0.5));
 
-        if (MathUtils.AreVelocitiesDiverging2D(car1NetVelocity, car2NetVelocity, car1DirectionToImpactPoint))
-        {
-            return;
-        }
+        // if (MathUtils.AreVelocitiesDiverging2D(car1NetVelocity, car2NetVelocity, car1DirectionToImpactPoint))
+        // {
+        //     car1.PerformFrameCorrectionAndUpdatePosition();
+        //     car2.PerformFrameCorrectionAndUpdatePosition();
+        //     return;
+        // }
 
         const car1FrontAxleVelocityNormalToImpact = MathUtils.GetProjectedOnto2D(car1.m_frontAxleVelocity, car1NetImpactPoint.GetDifference(car1.m_frontAxlePosition));
         const car1FrontAxleVelocityTangentToImpact = car1.m_frontAxleVelocity.GetDifference(car1FrontAxleVelocityNormalToImpact);
@@ -552,11 +723,24 @@ export default class Map
         const car2BackAxleVelocityNormalToImpact = MathUtils.GetProjectedOnto2D(car2.m_backAxleVelocity, car2NetImpactPoint.GetDifference(car2.m_backAxlePosition));
         const car2BackAxleVelocityTangentToImpact = car2.m_backAxleVelocity.GetDifference(car2BackAxleVelocityNormalToImpact);
 
-        car1.m_frontAxleVelocity = car1FrontAxleVelocityTangentToImpact.GetSum(car2FrontAxleVelocityNormalToImpact.GetScaled(car2ImpactFrontWeight)).GetSum(car2BackAxleVelocityNormalToImpact.GetScaled(car2ImpactBackWeight)).GetScaled(car1ImpactFrontWeight);
-        car1.m_backAxleVelocity = car1BackAxleVelocityTangentToImpact.GetSum(car2FrontAxleVelocityNormalToImpact.GetScaled(car2ImpactFrontWeight)).GetSum(car2BackAxleVelocityNormalToImpact.GetScaled(car2ImpactBackWeight)).GetScaled(car1ImpactBackWeight);
+        const car1BoneDirection = car1.m_frontAxlePosition.GetDifference(car1.m_backAxlePosition).GetNormalized();
+        const car2BoneDirection = car2.m_frontAxlePosition.GetDifference(car2.m_backAxlePosition).GetNormalized();
 
-        car2.m_frontAxleVelocity = car2FrontAxleVelocityTangentToImpact.GetSum(car1FrontAxleVelocityNormalToImpact.GetScaled(car1ImpactFrontWeight)).GetSum(car1BackAxleVelocityNormalToImpact.GetScaled(car1ImpactBackWeight)).GetScaled(car2ImpactFrontWeight);
-        car2.m_backAxleVelocity = car2BackAxleVelocityTangentToImpact.GetSum(car1FrontAxleVelocityNormalToImpact.GetScaled(car1ImpactFrontWeight)).GetSum(car1BackAxleVelocityNormalToImpact.GetScaled(car1ImpactBackWeight)).GetScaled(car2ImpactBackWeight);
+        const car2FrontAxleVelocityContributingOnlyToTranslation = MathUtils.GetProjectedOnto2D(car2FrontAxleVelocityNormalToImpact, car1BoneDirection);
+        const car2FrontAxleVelocityContributingToMomentOfInertia = car2FrontAxleVelocityNormalToImpact.GetDifference(car2FrontAxleVelocityContributingOnlyToTranslation);
+        const car2BackAxleVelocityContributingOnlyToTranslation = MathUtils.GetProjectedOnto2D(car2BackAxleVelocityNormalToImpact, car1BoneDirection);
+        const car2BackAxleVelocityContributingToMomentOfInertia = car2BackAxleVelocityNormalToImpact.GetDifference(car2BackAxleVelocityContributingOnlyToTranslation);
+
+        const car1FrontAxleVelocityContributingOnlyToTranslation = MathUtils.GetProjectedOnto2D(car1FrontAxleVelocityNormalToImpact, car2BoneDirection);
+        const car1FrontAxleVelocityContributingToMomentOfInertia = car1FrontAxleVelocityNormalToImpact.GetDifference(car1FrontAxleVelocityContributingOnlyToTranslation);
+        const car1BackAxleVelocityContributingOnlyToTranslation = MathUtils.GetProjectedOnto2D(car1BackAxleVelocityNormalToImpact, car2BoneDirection);
+        const car1BackAxleVelocityContributingToMomentOfInertia = car1BackAxleVelocityNormalToImpact.GetDifference(car1BackAxleVelocityContributingOnlyToTranslation);
+
+        car1.m_frontAxleVelocity = car1FrontAxleVelocityTangentToImpact.GetSum(car2FrontAxleVelocityContributingToMomentOfInertia.GetScaled(car2ImpactFrontWeight)).GetSum(car2FrontAxleVelocityContributingOnlyToTranslation).GetSum(car2BackAxleVelocityContributingToMomentOfInertia.GetScaled(car2ImpactBackWeight)).GetSum(car2BackAxleVelocityContributingOnlyToTranslation).GetScaled(car1ImpactFrontWeight);
+        car1.m_backAxleVelocity = car1BackAxleVelocityTangentToImpact.GetSum(car2BackAxleVelocityContributingToMomentOfInertia.GetScaled(car2ImpactFrontWeight)).GetSum(car2FrontAxleVelocityContributingOnlyToTranslation).GetSum(car2BackAxleVelocityContributingToMomentOfInertia.GetScaled(car2ImpactBackWeight)).GetSum(car2BackAxleVelocityContributingOnlyToTranslation).GetScaled(car1ImpactBackWeight);
+
+        car2.m_frontAxleVelocity = car2FrontAxleVelocityTangentToImpact.GetSum(car1FrontAxleVelocityContributingToMomentOfInertia.GetScaled(car1ImpactFrontWeight)).GetSum(car1FrontAxleVelocityContributingOnlyToTranslation).GetSum(car1BackAxleVelocityContributingToMomentOfInertia.GetScaled(car1ImpactBackWeight)).GetSum(car1BackAxleVelocityContributingOnlyToTranslation).GetScaled(car2ImpactFrontWeight);
+        car2.m_backAxleVelocity = car2BackAxleVelocityTangentToImpact.GetSum(car1FrontAxleVelocityContributingToMomentOfInertia.GetScaled(car1ImpactFrontWeight)).GetSum(car1FrontAxleVelocityContributingOnlyToTranslation).GetSum(car1BackAxleVelocityContributingToMomentOfInertia.GetScaled(car1ImpactBackWeight)).GetSum(car1BackAxleVelocityContributingOnlyToTranslation).GetScaled(car2ImpactBackWeight);
 
         car1.PerformFrameCorrectionAndUpdatePosition();
         car2.PerformFrameCorrectionAndUpdatePosition();
@@ -749,7 +933,7 @@ export default class Map
 
     UpdateHUD()
     {
-        if (g_aspect >= 2.0)
+        if (g_aspect >= 1.85)
         {
             let isAnyCarOrBallUnderClockWidget = false;
             for (let carIndex = 0; carIndex < this.m_cars.length; carIndex++)

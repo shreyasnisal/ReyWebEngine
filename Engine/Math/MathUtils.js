@@ -94,6 +94,21 @@ export function GetTurnedTowardDegrees(currentDegrees, goalDegrees, maxDeltaDegr
 }
 //------------------------------------------------------------------------------------------------------------
 
+// Vec2 operations
+//------------------------------------------------------------------------------------------------------------
+
+export function AddVec2(vecA, vecB)
+{
+    return new Vec2(vecA.x + vecB.x, vecA.y + vecB.y);
+}
+
+export function SubtractVec2(vecA, vecB)
+{
+    return new Vec2(vecA.x - vecB.x, vecA.y - vecB.y);
+}
+
+//------------------------------------------------------------------------------------------------------------
+
 export function NormalizeByte(byteToNormalize)
 {
     return byteToNormalize / 255;
@@ -425,6 +440,39 @@ export function DoOBB2Overlap(obb1, obb2)
     }
 
     return true;
+}
+
+export function GetCollisionNormalForOverlappingOBB2s(obb1, obb2)
+{
+    const separatingAxes = [obb1.m_iBasisNormal, obb1.m_iBasisNormal.GetRotated90Degrees(), obb2.m_iBasisNormal, obb2.m_iBasisNormal.GetRotated90Degrees()];
+
+    let minOverlap = Infinity;
+    let collisionNormal = new Vec2();
+
+    for (let axisIndex = 0; axisIndex < separatingAxes.length; axisIndex++)
+    {
+        const obb1ProjectionRangeOnAxis = obb1.GetNumberRangeForCornerPointsProjectedOntoAxis(separatingAxes[axisIndex]);
+        const obb2ProjectionRangeOnAxis = obb2.GetNumberRangeForCornerPointsProjectedOntoAxis(separatingAxes[axisIndex]);
+        const overlap = Math.min(obb1ProjectionRangeOnAxis.m_max, obb2ProjectionRangeOnAxis.m_max) - Math.max(obb1ProjectionRangeOnAxis.m_min, obb2ProjectionRangeOnAxis.m_min);
+        if (overlap <= 0.0)
+        {
+            // Found a separating axis, no overlap
+            return new Vec2();
+        }
+        if (overlap < minOverlap)
+        {
+            minOverlap = overlap;
+            collisionNormal = new Vec2(separatingAxes[axisIndex].x, separatingAxes[axisIndex].y);
+        }
+    }
+
+    const dirObb1ToObb2 = SubtractVec2(obb2.m_center, obb1.m_center);
+    if (DotProduct2D(collisionNormal, dirObb1ToObb2) < 0.0)
+    {
+        collisionNormal.Scale(-1.0);
+    }
+
+    return collisionNormal;
 }
 
 export function PushOBB2OutOfEachOther(obb1, obb2)
