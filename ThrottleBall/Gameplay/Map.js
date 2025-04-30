@@ -572,7 +572,7 @@ export default class Map
 
         const c1LeftNormal = car1Bounds.m_iBasisNormal.GetRotated90Degrees();
         const c1DeltaVel = MathUtils.SubtractVec2(car1.m_frontAxleVelocity, car1.m_backAxleVelocity);
-        const c1AngularVel = MathUtils.DotProduct2D(c1DeltaVel, c1LeftNormal);
+        const c1AngularVel = MathUtils.DotProduct2D(c1DeltaVel, c1LeftNormal) / Car.FRAME_LENGTH;
         const c1DispCenterToImpactPoint = MathUtils.SubtractVec2(impactPoint, car1Bounds.m_center);
         const c1CenterVel = MathUtils.AddVec2(car1.m_frontAxleVelocity, car1.m_backAxleVelocity).GetScaled(0.5);
         const c1VelAtImpactPoint = MathUtils.AddVec2(c1CenterVel, c1DispCenterToImpactPoint.GetRotated90Degrees().GetScaled(c1AngularVel));

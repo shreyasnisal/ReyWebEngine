@@ -667,6 +667,11 @@ export default class Game
                     continue;
                 }
 
+                if (this.m_players[playerIndex].m_car == null)
+                {
+                    continue;
+                }
+
             this.m_players[playerIndex].HandleMovementInput();
         }
         this.m_map.Update();
