@@ -101,7 +101,7 @@ export default class Game
             this.m_squirrelFixedFont = font;
         });
 
-        this.m_transitionTimer = new Stopwatch(0.5, this.m_clock);
+        this.m_transitionTimer = new Stopwatch(0.5);
         this.m_state = GameState.ATTRACT;
         this.m_nextState = GameState.NONE;
 
@@ -400,6 +400,15 @@ export default class Game
             .SetFontSize(4.0)
             .SetBackgroundColor(TERTIARY_COLOR_VARIANT_DARK)
             .SetColor(Rgba8.WHITE);
+
+        this.m_countdownTimerWidget = g_ui.CreateWidget(this.m_gameWidget);
+        this.m_countdownTimerWidget.SetText("")
+            .SetPosition(new Vec2(0.5, 0.5))
+            .SetDimensions(new Vec2(0.2, 0.2))
+            .SetPivot(new Vec2(0.5, 0.5))
+            .SetAlignment(new Vec2(0.5, 0.5))
+            .SetColor(Rgba8.WHITE)
+            .SetFontSize(12.0);
     }
 
     InitializeMatchEndUI()

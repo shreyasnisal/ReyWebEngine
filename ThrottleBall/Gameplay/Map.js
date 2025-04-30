@@ -46,6 +46,13 @@ export default class Map
 
         this.m_clockBlinkTimer = new Stopwatch(1.0, this.m_game.m_clock);
 
+        this.m_countdownTimer = new Stopwatch(3.0);
+        setTimeout(() => {
+            this.m_game.m_countdownTimerWidget.SetVisible(true);
+            this.m_countdownTimer.Start();
+            this.m_game.m_clock.Pause();
+        }, this.m_game.m_transitionTimer.m_duration * 1000 + 100);
+
         // DebugFlags
         this.m_drawDebug = false;
         this.m_disableFieldRendering = false;
@@ -138,8 +145,32 @@ export default class Map
         return directionCarToBallPosition.GetOrientationDegrees();
     }
 
+    HandleCountdown()
+    {
+        if (this.m_countdownTimer.GetRemainingSeconds() > 0)
+        {
+            this.m_game.m_countdownTimerWidget.SetText(this.m_countdownTimer.GetRemainingSeconds());
+        }
+        else
+        {
+            this.m_game.m_countdownTimerWidget.SetText("Go!");
+        }
+    }
+
     Update()
     {
+        if (!this.m_countdownTimer.IsStopped())
+        {
+            this.HandleCountdown();
+
+            if (this.m_countdownTimer.HasDurationElapsed())
+            {
+                this.m_countdownTimer.Stop();
+                this.m_game.m_clock.Unpause();
+                this.m_game.m_countdownTimerWidget.SetVisible(false);
+            }
+        }
+
         this.HandleDevCheats();
 
         // Update Entities
@@ -795,6 +826,13 @@ export default class Map
             g_audio.PlaySound(this.m_goalScored);
             this.IncrementScoreForTeam(goal.m_team === Team.BLUE ? Team.RED : Team.BLUE);
             this.ResetCarsAndBall();
+
+            if (this.m_matchTimer.GetRemainingSeconds() > 0)
+            {
+                this.m_game.m_clock.Pause();
+                this.m_countdownTimer.Start();
+                this.m_game.m_countdownTimerWidget.SetVisible(true);
+            }
         }
     }
 
