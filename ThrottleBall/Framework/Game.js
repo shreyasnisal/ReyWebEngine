@@ -81,7 +81,7 @@ export class GameState
 
 export default class Game
 {
-    static MATCH_DURATION_SECONDS = 300;
+    static MATCH_DURATION_SECONDS = 5;
 
     constructor()
     {
@@ -109,6 +109,9 @@ export default class Game
         this.m_playerCarChoiceIndexes = [];
         this.m_playerStatus = [];
         this.m_map = null;
+
+        this.m_blueTeamScore = 0;
+        this.m_redTeamScore = 0;
 
         this.SetGlobalRendererSettings();
         this.LoadAssets();
@@ -413,7 +416,19 @@ export default class Game
             .SetPosition(new Vec2(0.5, 0.5))
             .SetDimensions(new Vec2(1.0, 0.5))
             .SetPivot(new Vec2(0.5, 0.5))
-            .SetAlignment(new Vec2(0.5, 0.5));
+            .SetAlignment(new Vec2(0.5, 0.5))
+            .SetColor(Rgba8.WHITE)
+            .SetFontSize(12.0);
+
+        const infoText = g_ui.CreateWidget(this.m_matchEndWidget);
+        infoText.SetText("B to return to lobby\nY for a rematch")
+            .SetPosition(new Vec2(0.5, 0.2))
+            .SetDimensions(new Vec2(1.0, 0.1))
+            .SetPivot(new Vec2(0.5, 0.5))
+            .SetAlignment(new Vec2(0.5, 0.5))
+            .SetColor(Rgba8.WHITE)
+            .SetFontSize(4.0)
+            .SetColor(Rgba8.WHITE);
     }
 
     FixedUpdate(deltaSeconds)
@@ -650,17 +665,19 @@ export default class Game
 
     Update_MatchEnd()
     {
-        let messageColor = GetTeamColor(Team.RED);
-        let messageText = "Red Team Won!";
-
-        if (this.m_map.m_blueTeamScore > this.m_map.m_redTeamScore)
+        for (let playerIndex = 0; playerIndex < this.m_players.length; playerIndex++)
         {
-            messageColor = GetTeamColor(Team.BLUE);
-            messageText = "Blue Team Won!";
+            const gamepad = g_input.GetController(playerIndex);
+            if (gamepad.WasButtonJustPressed(XboxButtonID.B))
+            {
+                this.m_nextState = GameState.LOBBY;
+            }
+            if (gamepad.WasButtonJustPressed(XboxButtonID.Y))
+            {
+                this.m_nextState = GameState.GAME;
+            }
         }
-        messageText += "\n" + this.m_map.m_blueTeamScore + "-" + this.m_map.m_redTeamScore;
-        const screenCenter = new Vec2(SCREEN_SIZE_Y * g_aspect, SCREEN_SIZE_Y).GetScaled(0.5);
-        g_debugRenderSystem.AddScreenText(messageText, screenCenter, 40.0, new Vec2(0.5, 0.5), 0.0, messageColor, messageColor);
+
     }
 
     HandleDevCheats()
@@ -829,6 +846,15 @@ export default class Game
 
     Enter_Lobby()
     {
+        this.m_players = [];
+        this.m_playerCarChoiceIndexes = [];
+        this.m_playerStatus = [];
+        this.m_map = null;
+        for (let playerIndex = 0; playerIndex < 4; playerIndex++)
+        {
+            this.SetWidgetsHiddenForPlayer(playerIndex);
+        }
+
         this.m_lobbyWidget.SetVisible(true);
         this.m_lobbyWidget.SetFocus(true);
     }
@@ -844,6 +870,12 @@ export default class Game
         this.m_gameWidget.SetVisible(true);
         this.m_gameWidget.SetFocus(true);
 
+        this.m_blueTeamScore = 0;
+        this.m_redTeamScore = 0;
+
+        this.m_blueTeamScoreWidget.SetText(this.m_blueTeamScore.toString());
+        this.m_redTeamScoreWidget.SetText(this.m_redTeamScore.toString());
+
         this.m_map = new Map(this);
     }
 
@@ -851,16 +883,30 @@ export default class Game
     {
         this.m_gameWidget.SetVisible(false);
         this.m_gameWidget.SetFocus(false);
+
+        delete this.m_map;
     }
 
     Enter_MatchEnd()
     {
+        let messageColor = GetTeamColor(Team.RED);
+        let messageText = "Red Team Won!";
 
+        if (this.m_blueTeamScore > this.m_redTeamScore)
+        {
+            messageColor = GetTeamColor(Team.BLUE);
+            messageText = "Blue Team Won!";
+        }
+        messageText += "\n" + this.m_blueTeamScore + "-" + this.m_redTeamScore;
+
+        this.m_matchEndWinnerTextWidget.SetColor(messageColor).SetText(messageText);
+
+        this.m_matchEndWidget.SetVisible(true).SetFocus(true);
     }
 
     Exit_MatchEnd()
     {
-
+        this.m_matchEndWidget.SetVisible(false).SetFocus(false);
     }
 
     HandleStateChange()
@@ -886,6 +932,7 @@ export default class Game
                 case GameState.CREDITS:		    this.Exit_Credits();		break;
                 case GameState.LOBBY:		    this.Exit_Lobby();			break;
                 case GameState.GAME:			this.Exit_Game();			break;
+                case GameState.MATCH_END:       this.Exit_MatchEnd();       break;
             }
 
             this.m_state = this.m_nextState;
@@ -901,6 +948,7 @@ export default class Game
                 case GameState.CREDITS:		    this.Enter_Credits();		break;
                 case GameState.LOBBY:		    this.Enter_Lobby();			break;
                 case GameState.GAME:			this.Enter_Game();			break;
+                case GameState.MATCH_END:		this.Enter_MatchEnd();		break;
             }
 
             this.m_transitionTimer.Stop();

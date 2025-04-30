@@ -39,8 +39,6 @@ export default class Map
         this.m_blueTeamGoal = new Goal(this, new Vec2(WORLD_SIZE_X * 0.02, WORLD_SIZE_Y * 0.5), 0.0, Team.BLUE);
         this.m_redTeamGoal = new Goal(this, new Vec2(WORLD_SIZE_X * 0.98, WORLD_SIZE_Y * 0.5), 180.0, Team.RED);
 
-        this.m_blueTeamScore = 0;
-        this.m_redTeamScore = 0;
         this.m_isSuddenDeath = false;
 
         this.m_matchTimer = new Stopwatch(Game.MATCH_DURATION_SECONDS, this.m_game.m_clock);
@@ -984,16 +982,6 @@ export default class Map
                 }
             }
         }
-
-        // g_debugRenderSystem.AddScreenText(this.m_blueTeamScore + " - " + this.m_redTeamScore, new Vec2(SCREEN_SIZE_Y * g_aspect * 0.5, SCREEN_SIZE_Y), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
-        // if (!this.m_isSuddenDeath)
-        // {
-        //     g_debugRenderSystem.AddScreenText(GetTimeStringFromSeconds(this.m_matchTimer.GetRemainingSeconds()), new Vec2(SCREEN_SIZE_Y * g_aspect * 0.5, SCREEN_SIZE_Y - 20.0), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
-        // }
-        // else
-        // {
-        //     g_debugRenderSystem.AddScreenText("Sudden Death!", new Vec2(SCREEN_SIZE_Y * g_aspect * 0.5, SCREEN_SIZE_Y - 20.0), 20.0, new Vec2(0.5, 1.25), 0.0, Rgba8.MAGENTA, Rgba8.MAGENTA);
-        // }
     }
 
     ResetCarsAndBall()
@@ -1029,13 +1017,13 @@ export default class Map
     {
         if (team === Team.BLUE)
         {
-            this.m_blueTeamScore++;
-            this.m_game.m_blueTeamScoreWidget.SetText(this.m_blueTeamScore.toString());
+            this.m_game.m_blueTeamScore++;
+            this.m_game.m_blueTeamScoreWidget.SetText(this.m_game.m_blueTeamScore.toString());
         }
         else if (team === Team.RED)
         {
-            this.m_redTeamScore++;
-            this.m_game.m_redTeamScoreWidget.SetText(this.m_redTeamScore.toString());
+            this.m_game.m_redTeamScore++;
+            this.m_game.m_redTeamScoreWidget.SetText(this.m_game.m_redTeamScore.toString());
         }
 
         if (this.m_isSuddenDeath)
@@ -1049,7 +1037,7 @@ export default class Map
         // Check for end of match
         if (this.m_matchTimer.HasDurationElapsed())
         {
-            if (this.m_blueTeamScore === this.m_redTeamScore)
+            if (this.m_game.m_blueTeamScore === this.m_game.m_redTeamScore)
             {
                 this.m_matchTimer.Stop();
                 this.m_isSuddenDeath = true;
