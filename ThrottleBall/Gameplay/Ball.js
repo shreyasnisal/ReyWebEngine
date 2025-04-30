@@ -65,7 +65,7 @@ export default class Ball
         // Reset acceleration: Acceleration is accumulated each frame
         this.m_acceleration = new Vec2(0.0, 0.0);
 
-        this.m_uvOffset.Add(this.m_velocity.GetScaled(-0.001));
+        this.m_uvOffset.Add(this.m_velocity.GetScaled(-0.002));
     }
 
     Render()

@@ -81,7 +81,7 @@ export class GameState
 
 export default class Game
 {
-    static MATCH_DURATION_SECONDS = 5;
+    static MATCH_DURATION_SECONDS = 300;
 
     constructor()
     {
@@ -314,17 +314,17 @@ export default class Game
 
         this.m_playerPrevCarButtonWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
         this.m_playerPrevCarButtonWidgets[playerIndex].SetImage("/ThrottleBall/Data/Images/xbox_lb.png")
-            .SetPosition(new Vec2(0.3, 0.5))
+            .SetPosition(new Vec2(0.35, 0.1))
             .SetDimensions(new Vec2(0.25 / g_aspect, 0.25))
             .SetPivot(new Vec2(0.0, 0.5))
             .SetAlignment(new Vec2(0.0, 0.0))
             .SetColor(Rgba8.WHITE)
             .SetVisible(false);
 
-        const defaultCarIndex = playerIndex % 2 === 0 ? 0 : NUM_CAR_CHOICES / 2;
+        // const defaultCarIndex = playerIndex % 2 === 0 ? 0 : NUM_CAR_CHOICES / 2;
 
         this.m_playerCarWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
-        this.m_playerCarWidgets[playerIndex].SetImage(CAR_IMAGE_PATHS[defaultCarIndex])
+        this.m_playerCarWidgets[playerIndex].SetImage(CAR_IMAGE_PATHS[0])
             .SetPosition(new Vec2(0.3, 0.5))
             .SetDimensions(new Vec2(0.3, 0.5))
             .SetPivot(new Vec2(0.0, 0.5))
@@ -334,7 +334,7 @@ export default class Game
 
         this.m_playerNextCarButtonWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
         this.m_playerNextCarButtonWidgets[playerIndex].SetImage("/ThrottleBall/Data/Images/xbox_rb.png")
-            .SetPosition(new Vec2(0.5, 0.5))
+            .SetPosition(new Vec2(0.4, 0.1))
             .SetDimensions(new Vec2(0.25 / g_aspect, 0.25))
             .SetPivot(new Vec2(0.0, 0.5))
             .SetAlignment(new Vec2(0.0, 0.0))
@@ -352,12 +352,12 @@ export default class Game
             .SetVisible(false);
 
         this.m_playerTeamWidgets[playerIndex] = g_ui.CreateWidget(parentWidget);
-        this.m_playerTeamWidgets[playerIndex].SetText(GetTeamString(GetTeamFromCarImageIndex(defaultCarIndex)))
+        this.m_playerTeamWidgets[playerIndex].SetText(GetTeamString(GetTeamFromCarImageIndex(0)))
             .SetPosition(new Vec2(0.75, 0.8))
             .SetDimensions(new Vec2(0.3, 1.0))
             .SetPivot(new Vec2(0.0, 0.5))
             .SetAlignment(new Vec2(0.05, 0.0))
-            .SetColor(GetTeamColor(GetTeamFromCarImageIndex(defaultCarIndex)))
+            .SetColor(GetTeamColor(GetTeamFromCarImageIndex(0)))
             .SetFontSize(4.0)
             .SetVisible(false);
     }
@@ -597,6 +597,16 @@ export default class Game
         {
             if (this.m_playerStatus[controllerIndex] === PlayerState.NOT_JOINED)
             {
+                const playersAlreadyJoined = this.GetNumJoinedPlayers();
+                if (playersAlreadyJoined % 2 === 0)
+                {
+                    this.m_playerCarChoiceIndexes[controllerIndex] = 0;
+                }
+                else
+                {
+                    this.m_playerCarChoiceIndexes[controllerIndex] = NUM_CAR_CHOICES / 2;
+                }
+                this.m_playerCarWidgets[controllerIndex].SetImage(CAR_IMAGE_PATHS[this.m_playerCarChoiceIndexes[controllerIndex]]);
                 this.m_playerJoinInfoTextWidgets[controllerIndex].SetText("Press A when Ready!");
                 this.SetWidgetsVisibleForPlayer(controllerIndex);
                 this.m_players[controllerIndex] = new PlayerController(controllerIndex, controllerIndex % 2 === 0 ? Team.BLUE : Team.RED);
@@ -638,6 +648,20 @@ export default class Game
             this.m_playerCarChoiceIndexes.splice(controllerIndex, 1);
             this.SetWidgetsHiddenForPlayer(controllerIndex);
         }
+    }
+
+    GetNumJoinedPlayers()
+    {
+        let numPlayersJoined = 0;
+        for (let playerIndex = 0; playerIndex < this.m_playerStatus.length; playerIndex++)
+        {
+            if (this.m_playerStatus[playerIndex] === PlayerState.JOINED)
+            {
+                numPlayersJoined++;
+            }
+        }
+
+        return numPlayersJoined;
     }
 
     SetWidgetsVisibleForPlayer(playerIndex)
@@ -903,6 +927,8 @@ export default class Game
 
     Enter_MatchEnd()
     {
+        this.m_clock.Unpause();
+
         let messageColor = GetTeamColor(Team.RED);
         let messageText = "Red Team Won!";
 
