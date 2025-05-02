@@ -47,6 +47,30 @@ export function AddPCUVertsForLineSegment2D(verts, start, end, thickness, color 
     verts.push(vertex2);
 }
 
+export function AddPCUVertsForLineSegmentWithNoExtension2D(verts, start, end, thickness, color = Rgba8.WHITE)
+{
+    const fwdNormal = end.GetDifference(start).GetNormalized();
+    const leftNormal = fwdNormal.GetRotated90Degrees();
+
+    const  vertex1Position = start.GetDifference((leftNormal).GetScaled(thickness));
+    const  vertex2Position = start.GetDifference((leftNormal).GetScaled(thickness));
+    const  vertex3Position = end.GetSum((leftNormal).GetScaled(thickness));
+    const  vertex4Position = end.GetSum((leftNormal).GetScaled(thickness));
+
+    const vertex1 = new Vertex_PCU(vertex1Position.GetAsVec3(), color, Vec2.ZERO);
+    const vertex2 = new Vertex_PCU(vertex2Position.GetAsVec3(), color, Vec2.ZERO);
+    const vertex3 = new Vertex_PCU(vertex3Position.GetAsVec3(), color, Vec2.ZERO);
+    const vertex4 = new Vertex_PCU(vertex4Position.GetAsVec3(), color, Vec2.ZERO);
+
+    verts.push(vertex1);
+    verts.push(vertex3);
+    verts.push(vertex4);
+
+    verts.push(vertex1);
+    verts.push(vertex4);
+    verts.push(vertex2);
+}
+
 export function AddPCUVertsForAABB2(verts, bounds, color = Rgba8.WHITE, uvCoords = AABB2.ZERO_TO_ONE)
 {
     const vertexBLPosition = bounds.m_mins;
@@ -140,6 +164,61 @@ export function AddPCUVertsForDisc2D(verts, center, radius, color = Rgba8.WHITE,
 
         previousVertexPosition = newVertexPosition;
         previousVertexUVs = newVertexUVs;
+    }
+}
+
+export function AddPCUVertsForDiscWithOutline2D(verts, center, outerRadius, ringThickness, color = Rgba8.WHITE, uvCoords = AABB2.ZERO_TO_ONE, numSlices = 64)
+{
+    const discRadius = outerRadius - ringThickness;
+
+    const numVerts = numSlices * 3;
+    const degreesIncrementPerSlice = 360.0 / numSlices;
+
+    for (let sliceIndex = 0; sliceIndex < numSlices; sliceIndex++)
+    {
+        const startThetaDegrees = sliceIndex * degreesIncrementPerSlice;
+        const endThetaDegrees = (sliceIndex + 1) * degreesIncrementPerSlice;
+
+        const centerVertex = new Vertex_PCU(center.GetAsVec3(), color, uvCoords.m_mins.GetSum(new Vec2(0.5, 0.5)));
+
+        const startVertexPosition = center.GetSum(Vec2.MakeFromPolarDegrees(startThetaDegrees, discRadius));
+        const startVertexUVs = uvCoords.m_mins.GetSum(new Vec2(0.5, 0.5)).GetSum(Vec2.MakeFromPolarDegrees(startThetaDegrees, 0.25));
+        const startVertex = new Vertex_PCU(startVertexPosition.GetAsVec3(), color, startVertexUVs);
+
+        const endVertexPosition = center.GetSum(Vec2.MakeFromPolarDegrees(endThetaDegrees, discRadius));
+        const endVertexUVs = uvCoords.m_mins.GetSum(new Vec2(0.5, 0.5)).GetSum(Vec2.MakeFromPolarDegrees(endThetaDegrees, 0.25));
+        const endVertex = new Vertex_PCU(endVertexPosition.GetAsVec3(), color, endVertexUVs);
+
+        verts.push(centerVertex);
+        verts.push(startVertex);
+        verts.push(endVertex);
+    }
+
+    for (let triIndex = 0; triIndex < numSlices; triIndex++)
+    {
+        const startThetaDegrees = triIndex * degreesIncrementPerSlice;
+        let endThetaDegrees = (triIndex + 1) * degreesIncrementPerSlice;
+        if (endThetaDegrees > 360.0)
+        {
+            endThetaDegrees -= 360.0;
+        }
+
+        const innerStartUVs = uvCoords.m_mins.GetSum(new Vec2(0.5, 0.5)).GetSum(Vec2.MakeFromPolarDegrees(startThetaDegrees, 0.25));
+        const outerStartUVs = uvCoords.m_mins.GetSum(new Vec2(0.5, 0.5)).GetSum(Vec2.MakeFromPolarDegrees(startThetaDegrees, 0.5));
+        const innerEndUVs = uvCoords.m_mins.GetSum(new Vec2(0.5, 0.5)).GetSum(Vec2.MakeFromPolarDegrees(endThetaDegrees, 0.25));
+        const outerEndUVs = uvCoords.m_mins.GetSum(new Vec2(0.5, 0.5)).GetSum(Vec2.MakeFromPolarDegrees(endThetaDegrees, 0.5));
+
+        const innerStartVertexPos = center.GetSum(Vec2.MakeFromPolarDegrees(startThetaDegrees, discRadius));
+        const outerStartVertexPos = center.GetSum(Vec2.MakeFromPolarDegrees(startThetaDegrees, outerRadius));
+        const innerEndVertexPos = center.GetSum(Vec2.MakeFromPolarDegrees(endThetaDegrees, discRadius));
+        const outerEndVertexPos = center.GetSum(Vec2.MakeFromPolarDegrees(endThetaDegrees, outerRadius));
+
+        verts.push(new Vertex_PCU(new Vec3(innerStartVertexPos.x, innerStartVertexPos.y, 0.0), color, innerStartUVs));
+        verts.push(new Vertex_PCU(new Vec3(outerStartVertexPos.x, outerStartVertexPos.y, 0.0), color, outerStartUVs));
+        verts.push(new Vertex_PCU(new Vec3(innerEndVertexPos.x, innerEndVertexPos.y, 0.0), color, innerEndUVs));
+        verts.push(new Vertex_PCU(new Vec3(outerStartVertexPos.x, outerStartVertexPos.y, 0.0), color, outerStartUVs));
+        verts.push(new Vertex_PCU(new Vec3(outerEndVertexPos.x, outerEndVertexPos.y, 0.0), color, outerEndUVs));
+        verts.push(new Vertex_PCU(new Vec3(innerEndVertexPos.x, innerEndVertexPos.y, 0.0), color, innerEndUVs));
     }
 }
 

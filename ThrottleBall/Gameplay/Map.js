@@ -20,10 +20,10 @@ import * as VertexUtils from "/Engine/Core/VertexUtils.js";
 
 import AABB2 from "/Engine/Math/AABB2.js";
 import * as MathUtils from "/Engine/Math/MathUtils.js";
+import NumberRange from "/Engine/Math/NumberRange.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 
 import {g_aspect} from "/Engine/Renderer/Renderer.js";
-import {PushOBB2OutOfEachOther} from "/Engine/Math/MathUtils.js";
 
 
 export default class Map
@@ -47,11 +47,9 @@ export default class Map
         this.m_clockBlinkTimer = new Stopwatch(1.0, this.m_game.m_clock);
 
         this.m_countdownTimer = new Stopwatch(3.0);
-        setTimeout(() => {
-            this.m_game.m_countdownTimerWidget.SetVisible(true);
-            this.m_countdownTimer.Start();
-            this.m_game.m_clock.Pause();
-        }, this.m_game.m_transitionTimer.m_duration * 1000 + 100);
+        this.m_game.m_countdownTimerWidget.SetVisible(true);
+        this.m_countdownTimer.Start();
+        this.m_game.m_clock.Pause();
 
         // DebugFlags
         this.m_drawDebug = false;
@@ -92,8 +90,9 @@ export default class Map
 
             const carOrientation = this.GetCarOrientationFromPosition(carPosition);
 
-            this.m_cars.push(new Car(this, carPosition, carOrientation, this.m_game.m_players[carIndex], this.m_game.m_players[carIndex].m_team, CAR_IMAGE_PATHS[this.m_game.m_playerCarChoiceIndexes[carIndex]]));
-            this.m_game.m_players[carIndex].SetCar(this.m_cars[carIndex]);
+            const newCar = new Car(this, carPosition, carOrientation, this.m_game.m_players[carIndex], this.m_game.m_players[carIndex].m_team, CAR_IMAGE_PATHS[this.m_game.m_playerCarChoiceIndexes[carIndex]]);
+            this.m_cars.push(newCar);
+            this.m_game.m_players[carIndex].SetCar(newCar);
         }
     }
 
@@ -501,6 +500,28 @@ export default class Map
         car.m_backAxleVelocity = carImpactPointFinalVelocity.GetScaled(impactBackWeight);
 
         g_audio.PlaySound(this.m_carVsBallSFX, false, MathUtils.RangeMapClamped(ballNormalMomentumInCoMFrame.GetLength(), 0.0, Ball.MASS * 100.0, 0.0, 1.0));
+
+        const particleSpawnMins = MathUtils.SubtractVec2(impactPointOnCar, MathUtils.AddVec2(Vec2.WEST.GetScaled(2.0), Vec2.SOUTH.GetScaled(2.0)));
+        const particleSpawnMaxs = MathUtils.SubtractVec2(impactPointOnCar, MathUtils.AddVec2(Vec2.EAST.GetScaled(2.0), Vec2.NORTH.GetScaled(2.0)));
+
+        const relativeVelocity = MathUtils.SubtractVec2(MathUtils.AddVec2(car.m_frontAxleVelocity, car.m_backAxleVelocity).GetScaled(0.5), ball.m_velocity);
+        const particleVelMins = MathUtils.AddVec2(relativeVelocity.GetScaled(0.5), MathUtils.AddVec2(Vec2.WEST.GetScaled(10.0), Vec2.SOUTH.GetScaled(10.0)));
+        const particleVelMaxs = MathUtils.AddVec2(relativeVelocity.GetScaled(0.5), MathUtils.AddVec2(Vec2.EAST.GetScaled(10.0), Vec2.NORTH.GetScaled(10.0)));
+
+        // this.m_game.SpawnParticleCluster(
+        //     10,
+        //     new NumberRange(particleSpawnMins.x, particleSpawnMaxs.x),
+        //     new NumberRange(particleSpawnMins.y, particleSpawnMaxs.y),
+        //     new NumberRange(particleVelMins.x, particleVelMaxs.x),
+        //     new NumberRange(particleVelMins.y, particleVelMaxs.y),
+        //     new NumberRange(0.0, 360.0),
+        //     new NumberRange(-60.0, 60.0),
+        //     0.2,
+        //     0.5,
+        //     4,
+        //     new Rgba8(Rgba8.ORANGE.r, Rgba8.ORANGE.g, Rgba8.ORANGE.b, 255),
+        //     0.5
+        // );
 
         car.PerformFrameCorrectionAndUpdatePosition();
     }

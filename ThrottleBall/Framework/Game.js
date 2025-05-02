@@ -26,8 +26,9 @@ import {
 
 import {SubscribeButtonEvents} from "/ThrottleBall/Framework/ButtonEvents.js";
 import Car from "/ThrottleBall/Gameplay/Car.js";
-import PlayerController from "/ThrottleBall/Gameplay/PlayerController.js";
 import Map from "/ThrottleBall/Gameplay/Map.js";
+import PlayerController from "/ThrottleBall/Gameplay/PlayerController.js";
+import Particle from "/ThrottleBall/Gameplay/Particle.js";
 
 import {
     g_renderer,
@@ -51,12 +52,12 @@ import { XboxButtonID } from "/Engine/Input/XboxController.js";
 
 import AABB2 from "/Engine/Math/AABB2.js";
 import * as MathUtils from "/Engine/Math/MathUtils.js";
+import * as RNG from "/Engine/Math/RandomNumberGenerator.js";
 import Vec2 from "/Engine/Math/Vec2.js";
 
 import Camera from "/Engine/Renderer/Camera.js";
 import { BlendMode, CullMode, DepthMode, g_aspect, VertexType } from "/Engine/Renderer/Renderer.js";
 
-import * as DOM from "/Engine/Window/DomManager.js";
 
 export class PlayerState
 {
@@ -94,6 +95,8 @@ export default class Game
 
         this.m_clock = new Clock();
 
+        this.m_timeInState = 0.0;
+
         // Load BitmapFont
         this.m_squirrelFixedFont = null;
         g_renderer.CreateOrGetBitmapFont("/Sandbox/Data/Images/SquirrelFixedFont").then(font =>
@@ -109,6 +112,9 @@ export default class Game
         this.m_playerCarChoiceIndexes = [];
         this.m_playerStatus = [];
         this.m_map = null;
+        this.m_arePlayersLocked = false;
+
+        this.m_particles = [];
 
         this.m_blueTeamScore = 0;
         this.m_redTeamScore = 0;
@@ -403,7 +409,7 @@ export default class Game
 
         this.m_countdownTimerWidget = g_ui.CreateWidget(this.m_gameWidget);
         this.m_countdownTimerWidget.SetText("")
-            .SetPosition(new Vec2(0.5, 0.5))
+            .SetPosition(new Vec2(0.5, 0.75))
             .SetDimensions(new Vec2(0.2, 0.2))
             .SetPivot(new Vec2(0.5, 0.5))
             .SetAlignment(new Vec2(0.5, 0.5))
@@ -447,6 +453,8 @@ export default class Game
 
     Update()
     {
+        this.m_timeInState += Clock.SystemClock.GetDeltaSeconds();
+
         this.HandleDevCheats();
 
         switch (this.m_state)
@@ -461,6 +469,12 @@ export default class Game
             case GameState.MATCH_END:   this.Update_MatchEnd();         break;
         }
 
+        for (let particleIndex = 0; particleIndex < this.m_particles.length; particleIndex++)
+        {
+            this.m_particles[particleIndex].Update(Clock.SystemClock.GetDeltaSeconds());
+        }
+
+        this.DestroyDeadParticles();
         this.HandleStateChange();
         this.UpdateCameras();
     }
@@ -558,6 +572,10 @@ export default class Game
         {
             return;
         }
+        if (this.m_arePlayersLocked)
+        {
+            return;
+        }
 
         if (!this.m_playerStatus[controllerIndex])
         {
@@ -610,7 +628,7 @@ export default class Game
                 this.m_playerJoinInfoTextWidgets[controllerIndex].SetText("Press A when Ready!");
                 this.SetWidgetsVisibleForPlayer(controllerIndex);
                 this.m_players[controllerIndex] = new PlayerController(controllerIndex, controllerIndex % 2 === 0 ? Team.BLUE : Team.RED);
-                this.m_playerCarChoiceIndexes[controllerIndex] = controllerIndex % 2 === 0 ? 0 : NUM_CAR_CHOICES / 2;
+                this.m_players[controllerIndex].m_team = GetTeamFromCarImageIndex(this.m_playerCarChoiceIndexes[controllerIndex]);
                 this.m_playerStatus[controllerIndex] = PlayerState.JOINED;
             }
             else if (this.m_playerStatus[controllerIndex] === PlayerState.JOINED)
@@ -632,6 +650,7 @@ export default class Game
                 }
                 if (areAllPlayersReady)
                 {
+                    this.m_arePlayersLocked = true;
                     this.m_nextState = GameState.GAME;
                 }
             }
@@ -761,6 +780,11 @@ export default class Game
             case GameState.MATCH_END:       this.Render_MatchEnd();     break;
         }
 
+        for (let particleIndex = 0; particleIndex < this.m_particles.length; particleIndex++)
+        {
+            this.m_particles[particleIndex].Render();
+        }
+
         g_ui.Render();
 
         this.RenderIntroTransition();
@@ -888,6 +912,7 @@ export default class Game
         this.m_playerCarChoiceIndexes = [];
         this.m_playerStatus = [];
         this.m_map = null;
+        this.m_arePlayersLocked = false;
         for (let playerIndex = 0; playerIndex < 4; playerIndex++)
         {
             this.SetWidgetsHiddenForPlayer(playerIndex);
@@ -975,9 +1000,11 @@ export default class Game
                 case GameState.MATCH_END:       this.Exit_MatchEnd();       break;
             }
 
+            this.m_timeInState = 0.0;
             this.m_state = this.m_nextState;
             this.m_nextState = GameState.NONE;
             this.m_clock.Reset();
+            this.m_particles = [];
 
             switch (this.m_state)
             {
@@ -1016,12 +1043,12 @@ export default class Game
 
     RenderIntroTransition()
     {
-        if (this.m_clock.GetTotalSeconds() > this.m_transitionTimer.m_duration)
+        if (this.m_timeInState > this.m_transitionTimer.m_duration)
         {
             return;
         }
 
-        const t = MathUtils.EaseOutQuadratic(this.m_clock.GetTotalSeconds());
+        const t = MathUtils.EaseOutQuadratic(this.m_timeInState);
         const transitionColor = Rgba8.Lerp(Rgba8.BLACK, Rgba8.TRANSPARENT_BLACK, t);
 
         const transitionVerts = [];
@@ -1031,5 +1058,30 @@ export default class Game
         g_renderer.BindTexture(null);
         g_renderer.DrawVertexArray(transitionVerts);
         g_renderer.EndCamera(this.m_screenCamera);
+    }
+
+    SpawnParticleCluster(numParticles, positionXRange, positionYRange, velXRange, velYRange, orientationRange, angularVelRange, minSize, maxSize, numVerts, color, lifetime, fadeOverLifetime = true)
+    {
+        for (let particleIndex = 0; particleIndex < numParticles; particleIndex++)
+        {
+            const particlePosition = RNG.RollRandomVec2UsingFloatRanges(positionXRange, positionYRange);
+            const particleVelocity = RNG.RollRandomVec2UsingFloatRanges(velXRange, velYRange);
+            const particleOrientation = RNG.RollRandomFloatUsingFloatRange(orientationRange);
+            const particleAngularVelocity = RNG.RollRandomFloatUsingFloatRange(angularVelRange);
+
+            const newParticle = new Particle(particlePosition, particleVelocity, particleOrientation, particleAngularVelocity, minSize, maxSize, numVerts, color, lifetime, fadeOverLifetime);
+            this.m_particles.push(newParticle);
+        }
+    }
+
+    DestroyDeadParticles()
+    {
+        for (let particleIndex = 0; particleIndex < this.m_particles.length; particleIndex++)
+        {
+            if (this.m_particles[particleIndex].m_lifetimeTimer.HasDurationElapsed())
+            {
+                this.m_particles.splice(particleIndex, 1);
+            }
+        }
     }
 }

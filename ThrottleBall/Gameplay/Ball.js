@@ -17,7 +17,7 @@ export default class Ball
 {
     // To change the friction, change ONLY the COEFFICIENTS!
     static ROLLING_FRICTION_COEFFICIENT = 0.005;
-    static RADIUS = 2.0;
+    static RADIUS = 4.0;
     static MASS = 1.0;
     static ELASTICITY = 0.9;
     static MAX_VELOCITY = 100.0;
@@ -76,7 +76,7 @@ export default class Ball
         const uvMaxs = uvMins.GetSum(new Vec2(2.0, 2.0));
         const uvs = new AABB2(uvMins, uvMaxs);
 
-        VertexUtils.AddPCUVertsForDisc2D(ballVerts, this.m_position, Ball.RADIUS, Rgba8.WHITE, uvs, 32);
+        VertexUtils.AddPCUVertsForDiscWithOutline2D(ballVerts, this.m_position, Ball.RADIUS, Ball.RADIUS * 0.25,  Rgba8.WHITE, uvs, 32);
         g_renderer.BindShader(null);
         g_renderer.SetBlendMode(BlendMode.ALPHA);
         g_renderer.SetCullMode(CullMode.BACK);
@@ -84,6 +84,7 @@ export default class Ball
         g_renderer.SetSamplerMode(SamplerMode.BILINEAR_WRAP);
         g_renderer.SetModelConstants();
         g_renderer.BindTexture(this.m_texture);
+        // g_renderer.BindTexture(null);
         g_renderer.DrawVertexArray(ballVerts);
 
         if (this.m_map.m_drawDebug)

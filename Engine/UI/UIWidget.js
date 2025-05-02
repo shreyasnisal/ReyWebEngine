@@ -11,6 +11,7 @@ import AABB2 from "/Engine/Math/AABB2.js";
 import Mat44 from "/Engine/Math/Mat44.js"
 import * as MathUtils from "/Engine/Math/MathUtils.js";
 import Vec2 from "/Engine/Math/Vec2.js";
+import {BlendMode} from "/Engine/Renderer/Renderer.js";
 
 
 export default class UIWidget
@@ -224,6 +225,7 @@ export default class UIWidget
         VertexUtils.AddPCUVertsForArc2D(vertexes, this.m_renderBounds.m_maxs, this.m_borderRadius, this.m_borderWidth * 1.5, 0.0, 90.0, borderColor);
         VertexUtils.AddPCUVertsForArc2D(vertexes, new Vec2(this.m_renderBounds.m_maxs.x, this.m_renderBounds.m_mins.y), this.m_borderRadius, this.m_borderWidth * 1.5, 270.0, 360.0, borderColor);
 
+        g_renderer.SetBlendMode(BlendMode.ALPHA);
         g_renderer.BindTexture(this.m_backgroundTexture);
         g_renderer.DrawVertexArray(vertexes);
 

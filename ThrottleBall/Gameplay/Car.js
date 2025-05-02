@@ -4,6 +4,7 @@ import {GetTeamColor, SHADOW_COLOR, SHADOW_OFFSET_X, SHADOW_OFFSET_Y} from "/Thr
 
 import {g_debugRenderSystem, g_renderer} from "/Engine/Core/EngineCommon.js";
 
+import Clock from "/Engine/Core/Clock.js";
 import * as VertexUtils from "/Engine/Core/VertexUtils.js";
 import Rgba8 from "/Engine/Core/Rgba8.js";
 
@@ -49,6 +50,8 @@ export default class Car
         this.m_controller = controller;
         this.m_team = team;
 
+        this.m_trailPositions = [];
+
         this.m_acceleration = new Vec2(0.0, 0.0);
         this.m_texture = null;
         if (texturePath != null)
@@ -64,6 +67,8 @@ export default class Car
     Update()
     {
         const deltaSeconds = this.m_map.m_game.m_clock.GetDeltaSeconds();
+
+        const trailFrameStartPosition = new Vec2(this.m_backAxlePosition.x, this.m_backAxlePosition.y);
 
         // Calculate friction scaled to deltaTime
         const rollingFrictionThisFrame = Car.ROLLING_FRICTION * deltaSeconds;
@@ -115,6 +120,26 @@ export default class Car
         // Correction from fixed frame length
         this.PerformFrameCorrectionAndUpdatePosition();
 
+        const trailFrameEndPosition = new Vec2(this.m_backAxlePosition.x, this.m_backAxlePosition.y);
+
+        for (let trailSegmentIndex = 0; trailSegmentIndex < this.m_trailPositions.length; trailSegmentIndex++)
+        {
+            this.m_trailPositions[trailSegmentIndex].m_fOpacity -= 5.0 * Clock.SystemClock.GetDeltaSeconds();
+            if (this.m_trailPositions[trailSegmentIndex].m_fOpacity <= 0.0)
+            {
+                this.m_trailPositions.splice(trailSegmentIndex, 1);
+            }
+        }
+
+        if (trailFrameStartPosition.x !== trailFrameEndPosition.x || trailFrameStartPosition.y !== trailFrameEndPosition.y)
+        {
+            this.m_trailPositions.push({
+                m_start: trailFrameStartPosition,
+                m_end: trailFrameEndPosition,
+                m_fOpacity: 0.1,
+            });
+        }
+
         // Reset acceleration: Acceleration is accumulated every frame
         this.m_acceleration = new Vec2(0.0, 0.0);
     }
@@ -138,6 +163,8 @@ export default class Car
 
     Render()
     {
+        this.RenderTrail();
+
         const carVerts = [];
 
         // Add verts for wheels
@@ -175,6 +202,25 @@ export default class Car
         {
             this.RenderDebug();
         }
+    }
+
+    RenderTrail()
+    {
+        const trailVerts = [];
+        for (let trailSegmentIndex = 0; trailSegmentIndex < this.m_trailPositions.length; trailSegmentIndex++)
+        {
+            const trailColor = new Rgba8(255, 255, 255, Math.floor(this.m_trailPositions[trailSegmentIndex].m_fOpacity * 255));
+            // VertexUtils.AddPCUVertsForLineSegmentWithNoExtension2D(trailVerts, this.m_trailPositions[trailSegmentIndex].m_start, this.m_trailPositions[trailSegmentIndex].m_end, Car.FRAME_LENGTH * 0.5, trailColor);
+            VertexUtils.AddPCUVertsForLineSegment2D(trailVerts, this.m_trailPositions[trailSegmentIndex].m_start, this.m_trailPositions[trailSegmentIndex].m_end, Car.FRAME_LENGTH * 0.2, trailColor);
+        }
+
+        g_renderer.BindShader(null);
+        g_renderer.SetBlendMode(BlendMode.ALPHA);
+        g_renderer.SetCullMode(CullMode.BACK);
+        g_renderer.SetDepthMode(DepthMode.DISABLED);
+        g_renderer.SetModelConstants();
+        g_renderer.BindTexture(null);
+        g_renderer.DrawVertexArray(trailVerts);
     }
 
     RenderShadow()
