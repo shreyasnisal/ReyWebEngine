@@ -62,6 +62,8 @@ jobs:
             VERSION=$(jq -r .version "$VERSION_FILE")
             echo "Version: $VERSION"
 
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
             BUMP_TYPE=$(echo "$BUMP_TYPE" | xargs)
             case "$BUMP_TYPE" in
               "major")
